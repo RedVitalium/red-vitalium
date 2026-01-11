@@ -4,6 +4,8 @@ import { MetricCard } from "@/components/dashboard/MetricCard";
 import { MiniChart } from "@/components/dashboard/MiniChart";
 import { ReminderCard } from "@/components/dashboard/ReminderCard";
 import { WeeklyProgress } from "@/components/dashboard/WeeklyProgress";
+import { MonthlyAchievements } from "@/components/dashboard/MonthlyAchievements";
+import { HabitWeekIndicator } from "@/components/dashboard/HabitWeekIndicator";
 import { 
   Brain, 
   Heart, 
@@ -15,6 +17,14 @@ import {
   TrendingUp,
   Clock
 } from "lucide-react";
+
+// Get current week of the month (1-4)
+function getCurrentWeekOfMonth(): number {
+  const now = new Date();
+  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+  const dayOfMonth = now.getDate();
+  return Math.ceil((dayOfMonth + firstDay.getDay()) / 7);
+}
 
 // Sample data
 const anxietyData = [{ value: 65 }, { value: 58 }, { value: 52 }, { value: 48 }, { value: 45 }, { value: 42 }];
@@ -52,6 +62,16 @@ export default function Dashboard() {
         </p>
       </motion.div>
 
+      {/* Monthly Achievements - Gamification */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="mb-8"
+      >
+        <MonthlyAchievements />
+      </motion.div>
+
       {/* Weekly Progress & Quick Stats */}
       <div className="grid lg:grid-cols-3 gap-6 mb-8">
         <div className="lg:col-span-2">
@@ -67,13 +87,34 @@ export default function Dashboard() {
           animate={{ opacity: 1, x: 0 }}
           className="space-y-4"
         >
-          <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
-            <Clock className="h-5 w-5 text-primary" />
-            Recordatorios de hoy
-          </h3>
-          <ReminderCard type="meal" time="19:00" isCompleted />
-          <ReminderCard type="prepare-sleep" time="21:00" isActive />
-          <ReminderCard type="bedtime" time="22:30" />
+          {/* Habit Week Indicator */}
+          <HabitWeekIndicator />
+          
+          {/* Show reminders only for weeks 1-3 */}
+          {getCurrentWeekOfMonth() <= 3 ? (
+            <>
+              <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
+                <Clock className="h-5 w-5 text-primary" />
+                Recordatorios de hoy
+              </h3>
+              <ReminderCard type="meal" time="19:00" isCompleted />
+              <ReminderCard type="prepare-sleep" time="21:00" isActive />
+              <ReminderCard type="bedtime" time="22:30" />
+            </>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="p-4 bg-accent/10 border border-accent/20 rounded-xl text-center"
+            >
+              <p className="text-sm font-medium text-accent">
+                🎯 Semana de prueba
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Sin recordatorios - ¡Confía en tus nuevos hábitos!
+              </p>
+            </motion.div>
+          )}
         </motion.div>
       </div>
 
