@@ -6,6 +6,7 @@ import { ReminderCard } from "@/components/dashboard/ReminderCard";
 import { WeeklyProgress } from "@/components/dashboard/WeeklyProgress";
 import { MonthlyAchievements } from "@/components/dashboard/MonthlyAchievements";
 import { HabitWeekIndicator } from "@/components/dashboard/HabitWeekIndicator";
+import { LockedHabitCard } from "@/components/dashboard/LockedHabitCard";
 import { 
   Brain, 
   Heart, 
@@ -15,7 +16,12 @@ import {
   Smile,
   Frown,
   TrendingUp,
-  Clock
+  Clock,
+  Smartphone,
+  Flame,
+  Snowflake,
+  Leaf,
+  Timer
 } from "lucide-react";
 
 // Get current week of the month (1-4)
@@ -31,6 +37,7 @@ const anxietyData = [{ value: 65 }, { value: 58 }, { value: 52 }, { value: 48 },
 const stressData = [{ value: 70 }, { value: 62 }, { value: 55 }, { value: 50 }, { value: 48 }, { value: 44 }];
 const sleepData = [{ value: 6.5 }, { value: 7 }, { value: 7.2 }, { value: 7.5 }, { value: 7.8 }, { value: 8 }];
 const activityData = [{ value: 3 }, { value: 4 }, { value: 4.5 }, { value: 5 }, { value: 5.5 }, { value: 6 }];
+const phoneUnlocksData = [{ value: 85 }, { value: 78 }, { value: 72 }, { value: 68 }, { value: 62 }, { value: 58 }];
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -273,57 +280,106 @@ export default function Dashboard() {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="grid md:grid-cols-2 gap-6"
+            className="space-y-8"
           >
-            <motion.div variants={itemVariants}>
-              <MetricCard
-                title="Sueño"
-                subtitle="Horas efectivas de sueño"
-                value={7.8}
-                unit="hrs"
-                target="> 7.5 horas"
-                change={10}
-                status="optimal"
-                icon={<Moon className="h-5 w-5" />}
-                chart={<MiniChart data={sleepData} color="success" />}
-              />
-            </motion.div>
-            <motion.div variants={itemVariants}>
-              <MetricCard
-                title="Calidad de Sueño"
-                subtitle="Puntuación de tracker (0-100)"
-                value={88}
-                target="> 85"
-                change={5}
-                status="optimal"
-                icon={<Heart className="h-5 w-5" />}
-              />
-            </motion.div>
-            <motion.div variants={itemVariants}>
-              <MetricCard
-                title="Actividad Física"
-                subtitle="Horas por semana"
-                value={5.5}
-                unit="hrs"
-                target="> 5 horas"
-                change={15}
-                status="optimal"
-                icon={<Dumbbell className="h-5 w-5" />}
-                chart={<MiniChart data={activityData} color="success" />}
-              />
-            </motion.div>
-            <motion.div variants={itemVariants}>
-              <MetricCard
-                title="Tiempo en Pantalla"
-                subtitle="Uso no laboral diario"
-                value={95}
-                unit="min"
-                target="< 90 min"
-                change={-8}
-                status="warning"
-                icon={<Activity className="h-5 w-5" />}
-              />
-            </motion.div>
+            {/* Active Habits */}
+            <div className="grid md:grid-cols-2 gap-6">
+              <motion.div variants={itemVariants}>
+                <MetricCard
+                  title="Sueño"
+                  subtitle="Horas efectivas de sueño"
+                  value={7.8}
+                  unit="hrs"
+                  target="> 7.5 horas"
+                  change={10}
+                  status="optimal"
+                  icon={<Moon className="h-5 w-5" />}
+                  chart={<MiniChart data={sleepData} color="success" />}
+                />
+              </motion.div>
+              <motion.div variants={itemVariants}>
+                <MetricCard
+                  title="Calidad de Sueño"
+                  subtitle="Puntuación de tracker (0-100)"
+                  value={88}
+                  target="> 85"
+                  change={5}
+                  status="optimal"
+                  icon={<Heart className="h-5 w-5" />}
+                />
+              </motion.div>
+              <motion.div variants={itemVariants}>
+                <MetricCard
+                  title="Actividad Física"
+                  subtitle="Horas por semana"
+                  value={5.5}
+                  unit="hrs"
+                  target="> 5 horas"
+                  change={15}
+                  status="optimal"
+                  icon={<Dumbbell className="h-5 w-5" />}
+                  chart={<MiniChart data={activityData} color="success" />}
+                />
+              </motion.div>
+              <motion.div variants={itemVariants}>
+                <MetricCard
+                  title="Tiempo en Pantalla"
+                  subtitle="Uso no laboral diario"
+                  value={95}
+                  unit="min"
+                  target="< 90 min"
+                  change={-8}
+                  status="warning"
+                  icon={<Activity className="h-5 w-5" />}
+                />
+              </motion.div>
+              <motion.div variants={itemVariants}>
+                <MetricCard
+                  title="Desbloqueos de Teléfono"
+                  subtitle="Promedio diario"
+                  value={58}
+                  unit="veces"
+                  target="< 50"
+                  change={-18}
+                  status="warning"
+                  icon={<Smartphone className="h-5 w-5" />}
+                  chart={<MiniChart data={phoneUnlocksData} color="warning" />}
+                />
+              </motion.div>
+            </div>
+
+            {/* Locked Habits - Advanced Features */}
+            <div>
+              <h3 className="text-lg font-display font-bold mb-4 text-muted-foreground flex items-center gap-2">
+                <Timer className="h-5 w-5" />
+                Hábitos Avanzados
+                <span className="text-xs font-normal bg-muted px-2 py-1 rounded-full ml-2">
+                  Se desbloquean al estabilizar hábitos básicos
+                </span>
+              </h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                <LockedHabitCard
+                  title="Saunas"
+                  description="Sesiones de sauna para recuperación y longevidad"
+                  icon={Flame}
+                />
+                <LockedHabitCard
+                  title="Baños Fríos"
+                  description="Exposición al frío para resiliencia metabólica"
+                  icon={Snowflake}
+                />
+                <LockedHabitCard
+                  title="Meditación"
+                  description="Práctica de mindfulness y atención plena"
+                  icon={Brain}
+                />
+                <LockedHabitCard
+                  title="Yoga"
+                  description="Flexibilidad, equilibrio y conexión mente-cuerpo"
+                  icon={Leaf}
+                />
+              </div>
+            </div>
           </motion.div>
         </TabsContent>
 
@@ -379,6 +435,30 @@ export default function Dashboard() {
                 change={3}
                 status="optimal"
                 icon={<Dumbbell className="h-5 w-5" />}
+              />
+            </motion.div>
+            <motion.div variants={itemVariants}>
+              <MetricCard
+                title="Equilibrio Pierna Izq."
+                subtitle="Tiempo con ojos cerrados"
+                value={38}
+                unit="seg"
+                target="> 30 seg"
+                change={8}
+                status="optimal"
+                icon={<Timer className="h-5 w-5" />}
+              />
+            </motion.div>
+            <motion.div variants={itemVariants}>
+              <MetricCard
+                title="Equilibrio Pierna Der."
+                subtitle="Tiempo con ojos cerrados"
+                value={42}
+                unit="seg"
+                target="> 30 seg"
+                change={12}
+                status="optimal"
+                icon={<Timer className="h-5 w-5" />}
               />
             </motion.div>
             <motion.div variants={itemVariants}>

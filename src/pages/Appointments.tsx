@@ -25,7 +25,8 @@ import {
   MapPin, 
   Video, 
   Plus,
-  CheckCircle2
+  CheckCircle2,
+  Brain
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -46,7 +47,7 @@ const appointments: Appointment[] = [
     date: new Date(2025, 0, 15),
     time: "10:00",
     type: "consultation",
-    specialist: "Dr. García - Psicología",
+    specialist: "Psicología",
     location: "presencial",
     status: "confirmed",
   },
@@ -55,7 +56,7 @@ const appointments: Appointment[] = [
     date: new Date(2025, 0, 18),
     time: "15:30",
     type: "followup",
-    specialist: "Dra. Martínez - Nutrición",
+    specialist: "Psicología",
     location: "virtual",
     status: "pending",
   },
@@ -63,8 +64,8 @@ const appointments: Appointment[] = [
     id: "3",
     date: new Date(2025, 0, 8),
     time: "09:00",
-    type: "test",
-    specialist: "Laboratorio Clínico",
+    type: "consultation",
+    specialist: "Psicología",
     location: "presencial",
     status: "completed",
   },
@@ -73,15 +74,8 @@ const appointments: Appointment[] = [
 const typeLabels = {
   consultation: "Consulta",
   followup: "Seguimiento",
-  test: "Exámenes",
+  test: "Evaluación",
 };
-
-const specialists = [
-  "Dr. García - Psicología",
-  "Dra. Martínez - Nutrición",
-  "Dr. López - Medicina General",
-  "Fisioterapia",
-];
 
 const timeSlots = [
   "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
@@ -94,7 +88,6 @@ export default function Appointments() {
   const [newAppointment, setNewAppointment] = useState({
     date: undefined as Date | undefined,
     time: "",
-    specialist: "",
     type: "consultation" as "consultation" | "followup" | "test",
     location: "presencial" as "presencial" | "virtual",
   });
@@ -119,7 +112,7 @@ export default function Appointments() {
             Citas
           </h1>
           <p className="text-muted-foreground">
-            Gestiona tus citas con especialistas
+            Gestiona tus citas de psicología
           </p>
         </div>
 
@@ -134,29 +127,17 @@ export default function Appointments() {
             <DialogHeader>
               <DialogTitle className="font-display">Agendar Nueva Cita</DialogTitle>
               <DialogDescription>
-                Selecciona el especialista, fecha y hora para tu cita
+                Selecciona la fecha y hora para tu cita de psicología
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-6 py-4">
+              {/* Specialist - Fixed to Psychology */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Especialista</label>
-                <Select
-                  value={newAppointment.specialist}
-                  onValueChange={(value) =>
-                    setNewAppointment((prev) => ({ ...prev, specialist: value }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar especialista" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {specialists.map((specialist) => (
-                      <SelectItem key={specialist} value={specialist}>
-                        {specialist}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center gap-3 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                  <Brain className="h-5 w-5 text-primary" />
+                  <span className="font-medium">Psicología</span>
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -173,7 +154,7 @@ export default function Appointments() {
                   <SelectContent>
                     <SelectItem value="consultation">Consulta</SelectItem>
                     <SelectItem value="followup">Seguimiento</SelectItem>
-                    <SelectItem value="test">Exámenes</SelectItem>
+                    <SelectItem value="test">Evaluación</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -293,7 +274,7 @@ export default function Appointments() {
                             ? "bg-success/10" 
                             : "bg-warning/10"
                         }`}>
-                          <CalendarDays className={`h-5 w-5 ${
+                          <Brain className={`h-5 w-5 ${
                             apt.status === "confirmed" 
                               ? "text-success" 
                               : "text-warning"

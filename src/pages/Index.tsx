@@ -11,8 +11,7 @@ import {
   Calendar, 
   BarChart3,
   ArrowRight,
-  Check,
-  Star
+  Check
 } from "lucide-react";
 
 const features = [
@@ -226,23 +225,35 @@ export default function Index() {
               <Card className="p-8 bg-gradient-to-br from-primary via-primary to-accent/50 text-primary-foreground">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl" />
                 <div className="relative z-10">
-                  <div className="flex items-center gap-2 mb-6">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star key={star} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                    ))}
-                  </div>
-                  <blockquote className="text-lg mb-6 leading-relaxed">
-                    "Vitalium cambió mi perspectiva sobre la salud preventiva. El monitoreo 
-                    continuo y el apoyo psicológico me ayudaron a mejorar significativamente 
-                    mi calidad de vida."
-                  </blockquote>
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-white/20" />
-                    <div>
-                      <p className="font-semibold">María González</p>
-                      <p className="text-sm opacity-80">Paciente desde 2024</p>
-                    </div>
-                  </div>
+                  <h3 className="text-2xl font-display font-bold mb-4">
+                    ¿Por qué Vitalium?
+                  </h3>
+                  <ul className="space-y-4 text-primary-foreground/90">
+                    <li className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Check className="h-4 w-4" />
+                      </div>
+                      <span>Enfoque preventivo basado en evidencia científica</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Check className="h-4 w-4" />
+                      </div>
+                      <span>Atención personalizada con profesionales de salud</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Check className="h-4 w-4" />
+                      </div>
+                      <span>Tecnología de monitoreo continuo con wearables</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Check className="h-4 w-4" />
+                      </div>
+                      <span>Sistema de gamificación que te mantiene motivado</span>
+                    </li>
+                  </ul>
                 </div>
               </Card>
             </motion.div>
