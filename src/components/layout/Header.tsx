@@ -11,6 +11,7 @@ const navItems = [
   { label: "Tests", href: "/tests" },
   { label: "Citas", href: "/appointments" },
   { label: "Recordatorios", href: "/reminders" },
+  { label: "Admin", href: "/admin" },
 ];
 
 export function Header() {
