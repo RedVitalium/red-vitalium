@@ -14,16 +14,237 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      appointments: {
+        Row: {
+          appointment_date: string
+          appointment_time: string
+          created_at: string
+          id: string
+          notes: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          appointment_date: string
+          appointment_time: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          appointment_date?: string
+          appointment_time?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      biomarkers: {
+        Row: {
+          albumin: number | null
+          alkaline_phosphatase: number | null
+          biological_age: number | null
+          c_reactive_protein: number | null
+          creatinine: number | null
+          glucose: number | null
+          id: string
+          lymphocyte_percentage: number | null
+          mean_cell_volume: number | null
+          recorded_at: string
+          recorded_by: string | null
+          red_cell_distribution_width: number | null
+          user_id: string
+          white_blood_cell_count: number | null
+        }
+        Insert: {
+          albumin?: number | null
+          alkaline_phosphatase?: number | null
+          biological_age?: number | null
+          c_reactive_protein?: number | null
+          creatinine?: number | null
+          glucose?: number | null
+          id?: string
+          lymphocyte_percentage?: number | null
+          mean_cell_volume?: number | null
+          recorded_at?: string
+          recorded_by?: string | null
+          red_cell_distribution_width?: number | null
+          user_id: string
+          white_blood_cell_count?: number | null
+        }
+        Update: {
+          albumin?: number | null
+          alkaline_phosphatase?: number | null
+          biological_age?: number | null
+          c_reactive_protein?: number | null
+          creatinine?: number | null
+          glucose?: number | null
+          id?: string
+          lymphocyte_percentage?: number | null
+          mean_cell_volume?: number | null
+          recorded_at?: string
+          recorded_by?: string | null
+          red_cell_distribution_width?: number | null
+          user_id?: string
+          white_blood_cell_count?: number | null
+        }
+        Relationships: []
+      }
+      health_data: {
+        Row: {
+          data_type: string
+          id: string
+          recorded_at: string
+          source: string | null
+          unit: string | null
+          user_id: string
+          value: number
+        }
+        Insert: {
+          data_type: string
+          id?: string
+          recorded_at?: string
+          source?: string | null
+          unit?: string | null
+          user_id: string
+          value: number
+        }
+        Update: {
+          data_type?: string
+          id?: string
+          recorded_at?: string
+          source?: string | null
+          unit?: string | null
+          user_id?: string
+          value?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          date_of_birth: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          sex: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          sex?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          sex?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      test_results: {
+        Row: {
+          completed_at: string
+          id: string
+          scores: Json
+          test_id: string
+          test_name: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          id?: string
+          scores: Json
+          test_id: string
+          test_name: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          id?: string
+          scores?: Json
+          test_id?: string
+          test_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      unlocked_habits: {
+        Row: {
+          habit_id: string
+          id: string
+          unlocked_at: string
+          unlocked_by: string | null
+          user_id: string
+        }
+        Insert: {
+          habit_id: string
+          id?: string
+          unlocked_at?: string
+          unlocked_by?: string | null
+          user_id: string
+        }
+        Update: {
+          habit_id?: string
+          id?: string
+          unlocked_at?: string
+          unlocked_by?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "patient"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +371,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "patient"],
+    },
   },
 } as const
