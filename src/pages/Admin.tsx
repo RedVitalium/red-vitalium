@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   User, 
   Droplets, 
@@ -16,7 +19,10 @@ import {
   Unlock,
   Lock,
   FileText,
-  TrendingUp
+  TrendingUp,
+  Play,
+  StopCircle,
+  Calendar
 } from "lucide-react";
 import { 
   calculateBiologicalAge, 
@@ -24,13 +30,6 @@ import {
   validateBiomarkers,
   BloodBiomarkers 
 } from "@/lib/biological-age";
-
-// Mock patient list - would come from database
-const mockPatients = [
-  { id: "1", name: "María García", age: 45, sex: "female" },
-  { id: "2", name: "Carlos López", age: 52, sex: "male" },
-  { id: "3", name: "Ana Martínez", age: 38, sex: "female" },
-];
 
 // Locked habits that can be unlocked by admin
 const advancedHabits = [
@@ -41,8 +40,87 @@ const advancedHabits = [
 ];
 
 export default function Admin() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [selectedPatient, setSelectedPatient] = useState<string>("");
   const [unlockedHabits, setUnlockedHabits] = useState<Record<string, string[]>>({});
+  
+  // Fetch patients (profiles)
+  const { data: patients = [] } = useQuery({
+    queryKey: ["admin-patients"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, date_of_birth, sex");
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Fetch active cycle for selected patient
+  const { data: activeCycle } = useQuery({
+    queryKey: ["patient-cycle", selectedPatient],
+    queryFn: async () => {
+      if (!selectedPatient) return null;
+      const { data, error } = await supabase
+        .from("user_cycles")
+        .select("*")
+        .eq("user_id", selectedPatient)
+        .eq("is_active", true)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedPatient,
+  });
+
+  // Mutation to start a cycle
+  const startCycleMutation = useMutation({
+    mutationFn: async (patientId: string) => {
+      // First, deactivate any existing active cycles
+      await supabase
+        .from("user_cycles")
+        .update({ is_active: false })
+        .eq("user_id", patientId)
+        .eq("is_active", true);
+      
+      // Then create a new active cycle
+      const { error } = await supabase
+        .from("user_cycles")
+        .insert({
+          user_id: patientId,
+          started_by: user?.id,
+          is_active: true,
+        });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["patient-cycle", selectedPatient] });
+      toast.success("Ciclo iniciado correctamente");
+    },
+    onError: (error) => {
+      toast.error("Error al iniciar el ciclo: " + error.message);
+    },
+  });
+
+  // Mutation to stop a cycle
+  const stopCycleMutation = useMutation({
+    mutationFn: async (patientId: string) => {
+      const { error } = await supabase
+        .from("user_cycles")
+        .update({ is_active: false })
+        .eq("user_id", patientId)
+        .eq("is_active", true);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["patient-cycle", selectedPatient] });
+      toast.success("Ciclo detenido correctamente");
+    },
+    onError: (error) => {
+      toast.error("Error al detener el ciclo: " + error.message);
+    },
+  });
   
   // Biomarker form state
   const [biomarkers, setBiomarkers] = useState<Partial<BloodBiomarkers>>({
@@ -59,6 +137,32 @@ export default function Admin() {
   });
   
   const [biologicalAgeResult, setBiologicalAgeResult] = useState<ReturnType<typeof calculateBiologicalAge> | null>(null);
+
+  // Calculate age from date of birth
+  const calculateAge = (dateOfBirth: string | null): number => {
+    if (!dateOfBirth) return 0;
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  // Get cycle info
+  const getCycleInfo = () => {
+    if (!activeCycle) return null;
+    const startDate = new Date(activeCycle.started_at);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - startDate.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const currentWeek = Math.min(Math.floor(diffDays / 7) + 1, 4);
+    return { startDate, diffDays, currentWeek };
+  };
+
+  const cycleInfo = getCycleInfo();
 
   const handleBiomarkerChange = (key: keyof BloodBiomarkers, value: string) => {
     const numValue = value === "" ? undefined : parseFloat(value);
@@ -146,9 +250,9 @@ export default function Admin() {
                 <SelectValue placeholder="Seleccione un paciente" />
               </SelectTrigger>
               <SelectContent>
-                {mockPatients.map(patient => (
-                  <SelectItem key={patient.id} value={patient.id}>
-                    {patient.name} ({patient.age} años, {patient.sex === "female" ? "F" : "M"})
+                {patients.map(patient => (
+                  <SelectItem key={patient.user_id} value={patient.user_id}>
+                    {patient.full_name || "Sin nombre"} ({calculateAge(patient.date_of_birth)} años, {patient.sex === "female" ? "F" : patient.sex === "male" ? "M" : "-"})
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -156,8 +260,12 @@ export default function Admin() {
           </div>
         </Card>
 
-        <Tabs defaultValue="biomarkers" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 max-w-md">
+        <Tabs defaultValue="cycle" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4 max-w-lg">
+            <TabsTrigger value="cycle" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Ciclo
+            </TabsTrigger>
             <TabsTrigger value="biomarkers" className="flex items-center gap-2">
               <Droplets className="h-4 w-4" />
               Biomarcadores
@@ -171,6 +279,130 @@ export default function Admin() {
               Hábitos
             </TabsTrigger>
           </TabsList>
+
+          {/* Cycle Management Tab */}
+          <TabsContent value="cycle">
+            <Card className="p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Calendar className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-display font-bold">Gestión de Ciclo</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Inicie o detenga el ciclo de seguimiento de 4 semanas
+                  </p>
+                </div>
+              </div>
+
+              {!selectedPatient ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <User className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Seleccione un paciente para gestionar su ciclo</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {activeCycle && cycleInfo ? (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="p-6 bg-success/10 border border-success/30 rounded-xl"
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-success/20">
+                            <Play className="h-5 w-5 text-success" />
+                          </div>
+                          <div>
+                            <p className="font-display font-bold text-success">Ciclo Activo</p>
+                            <p className="text-sm text-muted-foreground">
+                              Iniciado el {cycleInfo.startDate.toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        <Button 
+                          variant="destructive" 
+                          onClick={() => stopCycleMutation.mutate(selectedPatient)}
+                          disabled={stopCycleMutation.isPending}
+                          className="gap-2"
+                        >
+                          <StopCircle className="h-4 w-4" />
+                          Detener Ciclo
+                        </Button>
+                      </div>
+                      
+                      <div className="grid grid-cols-3 gap-4 mt-4">
+                        <div className="text-center p-4 bg-background rounded-lg">
+                          <p className="text-2xl font-display font-bold text-primary">
+                            {cycleInfo.currentWeek}
+                          </p>
+                          <p className="text-xs text-muted-foreground">Semana actual</p>
+                        </div>
+                        <div className="text-center p-4 bg-background rounded-lg">
+                          <p className="text-2xl font-display font-bold text-primary">
+                            {cycleInfo.diffDays}
+                          </p>
+                          <p className="text-xs text-muted-foreground">Días transcurridos</p>
+                        </div>
+                        <div className="text-center p-4 bg-background rounded-lg">
+                          <p className="text-2xl font-display font-bold text-primary">
+                            {Math.max(28 - cycleInfo.diffDays, 0)}
+                          </p>
+                          <p className="text-xs text-muted-foreground">Días restantes</p>
+                        </div>
+                      </div>
+
+                      {/* Week progress indicators */}
+                      <div className="flex gap-2 mt-4">
+                        {[1, 2, 3, 4].map((week) => (
+                          <div
+                            key={week}
+                            className={`flex-1 h-2 rounded-full ${
+                              week === cycleInfo.currentWeek
+                                ? week === 4
+                                  ? "bg-accent"
+                                  : "bg-primary"
+                                : week < cycleInfo.currentWeek
+                                ? "bg-success"
+                                : "bg-muted"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <div className="flex justify-between mt-1 text-xs text-muted-foreground">
+                        <span>Semana 1</span>
+                        <span>Semana 2</span>
+                        <span>Semana 3</span>
+                        <span>Prueba</span>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="p-6 bg-muted/50 border border-muted rounded-xl text-center"
+                    >
+                      <Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                      <h3 className="font-display font-semibold text-foreground mb-2">
+                        Sin ciclo activo
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-6">
+                        Inicie un nuevo ciclo de 4 semanas para este paciente. Los recordatorios estarán activos las primeras 3 semanas, y la semana 4 será de prueba sin recordatorios.
+                      </p>
+                      <Button 
+                        onClick={() => startCycleMutation.mutate(selectedPatient)}
+                        disabled={startCycleMutation.isPending}
+                        className="gap-2"
+                      >
+                        <Play className="h-4 w-4" />
+                        Iniciar Ciclo
+                      </Button>
+                    </motion.div>
+                  )}
+                </div>
+              )}
+            </Card>
+          </TabsContent>
 
           {/* Biomarkers Tab */}
           <TabsContent value="biomarkers">

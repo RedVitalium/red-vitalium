@@ -9,31 +9,21 @@ interface MonthlyAchievementsProps {
   isMonthComplete?: boolean;
   achievements?: Achievement[];
   hasEnoughData?: boolean;
-}
-
-// Get current week of the month (1-4)
-function getCurrentWeekOfMonth(): number {
-  const now = new Date();
-  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-  const dayOfMonth = now.getDate();
-  return Math.ceil((dayOfMonth + firstDay.getDay()) / 7);
-}
-
-// Get days remaining in month
-function getDaysRemainingInMonth(): number {
-  const now = new Date();
-  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  return lastDay.getDate() - now.getDate();
+  cycleProgress?: number;
+  currentWeek?: number;
+  daysRemaining?: number;
+  hasActiveCycle?: boolean;
 }
 
 export function MonthlyAchievements({ 
   isMonthComplete = false, 
   achievements = [], 
-  hasEnoughData = false 
+  hasEnoughData = false,
+  cycleProgress = 0,
+  currentWeek = 0,
+  daysRemaining = 28,
+  hasActiveCycle = false
 }: MonthlyAchievementsProps) {
-  const currentWeek = getCurrentWeekOfMonth();
-  const daysRemaining = getDaysRemainingInMonth();
-  const monthProgress = Math.round(((30 - daysRemaining) / 30) * 100);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -63,9 +53,11 @@ export function MonthlyAchievements({
               {isMonthComplete ? "Logros del Mes" : "Mejores Logros del Mes"}
             </h2>
             <p className="text-sm text-muted-foreground">
-              {isMonthComplete 
-                ? "¡Felicidades por tus logros finales!" 
-                : `Semana ${currentWeek} • ${daysRemaining} días restantes`
+              {!hasActiveCycle 
+                ? "Esperando inicio del ciclo"
+                : isMonthComplete 
+                  ? "¡Felicidades por tus logros finales!" 
+                  : `Semana ${currentWeek} • ${daysRemaining} días restantes`
               }
             </p>
           </div>
@@ -73,10 +65,10 @@ export function MonthlyAchievements({
         
         {!isMonthComplete && (
           <div className="text-right">
-            <p className="text-xs text-muted-foreground mb-1">Progreso del mes</p>
+            <p className="text-xs text-muted-foreground mb-1">Progreso del ciclo</p>
             <div className="flex items-center gap-2">
-              <Progress value={monthProgress} className="w-24 h-2" />
-              <span className="text-sm font-semibold text-primary">{monthProgress}%</span>
+              <Progress value={cycleProgress} className="w-24 h-2" />
+              <span className="text-sm font-semibold text-primary">{cycleProgress}%</span>
             </div>
           </div>
         )}
@@ -89,13 +81,13 @@ export function MonthlyAchievements({
           className="mb-6 p-4 bg-success/10 border border-success/20 rounded-xl text-center"
         >
           <Award className="h-8 w-8 text-success mx-auto mb-2" />
-          <p className="font-display font-bold text-success">¡Mes Completado!</p>
-          <p className="text-sm text-muted-foreground">Estos son tus logros finales del mes</p>
+          <p className="font-display font-bold text-success">¡Ciclo Completado!</p>
+          <p className="text-sm text-muted-foreground">Estos son tus logros finales del ciclo</p>
         </motion.div>
       )}
 
-      {/* Empty state for new users */}
-      {!hasEnoughData && achievements.length === 0 && (
+      {/* Empty state for new users or no active cycle */}
+      {(!hasActiveCycle || (!hasEnoughData && achievements.length === 0)) && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -105,15 +97,18 @@ export function MonthlyAchievements({
             <Clock className="h-8 w-8 text-muted-foreground" />
           </div>
           <h3 className="font-display font-semibold text-foreground mb-2">
-            Sin logros todavía
+            {!hasActiveCycle ? "Ciclo no iniciado" : "Sin logros todavía"}
           </h3>
           <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-            Continúa registrando tus datos durante al menos una semana para ver tus primeros logros.
+            {!hasActiveCycle 
+              ? "Tu administrador iniciará tu ciclo de seguimiento pronto."
+              : "Continúa registrando tus datos durante al menos una semana para ver tus primeros logros."
+            }
           </p>
         </motion.div>
       )}
 
-      {achievements.length > 0 && (
+      {hasActiveCycle && achievements.length > 0 && (
         <>
           <motion.div
             variants={containerVariants}
@@ -147,7 +142,7 @@ export function MonthlyAchievements({
                   <TrendingUp className="h-5 w-5 text-warning" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-muted-foreground">Mayor avance del mes</p>
+                  <p className="text-sm text-muted-foreground">Mayor avance del ciclo</p>
                   <p className="font-display font-bold text-foreground">
                     {topAchievement.metric} <span className="text-success">+{topAchievement.improvement}%</span>
                   </p>
