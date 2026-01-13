@@ -7,6 +7,7 @@ import { WeeklyProgress } from "@/components/dashboard/WeeklyProgress";
 import { MonthlyAchievements } from "@/components/dashboard/MonthlyAchievements";
 import { HabitWeekIndicator } from "@/components/dashboard/HabitWeekIndicator";
 import { LockedHabitCard } from "@/components/dashboard/LockedHabitCard";
+import { NotificationSettings } from "@/components/dashboard/NotificationSettings";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useCycleData } from "@/hooks/useCycleData";
 import { useAuth } from "@/hooks/useAuth";
@@ -160,6 +161,12 @@ export default function Dashboard() {
             hasActiveCycle={cycleProgress.hasActiveCycle}
           />
           
+          {/* Notification Settings - only shows on native */}
+          <NotificationSettings 
+            hasActiveCycle={cycleProgress.hasActiveCycle}
+            currentWeek={cycleProgress.currentWeekOfCycle}
+          />
+          
           {/* Show reminders only for weeks 1-3 when cycle is active */}
           {cycleProgress.hasActiveCycle && cycleProgress.currentWeekOfCycle <= 3 ? (
             <>
@@ -171,7 +178,7 @@ export default function Dashboard() {
               <ReminderCard type="prepare-sleep" time="21:00" isActive />
               <ReminderCard type="bedtime" time="22:30" />
             </>
-          ) : (
+          ) : cycleProgress.hasActiveCycle ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -184,7 +191,7 @@ export default function Dashboard() {
                 Sin recordatorios - ¡Confía en tus nuevos hábitos!
               </p>
             </motion.div>
-          )}
+          ) : null}
         </motion.div>
       </div>
 
