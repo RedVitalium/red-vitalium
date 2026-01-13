@@ -71,7 +71,9 @@ export default function Dashboard() {
     habitsData, 
     longevityData, 
     weeklyProgress, 
-    hasData 
+    achievements,
+    hasData,
+    hasEnoughDataForAchievements
   } = useDashboardData();
 
   return (
@@ -120,7 +122,10 @@ export default function Dashboard() {
         transition={{ delay: 0.1 }}
         className="mb-8"
       >
-        <MonthlyAchievements />
+        <MonthlyAchievements 
+          achievements={achievements} 
+          hasEnoughData={hasEnoughDataForAchievements || isDemo} 
+        />
       </motion.div>
 
       {/* Weekly Progress & Quick Stats */}

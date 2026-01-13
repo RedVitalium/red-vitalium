@@ -3,6 +3,17 @@ import { useAuth } from "./useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+// Achievement type for monthly achievements
+export interface Achievement {
+  id: string;
+  type: "gold" | "silver" | "bronze";
+  icon: "trophy" | "star" | "medal" | "improvement";
+  title: string;
+  metric: string;
+  improvement: number;
+  isNew: boolean;
+}
+
 // Demo data for John Doe
 const demoPersonalData = {
   name: "John Doe",
@@ -48,6 +59,45 @@ const demoWeeklyProgress = {
   improvement: 12,
 };
 
+const demoAchievements: Achievement[] = [
+  {
+    id: "sleep",
+    type: "gold",
+    icon: "trophy",
+    title: "Campeón del Sueño",
+    metric: "Calidad de sueño",
+    improvement: 28,
+    isNew: true,
+  },
+  {
+    id: "anxiety",
+    type: "gold",
+    icon: "star",
+    title: "Control de Ansiedad",
+    metric: "Reducción de ansiedad",
+    improvement: 24,
+    isNew: false,
+  },
+  {
+    id: "activity",
+    type: "silver",
+    icon: "medal",
+    title: "Activo Constante",
+    metric: "Actividad física",
+    improvement: 18,
+    isNew: true,
+  },
+  {
+    id: "stress",
+    type: "bronze",
+    icon: "improvement",
+    title: "Manejo del Estrés",
+    metric: "Reducción de estrés",
+    improvement: 12,
+    isNew: false,
+  },
+];
+
 // Empty data for new users
 const emptyPersonalData = {
   name: "",
@@ -92,6 +142,8 @@ const emptyWeeklyProgress = {
   weeklyGoals: { completed: 0, total: 6 },
   improvement: 0,
 };
+
+const emptyAchievements: Achievement[] = [];
 
 // Helper to calculate age from date of birth
 function calculateAge(dateOfBirth: string | null): number {
@@ -202,6 +254,7 @@ export function useDashboardData() {
       habitsData: demoHabitsData,
       longevityData: demoLongevityData,
       weeklyProgress: demoWeeklyProgress,
+      achievements: demoAchievements,
       hasData: true,
     };
   }
@@ -270,6 +323,106 @@ export function useDashboardData() {
     hrv: { value: getHealthDataValue(healthData, "hrv"), change: 0 },
   };
 
+  // Calculate monthly achievements based on improvements
+  // For now, we need historical data to calculate real changes
+  // Get the month's start to filter data
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  
+  // Check if user has at least 7 days of data (minimum for achievements)
+  const hasEnoughData = (() => {
+    if (!healthData?.length) return false;
+    const sortedDates = healthData
+      .map(h => new Date(h.recorded_at))
+      .sort((a, b) => a.getTime() - b.getTime());
+    if (sortedDates.length < 2) return false;
+    const daysDiff = Math.floor((sortedDates[sortedDates.length - 1].getTime() - sortedDates[0].getTime()) / (1000 * 60 * 60 * 24));
+    return daysDiff >= 7;
+  })();
+
+  // Calculate real achievements from data improvements
+  const calculateRealAchievements = (): Achievement[] => {
+    if (!hasEnoughData) return [];
+    
+    const improvements: Array<{
+      id: string;
+      title: string;
+      metric: string;
+      improvement: number;
+      icon: "trophy" | "star" | "medal" | "improvement";
+    }> = [];
+
+    // Calculate sleep improvement
+    const sleepData = healthData?.filter(h => h.data_type === "sleep_hours" || h.data_type === "sleep_quality") || [];
+    if (sleepData.length >= 2) {
+      const oldAvg = sleepData.slice(-3).reduce((sum, h) => sum + Number(h.value), 0) / Math.min(3, sleepData.length);
+      const newAvg = sleepData.slice(0, 3).reduce((sum, h) => sum + Number(h.value), 0) / Math.min(3, sleepData.length);
+      if (oldAvg > 0) {
+        const improvement = Math.round(((newAvg - oldAvg) / oldAvg) * 100);
+        if (improvement > 0) {
+          improvements.push({ id: "sleep", title: "Campeón del Sueño", metric: "Calidad de sueño", improvement, icon: "trophy" });
+        }
+      }
+    }
+
+    // Calculate activity improvement
+    const activityData = healthData?.filter(h => h.data_type === "activity_hours" || h.data_type === "steps") || [];
+    if (activityData.length >= 2) {
+      const oldAvg = activityData.slice(-3).reduce((sum, h) => sum + Number(h.value), 0) / Math.min(3, activityData.length);
+      const newAvg = activityData.slice(0, 3).reduce((sum, h) => sum + Number(h.value), 0) / Math.min(3, activityData.length);
+      if (oldAvg > 0) {
+        const improvement = Math.round(((newAvg - oldAvg) / oldAvg) * 100);
+        if (improvement > 0) {
+          improvements.push({ id: "activity", title: "Activo Constante", metric: "Actividad física", improvement, icon: "medal" });
+        }
+      }
+    }
+
+    // Calculate HRV improvement
+    const hrvData = healthData?.filter(h => h.data_type === "hrv") || [];
+    if (hrvData.length >= 2) {
+      const oldAvg = hrvData.slice(-3).reduce((sum, h) => sum + Number(h.value), 0) / Math.min(3, hrvData.length);
+      const newAvg = hrvData.slice(0, 3).reduce((sum, h) => sum + Number(h.value), 0) / Math.min(3, hrvData.length);
+      if (oldAvg > 0) {
+        const improvement = Math.round(((newAvg - oldAvg) / oldAvg) * 100);
+        if (improvement > 0) {
+          improvements.push({ id: "hrv", title: "Mejor Recuperación", metric: "Variabilidad cardíaca", improvement, icon: "star" });
+        }
+      }
+    }
+
+    // Calculate stress/anxiety reduction from test results
+    if (testResults && testResults.length >= 2) {
+      const anxietyTests = testResults.filter(t => 
+        t.test_name.toLowerCase().includes("ansiedad") || 
+        t.test_name.toLowerCase().includes("anxiety") ||
+        t.test_name.toLowerCase().includes("estrés") ||
+        t.test_name.toLowerCase().includes("stress")
+      );
+      if (anxietyTests.length >= 2) {
+        const newestScore = (anxietyTests[0].scores as Record<string, number>).total || 0;
+        const oldestScore = (anxietyTests[anxietyTests.length - 1].scores as Record<string, number>).total || 0;
+        if (oldestScore > 0 && newestScore < oldestScore) {
+          const improvement = Math.round(((oldestScore - newestScore) / oldestScore) * 100);
+          if (improvement > 0) {
+            improvements.push({ id: "stress", title: "Manejo del Estrés", metric: "Reducción de estrés", improvement, icon: "improvement" });
+          }
+        }
+      }
+    }
+
+    // Sort by improvement and assign medal types
+    improvements.sort((a, b) => b.improvement - a.improvement);
+    
+    return improvements.slice(0, 4).map((item, index) => ({
+      ...item,
+      type: (index === 0 ? "gold" : index === 1 ? "silver" : "bronze") as "gold" | "silver" | "bronze",
+      isNew: index === 0, // Mark the top achievement as new
+    }));
+  };
+
+  const realAchievements = calculateRealAchievements();
+
   return {
     isDemo: false,
     userName: profileData?.full_name?.split(" ")[0] || "Usuario",
@@ -278,6 +431,8 @@ export function useDashboardData() {
     habitsData: hasRealData ? realHabitsData : emptyHabitsData,
     longevityData: hasRealData ? realLongevityData : emptyLongevityData,
     weeklyProgress: emptyWeeklyProgress,
+    achievements: hasEnoughData ? realAchievements : emptyAchievements,
     hasData: hasRealData,
+    hasEnoughDataForAchievements: hasEnoughData,
   };
 }
