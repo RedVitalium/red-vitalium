@@ -257,6 +257,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_settings: {
+        Row: {
+          bedtime: number | null
+          created_at: string
+          id: string
+          notification_settings: Json | null
+          notifications_enabled: boolean | null
+          reminders: Json | null
+          sleep_goal: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bedtime?: number | null
+          created_at?: string
+          id?: string
+          notification_settings?: Json | null
+          notifications_enabled?: boolean | null
+          reminders?: Json | null
+          sleep_goal?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bedtime?: number | null
+          created_at?: string
+          id?: string
+          notification_settings?: Json | null
+          notifications_enabled?: boolean | null
+          reminders?: Json | null
+          sleep_goal?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
