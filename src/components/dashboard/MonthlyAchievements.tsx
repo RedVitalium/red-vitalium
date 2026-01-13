@@ -1,62 +1,15 @@
 import { motion } from "framer-motion";
-import { Trophy, Star, Medal, TrendingUp, Award, Crown } from "lucide-react";
+import { Trophy, Star, Medal, TrendingUp, Award, Crown, Clock } from "lucide-react";
 import { AchievementBadge } from "./AchievementBadge";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-
-interface Achievement {
-  id: string;
-  type: "gold" | "silver" | "bronze";
-  icon: "trophy" | "star" | "medal" | "improvement";
-  title: string;
-  metric: string;
-  improvement: number;
-  isNew: boolean;
-}
+import { Achievement } from "@/hooks/useDashboardData";
 
 interface MonthlyAchievementsProps {
   isMonthComplete?: boolean;
+  achievements?: Achievement[];
+  hasEnoughData?: boolean;
 }
-
-// Sample achievements data - in real app this would come from props/API
-const achievements: Achievement[] = [
-  {
-    id: "sleep",
-    type: "gold",
-    icon: "trophy",
-    title: "Campeón del Sueño",
-    metric: "Calidad de sueño",
-    improvement: 28,
-    isNew: true,
-  },
-  {
-    id: "anxiety",
-    type: "gold",
-    icon: "star",
-    title: "Control de Ansiedad",
-    metric: "Reducción de ansiedad",
-    improvement: 24,
-    isNew: false,
-  },
-  {
-    id: "activity",
-    type: "silver",
-    icon: "medal",
-    title: "Activo Constante",
-    metric: "Actividad física",
-    improvement: 18,
-    isNew: true,
-  },
-  {
-    id: "stress",
-    type: "bronze",
-    icon: "improvement",
-    title: "Manejo del Estrés",
-    metric: "Reducción de estrés",
-    improvement: 12,
-    isNew: false,
-  },
-];
 
 // Get current week of the month (1-4)
 function getCurrentWeekOfMonth(): number {
@@ -73,7 +26,11 @@ function getDaysRemainingInMonth(): number {
   return lastDay.getDate() - now.getDate();
 }
 
-export function MonthlyAchievements({ isMonthComplete = false }: MonthlyAchievementsProps) {
+export function MonthlyAchievements({ 
+  isMonthComplete = false, 
+  achievements = [], 
+  hasEnoughData = false 
+}: MonthlyAchievementsProps) {
   const currentWeek = getCurrentWeekOfMonth();
   const daysRemaining = getDaysRemainingInMonth();
   const monthProgress = Math.round(((30 - daysRemaining) / 30) * 100);
@@ -90,6 +47,9 @@ export function MonthlyAchievements({ isMonthComplete = false }: MonthlyAchievem
     hidden: { opacity: 0, scale: 0.8 },
     visible: { opacity: 1, scale: 1 }
   };
+
+  // Get the top achievement for the highlight section
+  const topAchievement = achievements.length > 0 ? achievements[0] : null;
 
   return (
     <Card className="p-6 bg-gradient-to-br from-primary/5 via-accent/5 to-warning/5 border-primary/20">
@@ -134,49 +94,74 @@ export function MonthlyAchievements({ isMonthComplete = false }: MonthlyAchievem
         </motion.div>
       )}
 
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="grid grid-cols-2 sm:grid-cols-4 gap-6"
-      >
-        {achievements.map((achievement) => (
-          <motion.div key={achievement.id} variants={itemVariants}>
-            <AchievementBadge
-              type={achievement.type}
-              icon={achievement.icon}
-              title={achievement.title}
-              description={`+${achievement.improvement}% mejora`}
-              isNew={achievement.isNew && !isMonthComplete}
-            />
-          </motion.div>
-        ))}
-      </motion.div>
+      {/* Empty state for new users */}
+      {!hasEnoughData && achievements.length === 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="py-8 text-center"
+        >
+          <div className="p-4 rounded-full bg-muted/50 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+            <Clock className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h3 className="font-display font-semibold text-foreground mb-2">
+            Sin logros todavía
+          </h3>
+          <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+            Continúa registrando tus datos durante al menos una semana para ver tus primeros logros.
+          </p>
+        </motion.div>
+      )}
 
-      {/* Top Improvement Highlight */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="mt-6 p-4 bg-card rounded-xl border border-border"
-      >
-        <div className="flex items-center gap-4">
-          <div className="p-2 rounded-lg bg-warning/10">
-            <TrendingUp className="h-5 w-5 text-warning" />
-          </div>
-          <div className="flex-1">
-            <p className="text-sm text-muted-foreground">Mayor avance del mes</p>
-            <p className="font-display font-bold text-foreground">
-              Calidad de Sueño <span className="text-success">+28%</span>
-            </p>
-          </div>
-          <div className="flex items-center gap-1">
-            <Star className="h-5 w-5 text-warning fill-warning" />
-            <Star className="h-5 w-5 text-warning fill-warning" />
-            <Star className="h-5 w-5 text-warning fill-warning" />
-          </div>
-        </div>
-      </motion.div>
+      {achievements.length > 0 && (
+        <>
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-2 sm:grid-cols-4 gap-6"
+          >
+            {achievements.map((achievement) => (
+              <motion.div key={achievement.id} variants={itemVariants}>
+                <AchievementBadge
+                  type={achievement.type}
+                  icon={achievement.icon}
+                  title={achievement.title}
+                  description={`+${achievement.improvement}% mejora`}
+                  isNew={achievement.isNew && !isMonthComplete}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* Top Improvement Highlight */}
+          {topAchievement && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="mt-6 p-4 bg-card rounded-xl border border-border"
+            >
+              <div className="flex items-center gap-4">
+                <div className="p-2 rounded-lg bg-warning/10">
+                  <TrendingUp className="h-5 w-5 text-warning" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-muted-foreground">Mayor avance del mes</p>
+                  <p className="font-display font-bold text-foreground">
+                    {topAchievement.metric} <span className="text-success">+{topAchievement.improvement}%</span>
+                  </p>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Star className="h-5 w-5 text-warning fill-warning" />
+                  <Star className="h-5 w-5 text-warning fill-warning" />
+                  <Star className="h-5 w-5 text-warning fill-warning" />
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </>
+      )}
     </Card>
   );
 }
