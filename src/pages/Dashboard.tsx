@@ -8,6 +8,9 @@ import { MonthlyAchievements } from "@/components/dashboard/MonthlyAchievements"
 import { HabitWeekIndicator } from "@/components/dashboard/HabitWeekIndicator";
 import { LockedHabitCard } from "@/components/dashboard/LockedHabitCard";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { useCycleData } from "@/hooks/useCycleData";
+import { useAuth } from "@/hooks/useAuth";
+import { useSearchParams } from "react-router-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   Brain, 
@@ -26,14 +29,6 @@ import {
   Timer,
   Info
 } from "lucide-react";
-
-// Get current week of the month (1-4)
-function getCurrentWeekOfMonth(): number {
-  const now = new Date();
-  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-  const dayOfMonth = now.getDate();
-  return Math.ceil((dayOfMonth + firstDay.getDay()) / 7);
-}
 
 // Helper to determine status based on value and target
 function getStatus(value: number, target: number, isLowerBetter: boolean = false): "optimal" | "warning" | "danger" {
@@ -63,8 +58,11 @@ const itemVariants = {
 };
 
 export default function Dashboard() {
+  const [searchParams] = useSearchParams();
+  const isDemo = searchParams.get("demo") === "true";
+  const { user } = useAuth();
+  
   const { 
-    isDemo, 
     userName, 
     personalData, 
     psychologicalData, 
@@ -75,6 +73,12 @@ export default function Dashboard() {
     hasData,
     hasEnoughDataForAchievements
   } = useDashboardData();
+
+  // Get cycle data for real users
+  const { getCycleProgress } = useCycleData(isDemo ? null : user?.id || null);
+  const cycleProgress = isDemo 
+    ? { cycleStartDate: new Date(), currentWeekOfCycle: 3, daysSinceCycleStart: 18, cycleProgress: 64, hasActiveCycle: true, isTestWeek: false, weeksUntilTest: 1 }
+    : getCycleProgress();
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -124,7 +128,11 @@ export default function Dashboard() {
       >
         <MonthlyAchievements 
           achievements={achievements} 
-          hasEnoughData={hasEnoughDataForAchievements || isDemo} 
+          hasEnoughData={hasEnoughDataForAchievements || isDemo}
+          cycleProgress={cycleProgress.cycleProgress}
+          currentWeek={cycleProgress.currentWeekOfCycle}
+          daysRemaining={28 - cycleProgress.daysSinceCycleStart}
+          hasActiveCycle={cycleProgress.hasActiveCycle}
         />
       </motion.div>
 
@@ -135,6 +143,8 @@ export default function Dashboard() {
             streak={weeklyProgress.streak}
             weeklyGoals={weeklyProgress.weeklyGoals}
             improvement={weeklyProgress.improvement}
+            weeklyAchievements={achievements.slice(0, 3)}
+            hasActiveCycle={cycleProgress.hasActiveCycle}
           />
         </div>
         
@@ -144,10 +154,14 @@ export default function Dashboard() {
           className="space-y-4"
         >
           {/* Habit Week Indicator */}
-          <HabitWeekIndicator />
+          <HabitWeekIndicator 
+            currentWeek={cycleProgress.currentWeekOfCycle}
+            isTestWeek={cycleProgress.isTestWeek}
+            hasActiveCycle={cycleProgress.hasActiveCycle}
+          />
           
-          {/* Show reminders only for weeks 1-3 */}
-          {getCurrentWeekOfMonth() <= 3 ? (
+          {/* Show reminders only for weeks 1-3 when cycle is active */}
+          {cycleProgress.hasActiveCycle && cycleProgress.currentWeekOfCycle <= 3 ? (
             <>
               <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
                 <Clock className="h-5 w-5 text-primary" />

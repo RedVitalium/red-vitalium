@@ -1,15 +1,26 @@
 import { motion } from "framer-motion";
 import { AchievementBadge } from "./AchievementBadge";
-import { TrendingUp, Target, Flame } from "lucide-react";
+import { TrendingUp, Target, Flame, Clock } from "lucide-react";
+import { Achievement } from "@/hooks/useDashboardData";
 
 interface WeeklyProgressProps {
   streak: number;
   weeklyGoals: { completed: number; total: number };
   improvement: number;
+  weeklyAchievements?: Achievement[];
+  hasActiveCycle?: boolean;
 }
 
-export function WeeklyProgress({ streak, weeklyGoals, improvement }: WeeklyProgressProps) {
-  const progressPercentage = (weeklyGoals.completed / weeklyGoals.total) * 100;
+export function WeeklyProgress({ 
+  streak, 
+  weeklyGoals, 
+  improvement, 
+  weeklyAchievements = [],
+  hasActiveCycle = false 
+}: WeeklyProgressProps) {
+  const progressPercentage = weeklyGoals.total > 0 
+    ? (weeklyGoals.completed / weeklyGoals.total) * 100 
+    : 0;
 
   return (
     <motion.div
@@ -68,24 +79,29 @@ export function WeeklyProgress({ streak, weeklyGoals, improvement }: WeeklyProgr
         {/* Achievements */}
         <div>
           <h4 className="text-sm font-medium mb-4 opacity-90">Logros de la semana</h4>
-          <div className="flex justify-around">
-            <AchievementBadge
-              type="gold"
-              icon="trophy"
-              title="Mejor sueño"
-              isNew
-            />
-            <AchievementBadge
-              type="silver"
-              icon="star"
-              title="5 días activo"
-            />
-            <AchievementBadge
-              type="bronze"
-              icon="improvement"
-              title="-5% estrés"
-            />
-          </div>
+          {!hasActiveCycle || weeklyAchievements.length === 0 ? (
+            <div className="flex items-center justify-center gap-3 py-4 opacity-70">
+              <Clock className="h-5 w-5" />
+              <span className="text-sm">
+                {!hasActiveCycle 
+                  ? "Esperando inicio del ciclo" 
+                  : "Sin logros esta semana aún"
+                }
+              </span>
+            </div>
+          ) : (
+            <div className="flex justify-around">
+              {weeklyAchievements.slice(0, 3).map((achievement) => (
+                <AchievementBadge
+                  key={achievement.id}
+                  type={achievement.type}
+                  icon={achievement.icon}
+                  title={achievement.title}
+                  isNew={achievement.isNew}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </motion.div>
