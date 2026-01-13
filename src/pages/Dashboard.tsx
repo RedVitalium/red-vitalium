@@ -7,6 +7,8 @@ import { WeeklyProgress } from "@/components/dashboard/WeeklyProgress";
 import { MonthlyAchievements } from "@/components/dashboard/MonthlyAchievements";
 import { HabitWeekIndicator } from "@/components/dashboard/HabitWeekIndicator";
 import { LockedHabitCard } from "@/components/dashboard/LockedHabitCard";
+import { useDashboardData } from "@/hooks/useDashboardData";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   Brain, 
   Heart, 
@@ -21,7 +23,8 @@ import {
   Flame,
   Snowflake,
   Leaf,
-  Timer
+  Timer,
+  Info
 } from "lucide-react";
 
 // Get current week of the month (1-4)
@@ -32,12 +35,19 @@ function getCurrentWeekOfMonth(): number {
   return Math.ceil((dayOfMonth + firstDay.getDay()) / 7);
 }
 
-// Sample data
-const anxietyData = [{ value: 65 }, { value: 58 }, { value: 52 }, { value: 48 }, { value: 45 }, { value: 42 }];
-const stressData = [{ value: 70 }, { value: 62 }, { value: 55 }, { value: 50 }, { value: 48 }, { value: 44 }];
-const sleepData = [{ value: 6.5 }, { value: 7 }, { value: 7.2 }, { value: 7.5 }, { value: 7.8 }, { value: 8 }];
-const activityData = [{ value: 3 }, { value: 4 }, { value: 4.5 }, { value: 5 }, { value: 5.5 }, { value: 6 }];
-const phoneUnlocksData = [{ value: 85 }, { value: 78 }, { value: 72 }, { value: 68 }, { value: 62 }, { value: 58 }];
+// Helper to determine status based on value and target
+function getStatus(value: number, target: number, isLowerBetter: boolean = false): "optimal" | "warning" | "danger" {
+  if (value === 0) return "warning";
+  if (isLowerBetter) {
+    if (value <= target) return "optimal";
+    if (value <= target * 1.2) return "warning";
+    return "danger";
+  } else {
+    if (value >= target) return "optimal";
+    if (value >= target * 0.8) return "warning";
+    return "danger";
+  }
+}
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -53,6 +63,17 @@ const itemVariants = {
 };
 
 export default function Dashboard() {
+  const { 
+    isDemo, 
+    userName, 
+    personalData, 
+    psychologicalData, 
+    habitsData, 
+    longevityData, 
+    weeklyProgress, 
+    hasData 
+  } = useDashboardData();
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Welcome Section */}
@@ -62,12 +83,35 @@ export default function Dashboard() {
         className="mb-8"
       >
         <h1 className="text-3xl font-display font-bold text-foreground mb-2">
-          Bienvenido, <span className="gradient-text">John</span>
+          {isDemo ? (
+            <>Bienvenido, <span className="gradient-text">John</span> <span className="text-sm font-normal text-muted-foreground">(Demo)</span></>
+          ) : (
+            <>Bienvenido, <span className="gradient-text">{userName}</span></>
+          )}
         </h1>
         <p className="text-muted-foreground">
-          Aquí está tu resumen de salud y bienestar
+          {isDemo 
+            ? "Explora el dashboard con datos de ejemplo" 
+            : "Aquí está tu resumen de salud y bienestar"
+          }
         </p>
       </motion.div>
+
+      {/* No Data Alert for Real Users */}
+      {!isDemo && !hasData && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              Aún no tienes datos registrados. Conecta tu dispositivo wearable o espera a que tu médico ingrese tus biomarcadores para comenzar a ver tu progreso.
+            </AlertDescription>
+          </Alert>
+        </motion.div>
+      )}
 
       {/* Monthly Achievements - Gamification */}
       <motion.div
@@ -83,9 +127,9 @@ export default function Dashboard() {
       <div className="grid lg:grid-cols-3 gap-6 mb-8">
         <div className="lg:col-span-2">
           <WeeklyProgress 
-            streak={5}
-            weeklyGoals={{ completed: 4, total: 6 }}
-            improvement={12}
+            streak={weeklyProgress.streak}
+            weeklyGoals={weeklyProgress.weeklyGoals}
+            improvement={weeklyProgress.improvement}
           />
         </div>
         
@@ -168,27 +212,33 @@ export default function Dashboard() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               <motion.div variants={itemVariants} className="space-y-1">
                 <p className="text-sm text-muted-foreground">Nombre</p>
-                <p className="font-medium">John Doe</p>
+                <p className="font-medium">{personalData.name || "Sin datos"}</p>
               </motion.div>
               <motion.div variants={itemVariants} className="space-y-1">
                 <p className="text-sm text-muted-foreground">Edad</p>
-                <p className="font-medium">46 años</p>
+                <p className="font-medium">{personalData.age > 0 ? `${personalData.age} años` : "Sin datos"}</p>
               </motion.div>
               <motion.div variants={itemVariants} className="space-y-1">
                 <p className="text-sm text-muted-foreground">Sexo</p>
-                <p className="font-medium">Masculino</p>
+                <p className="font-medium">{personalData.sex || "Sin datos"}</p>
               </motion.div>
               <motion.div variants={itemVariants} className="space-y-1">
                 <p className="text-sm text-muted-foreground">Altura</p>
-                <p className="font-medium">1.75 m</p>
+                <p className="font-medium">{personalData.height > 0 ? `${personalData.height} m` : "Sin datos"}</p>
               </motion.div>
               <motion.div variants={itemVariants} className="space-y-1">
                 <p className="text-sm text-muted-foreground">Peso Actual</p>
-                <p className="font-medium">72.5 Kg</p>
+                <p className="font-medium">{personalData.weight > 0 ? `${personalData.weight} Kg` : "Sin datos"}</p>
               </motion.div>
               <motion.div variants={itemVariants} className="space-y-1">
                 <p className="text-sm text-muted-foreground">RCHA (Cintura/Altura)</p>
-                <p className="font-medium">0.49 <span className="text-success">(Óptimo)</span></p>
+                <p className="font-medium">
+                  {personalData.waistHeightRatio > 0 ? (
+                    <>{personalData.waistHeightRatio} <span className={personalData.waistHeightRatio < 0.5 ? "text-success" : "text-warning"}>(
+                      {personalData.waistHeightRatio < 0.5 ? "Óptimo" : "Precaución"}
+                    )</span></>
+                  ) : "Sin datos"}
+                </p>
               </motion.div>
             </div>
             
@@ -201,16 +251,18 @@ export default function Dashboard() {
               </h4>
               <ul className="space-y-2 text-sm">
                 <li className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-success" />
-                  <strong>Edad Biológica:</strong> 42.5 años (4.0 años menos que cronológica)
+                  <span className={`w-2 h-2 rounded-full ${personalData.biologicalAge > 0 ? "bg-success" : "bg-muted"}`} />
+                  <strong>Edad Biológica:</strong> {personalData.biologicalAge > 0 
+                    ? `${personalData.biologicalAge} años (${(personalData.age - personalData.biologicalAge).toFixed(1)} años ${personalData.biologicalAge < personalData.age ? "menos" : "más"} que cronológica)`
+                    : "Sin datos"}
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-success" />
-                  <strong>VO2 Máx:</strong> 47 ml/kg/min (Excelente)
+                  <span className={`w-2 h-2 rounded-full ${personalData.vo2Max > 0 ? "bg-success" : "bg-muted"}`} />
+                  <strong>VO2 Máx:</strong> {personalData.vo2Max > 0 ? `${personalData.vo2Max} ml/kg/min` : "Sin datos"}
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-success" />
-                  <strong>HbA1c:</strong> 5.1% (Ideal)
+                  <span className={`w-2 h-2 rounded-full ${personalData.hba1c > 0 ? "bg-success" : "bg-muted"}`} />
+                  <strong>HbA1c:</strong> {personalData.hba1c > 0 ? `${personalData.hba1c}%` : "Sin datos"}
                 </li>
               </ul>
             </motion.div>
@@ -229,34 +281,34 @@ export default function Dashboard() {
               <MetricCard
                 title="Ansiedad"
                 subtitle="Puntuación mensual (0-100)"
-                value={42}
+                value={psychologicalData.anxiety.value}
                 target="< 50"
-                change={-12}
-                status="optimal"
+                change={psychologicalData.anxiety.change}
+                status={getStatus(psychologicalData.anxiety.value, 50, true)}
                 icon={<Brain className="h-5 w-5" />}
-                chart={<MiniChart data={anxietyData} color="success" />}
+                chart={psychologicalData.anxiety.data.length > 0 ? <MiniChart data={psychologicalData.anxiety.data} color="success" /> : undefined}
               />
             </motion.div>
             <motion.div variants={itemVariants}>
               <MetricCard
                 title="Estrés"
                 subtitle="Puntuación mensual (0-100)"
-                value={44}
+                value={psychologicalData.stress.value}
                 target="< 50"
-                change={-15}
-                status="optimal"
+                change={psychologicalData.stress.change}
+                status={getStatus(psychologicalData.stress.value, 50, true)}
                 icon={<Activity className="h-5 w-5" />}
-                chart={<MiniChart data={stressData} color="success" />}
+                chart={psychologicalData.stress.data.length > 0 ? <MiniChart data={psychologicalData.stress.data} color="success" /> : undefined}
               />
             </motion.div>
             <motion.div variants={itemVariants}>
               <MetricCard
                 title="Síntomas Depresivos"
                 subtitle="Test DASS-21 (0-30)"
-                value={8}
+                value={psychologicalData.depression.value}
                 target="< 10"
-                change={-5}
-                status="optimal"
+                change={psychologicalData.depression.change}
+                status={getStatus(psychologicalData.depression.value, 10, true)}
                 icon={<Frown className="h-5 w-5" />}
               />
             </motion.div>
@@ -264,10 +316,10 @@ export default function Dashboard() {
               <MetricCard
                 title="Satisfacción con la Vida"
                 subtitle="Escala SWLS (1-10)"
-                value={7.8}
+                value={psychologicalData.lifeSatisfaction.value}
                 target="> 8"
-                change={8}
-                status="warning"
+                change={psychologicalData.lifeSatisfaction.change}
+                status={getStatus(psychologicalData.lifeSatisfaction.value, 8)}
                 icon={<Smile className="h-5 w-5" />}
               />
             </motion.div>
@@ -288,23 +340,23 @@ export default function Dashboard() {
                 <MetricCard
                   title="Sueño"
                   subtitle="Horas efectivas de sueño"
-                  value={7.8}
+                  value={habitsData.sleep.value}
                   unit="hrs"
                   target="> 7.5 horas"
-                  change={10}
-                  status="optimal"
+                  change={habitsData.sleep.change}
+                  status={getStatus(habitsData.sleep.value, 7.5)}
                   icon={<Moon className="h-5 w-5" />}
-                  chart={<MiniChart data={sleepData} color="success" />}
+                  chart={habitsData.sleep.data.length > 0 ? <MiniChart data={habitsData.sleep.data} color="success" /> : undefined}
                 />
               </motion.div>
               <motion.div variants={itemVariants}>
                 <MetricCard
                   title="Calidad de Sueño"
                   subtitle="Puntuación de tracker (0-100)"
-                  value={88}
+                  value={habitsData.sleepQuality.value}
                   target="> 85"
-                  change={5}
-                  status="optimal"
+                  change={habitsData.sleepQuality.change}
+                  status={getStatus(habitsData.sleepQuality.value, 85)}
                   icon={<Heart className="h-5 w-5" />}
                 />
               </motion.div>
@@ -312,24 +364,24 @@ export default function Dashboard() {
                 <MetricCard
                   title="Actividad Física"
                   subtitle="Horas por semana"
-                  value={5.5}
+                  value={habitsData.activity.value}
                   unit="hrs"
                   target="> 5 horas"
-                  change={15}
-                  status="optimal"
+                  change={habitsData.activity.change}
+                  status={getStatus(habitsData.activity.value, 5)}
                   icon={<Dumbbell className="h-5 w-5" />}
-                  chart={<MiniChart data={activityData} color="success" />}
+                  chart={habitsData.activity.data.length > 0 ? <MiniChart data={habitsData.activity.data} color="success" /> : undefined}
                 />
               </motion.div>
               <motion.div variants={itemVariants}>
                 <MetricCard
                   title="Tiempo en Pantalla"
                   subtitle="Uso no laboral diario"
-                  value={95}
+                  value={habitsData.screenTime.value}
                   unit="min"
                   target="< 90 min"
-                  change={-8}
-                  status="warning"
+                  change={habitsData.screenTime.change}
+                  status={getStatus(habitsData.screenTime.value, 90, true)}
                   icon={<Activity className="h-5 w-5" />}
                 />
               </motion.div>
@@ -337,13 +389,13 @@ export default function Dashboard() {
                 <MetricCard
                   title="Desbloqueos de Teléfono"
                   subtitle="Promedio diario"
-                  value={58}
+                  value={habitsData.phoneUnlocks.value}
                   unit="veces"
                   target="< 50"
-                  change={-18}
-                  status="warning"
+                  change={habitsData.phoneUnlocks.change}
+                  status={getStatus(habitsData.phoneUnlocks.value, 50, true)}
                   icon={<Smartphone className="h-5 w-5" />}
-                  chart={<MiniChart data={phoneUnlocksData} color="warning" />}
+                  chart={habitsData.phoneUnlocks.data.length > 0 ? <MiniChart data={habitsData.phoneUnlocks.data} color="warning" /> : undefined}
                 />
               </motion.div>
             </div>
@@ -394,12 +446,12 @@ export default function Dashboard() {
             <motion.div variants={itemVariants}>
               <MetricCard
                 title="Edad Biológica"
-                subtitle="vs Edad cronológica (46 años)"
-                value={42.5}
+                subtitle={`vs Edad cronológica (${personalData.age} años)`}
+                value={longevityData.biologicalAge.value}
                 unit="años"
                 target="Menor que cronológica"
-                change={-3}
-                status="optimal"
+                change={longevityData.biologicalAge.change}
+                status={getStatus(longevityData.biologicalAge.value > 0 ? personalData.age - longevityData.biologicalAge.value : 0, 0)}
                 icon={<TrendingUp className="h-5 w-5" />}
               />
             </motion.div>
@@ -407,10 +459,10 @@ export default function Dashboard() {
               <MetricCard
                 title="RCHA"
                 subtitle="Cintura/Altura - Riesgo metabólico"
-                value={0.49}
+                value={longevityData.waistHeightRatio.value}
                 target="< 0.5"
-                change={-2}
-                status="optimal"
+                change={longevityData.waistHeightRatio.change}
+                status={getStatus(longevityData.waistHeightRatio.value, 0.5, true)}
                 icon={<Activity className="h-5 w-5" />}
               />
             </motion.div>
@@ -418,10 +470,10 @@ export default function Dashboard() {
               <MetricCard
                 title="VO2 Máx"
                 subtitle="Capacidad aeróbica (ml/kg/min)"
-                value={47}
+                value={longevityData.vo2Max.value}
                 target="> 45"
-                change={5}
-                status="optimal"
+                change={longevityData.vo2Max.change}
+                status={getStatus(longevityData.vo2Max.value, 45)}
                 icon={<Heart className="h-5 w-5" />}
               />
             </motion.div>
@@ -429,11 +481,11 @@ export default function Dashboard() {
               <MetricCard
                 title="Fuerza de Agarre"
                 subtitle="Potencia muscular (Kg)"
-                value={42}
+                value={longevityData.gripStrength.value}
                 unit="Kg"
                 target="> 40 Kg"
-                change={3}
-                status="optimal"
+                change={longevityData.gripStrength.change}
+                status={getStatus(longevityData.gripStrength.value, 40)}
                 icon={<Dumbbell className="h-5 w-5" />}
               />
             </motion.div>
@@ -441,11 +493,11 @@ export default function Dashboard() {
               <MetricCard
                 title="Equilibrio Pierna Izq."
                 subtitle="Tiempo con ojos cerrados"
-                value={38}
+                value={longevityData.balanceLeft.value}
                 unit="seg"
                 target="> 30 seg"
-                change={8}
-                status="optimal"
+                change={longevityData.balanceLeft.change}
+                status={getStatus(longevityData.balanceLeft.value, 30)}
                 icon={<Timer className="h-5 w-5" />}
               />
             </motion.div>
@@ -453,11 +505,11 @@ export default function Dashboard() {
               <MetricCard
                 title="Equilibrio Pierna Der."
                 subtitle="Tiempo con ojos cerrados"
-                value={42}
+                value={longevityData.balanceRight.value}
                 unit="seg"
                 target="> 30 seg"
-                change={12}
-                status="optimal"
+                change={longevityData.balanceRight.change}
+                status={getStatus(longevityData.balanceRight.value, 30)}
                 icon={<Timer className="h-5 w-5" />}
               />
             </motion.div>
@@ -465,23 +517,23 @@ export default function Dashboard() {
               <MetricCard
                 title="Colesterol No-HDL"
                 subtitle="Predictor metabólico (mg/dL)"
-                value={95}
+                value={longevityData.nonHdlCholesterol.value}
                 unit="mg/dL"
                 target="< 100"
-                change={-8}
-                status="optimal"
+                change={longevityData.nonHdlCholesterol.change}
+                status={getStatus(longevityData.nonHdlCholesterol.value, 100, true)}
                 icon={<Activity className="h-5 w-5" />}
               />
             </motion.div>
             <motion.div variants={itemVariants}>
               <MetricCard
-                title="HbA1c"
-                subtitle="Glucosa promedio (%)"
-                value={5.1}
-                unit="%"
-                target="< 5.4%"
-                change={-2}
-                status="optimal"
+                title="VFC (HRV)"
+                subtitle="Variabilidad cardíaca (ms)"
+                value={longevityData.hrv.value}
+                unit="ms"
+                target="> 50"
+                change={longevityData.hrv.change}
+                status={getStatus(longevityData.hrv.value, 50)}
                 icon={<TrendingUp className="h-5 w-5" />}
               />
             </motion.div>

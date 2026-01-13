@@ -103,8 +103,8 @@ export default function Index() {
                 size="lg" 
                 className="bg-white text-primary hover:bg-gray-100 font-bold text-lg px-8 py-6 rounded-full shadow-lg hover:shadow-xl transition-all hover:-translate-y-1"
               >
-                <Link to="/dashboard">
-                  Ver Mi Dashboard
+                <Link to="/dashboard?demo=true">
+                  Ver Demo
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
