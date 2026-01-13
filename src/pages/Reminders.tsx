@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
+import { Skeleton } from "@/components/ui/skeleton";
 import { HabitWeekIndicator } from "@/components/dashboard/HabitWeekIndicator";
+import { useUserSettings } from "@/hooks/useUserSettings";
+import { useAuth } from "@/hooks/useAuth";
+import { Link } from "react-router-dom";
 import { 
   Bell, 
   Moon, 
@@ -15,7 +19,9 @@ import {
   Clock,
   Settings,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Cloud,
+  CloudOff
 } from "lucide-react";
 
 interface Reminder {
@@ -28,14 +34,12 @@ interface Reminder {
   icon: typeof Moon;
 }
 
-const defaultReminders: Reminder[] = [
+const reminderDefaults: Omit<Reminder, "enabled" | "time">[] = [
   {
     id: "meal",
     type: "meal",
     title: "Última comida del día",
     description: "Termina de comer 3 horas antes de dormir",
-    time: "19:00",
-    enabled: true,
     icon: Utensils,
   },
   {
@@ -43,8 +47,6 @@ const defaultReminders: Reminder[] = [
     type: "screen-break",
     title: "Reducir pantallas",
     description: "Activa filtro de luz azul",
-    time: "20:00",
-    enabled: true,
     icon: Smartphone,
   },
   {
@@ -52,8 +54,6 @@ const defaultReminders: Reminder[] = [
     type: "prepare-sleep",
     title: "Preparar para dormir",
     description: "Comienza tu rutina nocturna",
-    time: "21:30",
-    enabled: true,
     icon: Moon,
   },
   {
@@ -61,8 +61,6 @@ const defaultReminders: Reminder[] = [
     type: "bedtime",
     title: "Hora de dormir",
     description: "Ve a la cama para 7-8 horas de sueño",
-    time: "22:30",
-    enabled: true,
     icon: BedDouble,
   },
   {
@@ -70,8 +68,6 @@ const defaultReminders: Reminder[] = [
     type: "morning",
     title: "Despertar",
     description: "Rutina matutina y luz natural",
-    time: "06:30",
-    enabled: true,
     icon: Sun,
   },
 ];
@@ -85,16 +81,74 @@ function getCurrentWeekOfMonth(): number {
 }
 
 export default function Reminders() {
-  const [reminders, setReminders] = useState(defaultReminders);
-  const [bedtime, setBedtime] = useState([22.5]); // 22:30
-  const [sleepGoal, setSleepGoal] = useState([7.5]);
+  const { user } = useAuth();
+  const { 
+    settings, 
+    isLoading, 
+    updateSleepSettings, 
+    updateReminders,
+    defaultRemindersPage 
+  } = useUserSettings();
 
-  const toggleReminder = (id: string) => {
-    setReminders(prev =>
-      prev.map(r =>
-        r.id === id ? { ...r, enabled: !r.enabled } : r
-      )
+  const [localBedtime, setLocalBedtime] = useState([22.5]);
+  const [localSleepGoal, setLocalSleepGoal] = useState([7.5]);
+  const [localReminders, setLocalReminders] = useState<Reminder[]>([]);
+
+  // Sync local state with cloud settings
+  useEffect(() => {
+    if (!isLoading) {
+      setLocalBedtime([settings.bedtime]);
+      setLocalSleepGoal([settings.sleepGoal]);
+      
+      // Build reminders from saved settings
+      const savedReminders = settings.reminders || defaultRemindersPage;
+      const mergedReminders: Reminder[] = reminderDefaults.map(def => {
+        const saved = savedReminders.find(r => r.id === def.id);
+        return {
+          ...def,
+          enabled: saved?.enabled ?? true,
+          time: saved?.time ?? "12:00",
+        };
+      });
+      setLocalReminders(mergedReminders);
+    }
+  }, [isLoading, settings, defaultRemindersPage]);
+
+  const toggleReminder = async (id: string) => {
+    const updated = localReminders.map(r =>
+      r.id === id ? { ...r, enabled: !r.enabled } : r
     );
+    setLocalReminders(updated);
+    
+    // Save to cloud
+    await updateReminders(updated.map(r => ({
+      id: r.id,
+      type: r.type,
+      enabled: r.enabled,
+      time: r.time,
+    })));
+  };
+
+  const handleBedtimeChange = async (value: number[]) => {
+    setLocalBedtime(value);
+  };
+
+  const handleBedtimeCommit = async () => {
+    await updateSleepSettings({
+      bedtime: localBedtime[0],
+      sleepGoal: localSleepGoal[0],
+    });
+  };
+
+  const handleSleepGoalChange = async (value: number[]) => {
+    setLocalSleepGoal(value);
+  };
+
+  const handleSleepGoalCommit = async () => {
+    await updateSleepSettings({
+      bedtime: localBedtime[0],
+      sleepGoal: localSleepGoal[0],
+    });
   };
 
   const formatTime = (value: number) => {
@@ -104,14 +158,29 @@ export default function Reminders() {
   };
 
   const calculateWakeTime = () => {
-    const bedtimeHours = bedtime[0];
-    const sleepHours = sleepGoal[0];
+    const bedtimeHours = localBedtime[0];
+    const sleepHours = localSleepGoal[0];
     const wakeTime = (bedtimeHours + sleepHours) % 24;
     return formatTime(wakeTime);
   };
 
   const currentWeek = getCurrentWeekOfMonth();
   const isTestWeek = currentWeek === 4;
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <Skeleton className="h-10 w-48 mb-8" />
+        <Skeleton className="h-24 w-full mb-8" />
+        <Skeleton className="h-64 w-full mb-8" />
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-24 w-full" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -120,12 +189,29 @@ export default function Reminders() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="text-3xl font-display font-bold text-foreground mb-2">
-          Recordatorios
-        </h1>
-        <p className="text-muted-foreground">
-          Configura tus rutinas diarias para optimizar tu bienestar
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-display font-bold text-foreground mb-2">
+              Recordatorios
+            </h1>
+            <p className="text-muted-foreground">
+              Configura tus rutinas diarias para optimizar tu bienestar
+            </p>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            {user ? (
+              <span className="flex items-center gap-1 text-success">
+                <Cloud className="h-4 w-4" />
+                Sincronizado
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 text-muted-foreground">
+                <CloudOff className="h-4 w-4" />
+                Local
+              </span>
+            )}
+          </div>
+        </div>
       </motion.div>
 
       {/* Habit Week Indicator */}
@@ -195,12 +281,13 @@ export default function Reminders() {
                 <div className="flex justify-between mb-3">
                   <label className="text-sm font-medium">Hora de dormir</label>
                   <span className="text-sm font-display font-bold text-primary">
-                    {formatTime(bedtime[0])}
+                    {formatTime(localBedtime[0])}
                   </span>
                 </div>
                 <Slider
-                  value={bedtime}
-                  onValueChange={setBedtime}
+                  value={localBedtime}
+                  onValueChange={handleBedtimeChange}
+                  onValueCommit={handleBedtimeCommit}
                   min={20}
                   max={24}
                   step={0.5}
@@ -212,12 +299,13 @@ export default function Reminders() {
                 <div className="flex justify-between mb-3">
                   <label className="text-sm font-medium">Meta de sueño</label>
                   <span className="text-sm font-display font-bold text-primary">
-                    {sleepGoal[0]} horas
+                    {localSleepGoal[0]} horas
                   </span>
                 </div>
                 <Slider
-                  value={sleepGoal}
-                  onValueChange={setSleepGoal}
+                  value={localSleepGoal}
+                  onValueChange={handleSleepGoalChange}
+                  onValueCommit={handleSleepGoalCommit}
                   min={6}
                   max={9}
                   step={0.5}
@@ -230,7 +318,7 @@ export default function Reminders() {
               <p className="text-sm text-muted-foreground mb-2">Hora de despertar sugerida</p>
               <p className="text-4xl font-display font-bold text-primary">{calculateWakeTime()}</p>
               <p className="text-xs text-muted-foreground mt-2">
-                Para {sleepGoal[0]} horas de sueño
+                Para {localSleepGoal[0]} horas de sueño
               </p>
             </div>
           </div>
@@ -276,7 +364,7 @@ export default function Reminders() {
           </div>
 
           <div className="space-y-3">
-            {reminders.map((reminder, index) => {
+            {localReminders.map((reminder, index) => {
               const Icon = reminder.icon;
               return (
                 <motion.div
@@ -352,7 +440,7 @@ export default function Reminders() {
         </h2>
         <Card className="p-6">
           <div className="grid grid-cols-5 gap-4 text-center">
-            {reminders.map((reminder) => {
+            {localReminders.map((reminder) => {
               const Icon = reminder.icon;
               const isCompleted = Math.random() > 0.3; // Simulated
               return (
