@@ -8,6 +8,7 @@ import { MonthlyAchievements } from "@/components/dashboard/MonthlyAchievements"
 import { HabitWeekIndicator } from "@/components/dashboard/HabitWeekIndicator";
 import { LockedHabitCard } from "@/components/dashboard/LockedHabitCard";
 import { NotificationSettings } from "@/components/dashboard/NotificationSettings";
+import { HealthConnectCard } from "@/components/dashboard/HealthConnectCard";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useCycleData } from "@/hooks/useCycleData";
 import { useAuth } from "@/hooks/useAuth";
@@ -166,6 +167,9 @@ export default function Dashboard() {
             hasActiveCycle={cycleProgress.hasActiveCycle}
             currentWeek={cycleProgress.currentWeekOfCycle}
           />
+          
+          {/* Health Connect Card */}
+          <HealthConnectCard />
           
           {/* Show reminders only for weeks 1-3 when cycle is active */}
           {cycleProgress.hasActiveCycle && cycleProgress.currentWeekOfCycle <= 3 ? (
