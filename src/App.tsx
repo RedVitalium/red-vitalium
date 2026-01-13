@@ -13,6 +13,7 @@ import Tests from "./pages/Tests";
 import Appointments from "./pages/Appointments";
 import Reminders from "./pages/Reminders";
 import Admin from "./pages/Admin";
+import NotificationSettings from "./pages/NotificationSettings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,6 +47,11 @@ const App = () => (
               <Route path="/reminders" element={
                 <ProtectedRoute>
                   <Reminders />
+                </ProtectedRoute>
+              } />
+              <Route path="/settings/notifications" element={
+                <ProtectedRoute>
+                  <NotificationSettings />
                 </ProtectedRoute>
               } />
               <Route path="/admin" element={
