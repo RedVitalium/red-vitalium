@@ -49,6 +49,30 @@ export const defaultHabitReminders: ReminderNotification[] = [
   },
 ];
 
+const STORAGE_KEY = "customReminderSettings";
+
+// Helper to load custom reminders from storage
+export function loadCustomReminders(): ReminderNotification[] {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return parsed
+        .filter((r: { enabled?: boolean }) => r.enabled !== false)
+        .map((r: { id: number; notificationTitle: string; notificationBody: string; hour: number; minute: number }) => ({
+          id: r.id,
+          title: r.notificationTitle,
+          body: r.notificationBody,
+          hour: r.hour,
+          minute: r.minute,
+        }));
+    }
+  } catch (e) {
+    console.error("Error loading custom reminders:", e);
+  }
+  return defaultHabitReminders;
+}
+
 export function useLocalNotifications() {
   const [hasPermission, setHasPermission] = useState<boolean>(false);
   const [isNative, setIsNative] = useState<boolean>(false);

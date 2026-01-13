@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -13,11 +14,12 @@ import {
   CheckCircle2, 
   AlertCircle,
   Clock,
-  TestTube
+  TestTube,
+  Settings
 } from "lucide-react";
 import { 
   useLocalNotifications, 
-  defaultHabitReminders 
+  loadCustomReminders
 } from "@/hooks/useLocalNotifications";
 
 interface NotificationSettingsProps {
@@ -42,6 +44,7 @@ export function NotificationSettings({
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [customReminders, setCustomReminders] = useState(loadCustomReminders());
 
   // Load saved preference
   useEffect(() => {
@@ -49,6 +52,8 @@ export function NotificationSettings({
     if (saved === "true") {
       setNotificationsEnabled(true);
     }
+    // Reload custom reminders when component mounts
+    setCustomReminders(loadCustomReminders());
   }, []);
 
   // Update notifications based on cycle status
@@ -58,7 +63,7 @@ export function NotificationSettings({
     const updateNotifications = async () => {
       // If cycle is active and week is 1-3, enable reminders
       if (hasActiveCycle && currentWeek <= 3 && notificationsEnabled) {
-        await scheduleHabitReminders(defaultHabitReminders);
+        await scheduleHabitReminders(customReminders);
       } else {
         // Week 4 (test week) or no active cycle - cancel notifications
         await cancelAllNotifications();
@@ -66,7 +71,7 @@ export function NotificationSettings({
     };
 
     updateNotifications();
-  }, [hasActiveCycle, currentWeek, notificationsEnabled, isNative]);
+  }, [hasActiveCycle, currentWeek, notificationsEnabled, isNative, customReminders]);
 
   const handleToggleNotifications = async (enabled: boolean) => {
     setIsLoading(true);
@@ -83,7 +88,7 @@ export function NotificationSettings({
         }
 
         if (hasActiveCycle && currentWeek <= 3) {
-          const success = await scheduleHabitReminders(defaultHabitReminders);
+          const success = await scheduleHabitReminders(customReminders);
           if (success) {
             toast.success("Recordatorios de hábitos activados");
           }
@@ -194,17 +199,25 @@ export function NotificationSettings({
                   Recordatorios activos
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {defaultHabitReminders.length} notificaciones diarias programadas
+                  {customReminders.length} notificaciones diarias programadas
                 </p>
               </div>
             )}
 
             <div className="pt-2 border-t border-border">
-              <p className="text-xs text-muted-foreground mb-2">
-                Horarios de recordatorio:
-              </p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs text-muted-foreground">
+                  Horarios de recordatorio:
+                </p>
+                <Link to="/settings/notifications">
+                  <Button variant="ghost" size="sm" className="h-6 text-xs gap-1">
+                    <Settings className="h-3 w-3" />
+                    Personalizar
+                  </Button>
+                </Link>
+              </div>
               <div className="flex flex-wrap gap-2">
-                {defaultHabitReminders.map((reminder) => (
+                {customReminders.map((reminder) => (
                   <Badge key={reminder.id} variant="outline" className="text-xs">
                     {reminder.hour.toString().padStart(2, "0")}:{reminder.minute.toString().padStart(2, "0")}
                   </Badge>
