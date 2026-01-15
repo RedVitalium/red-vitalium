@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { 
@@ -81,18 +81,8 @@ interface DemoTourProps {
 export function DemoTour({ onComplete }: DemoTourProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [showStartButton, setShowStartButton] = useState(true);
-
-  useEffect(() => {
-    // Check if tour was already completed
-    const tourCompleted = localStorage.getItem('vitalium-demo-tour-completed');
-    if (tourCompleted) {
-      setShowStartButton(false);
-    }
-  }, []);
 
   const startTour = () => {
-    setShowStartButton(false);
     setIsOpen(true);
     setCurrentStep(0);
   };
@@ -113,33 +103,31 @@ export function DemoTour({ onComplete }: DemoTourProps) {
 
   const completeTour = () => {
     setIsOpen(false);
-    localStorage.setItem('vitalium-demo-tour-completed', 'true');
     onComplete();
   };
 
   const skipTour = () => {
     setIsOpen(false);
-    setShowStartButton(false);
-    localStorage.setItem('vitalium-demo-tour-completed', 'true');
     onComplete();
   };
 
   const step = tourSteps[currentStep];
   const progress = ((currentStep + 1) / tourSteps.length) * 100;
 
-  if (showStartButton && !isOpen) {
+  // Always show the start button when tour is not open
+  if (!isOpen) {
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="fixed bottom-6 right-6 z-50"
+        className="fixed top-4 right-4 z-50"
       >
         <Button
           onClick={startTour}
-          className="gap-2 shadow-lg bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white px-6 py-6 text-base rounded-full"
+          className="gap-2 shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 text-sm rounded-full"
         >
-          <Play className="h-5 w-5" />
-          Iniciar Tour Guiado
+          <Play className="h-4 w-4" />
+          Iniciar Tour
         </Button>
       </motion.div>
     );
