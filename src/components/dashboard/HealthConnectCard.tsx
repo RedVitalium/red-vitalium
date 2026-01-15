@@ -44,7 +44,27 @@ export function HealthConnectCard() {
   const handleManualSync = async () => {
     setIsSyncing(true);
     try {
-      await syncHealthData(['steps', 'heart_rate', 'calories', 'sleep_duration']);
+      // Sync all comprehensive health data types
+      await syncHealthData([
+        'sleep_duration',
+        'sleep_deep',
+        'sleep_light',
+        'sleep_rem',
+        'sleep_score',
+        'sleep_spo2',
+        'activity_duration',
+        'activity_zone_fat_burn',
+        'activity_zone_cardio',
+        'activity_zone_peak',
+        'steps',
+        'heart_rate',
+        'resting_heart_rate',
+        'hrv',
+        'spo2',
+        'stress',
+        'vo2_max',
+        'calories',
+      ]);
     } finally {
       setIsSyncing(false);
     }
