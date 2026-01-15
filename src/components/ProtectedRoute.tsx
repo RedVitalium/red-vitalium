@@ -1,4 +1,4 @@
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
 interface ProtectedRouteProps {
@@ -9,6 +9,14 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
   const { user, loading, isAdmin } = useAuth();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  
+  // Allow demo mode without authentication
+  const isDemo = searchParams.get('demo') === 'true';
+  
+  if (isDemo) {
+    return <>{children}</>;
+  }
 
   if (loading) {
     return (
