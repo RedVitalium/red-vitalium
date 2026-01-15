@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MetricCard } from "@/components/dashboard/MetricCard";
@@ -9,6 +10,7 @@ import { HabitWeekIndicator } from "@/components/dashboard/HabitWeekIndicator";
 import { LockedHabitCard } from "@/components/dashboard/LockedHabitCard";
 import { NotificationSettings } from "@/components/dashboard/NotificationSettings";
 import { HealthConnectCard } from "@/components/dashboard/HealthConnectCard";
+import { DemoTour } from "@/components/dashboard/DemoTour";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useCycleData } from "@/hooks/useCycleData";
 import { useAuth } from "@/hooks/useAuth";
@@ -63,6 +65,7 @@ export default function Dashboard() {
   const [searchParams] = useSearchParams();
   const isDemo = searchParams.get("demo") === "true";
   const { user } = useAuth();
+  const [tourCompleted, setTourCompleted] = useState(false);
   
   const { 
     userName, 
@@ -84,6 +87,12 @@ export default function Dashboard() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Demo Tour */}
+      {isDemo && (
+        <DemoTour onComplete={() => setTourCompleted(true)} />
+      )}
+      
+      {/* Welcome Section */}
       {/* Welcome Section */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
