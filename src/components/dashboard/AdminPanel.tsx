@@ -1409,6 +1409,22 @@ export function AdminPanel() {
                   );
                 })}
               </div>
+
+              {/* Personality Test Results Section */}
+              <div className="mt-8 pt-6 border-t">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 rounded-lg bg-accent/10">
+                    <UserCircle className="h-5 w-5 text-accent" />
+                  </div>
+                  <div>
+                    <h3 className="font-display font-semibold">Resultados de Personalidad (BFI-10)</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Últimos resultados del test de los Cinco Grandes
+                    </p>
+                  </div>
+                </div>
+                <PersonalityResults patientId={selectedPatient?.user_id} />
+              </div>
             </Card>
           </TabsContent>
         </Tabs>
