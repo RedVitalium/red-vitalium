@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Save, Smartphone, Monitor, Leaf, Moon, Heart } from "lucide-react";
+import { Save, Smartphone, Monitor, Leaf, Moon, Heart, Activity } from "lucide-react";
 
 interface HabitGoalsSectionProps {
   patientId: string | undefined;
@@ -28,6 +28,12 @@ const sleepHoursOptions = [6, 6.5, 7, 7.5, 8, 8.5, 9];
 // Sleep quality score options (5 increments)
 const sleepQualityOptions = [70, 75, 80, 85, 90, 95, 100];
 
+// Activity sessions options
+const activitySessionOptions = [1, 2, 3, 4, 5, 6, 7];
+
+// Activity duration options (5 min increments)
+const activityDurationOptions = [15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90];
+
 export function HabitGoalsSection({ patientId, adminId, currentMonth }: HabitGoalsSectionProps) {
   const queryClient = useQueryClient();
   const [screenTimeGoal, setScreenTimeGoal] = useState(90);
@@ -35,6 +41,8 @@ export function HabitGoalsSection({ patientId, adminId, currentMonth }: HabitGoa
   const [yogaGoal, setYogaGoal] = useState(3);
   const [sleepHoursGoal, setSleepHoursGoal] = useState(7.5);
   const [sleepQualityGoal, setSleepQualityGoal] = useState(85);
+  const [activitySessionsGoal, setActivitySessionsGoal] = useState(4);
+  const [activityDurationGoal, setActivityDurationGoal] = useState(30);
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
 
   // Fetch existing goals for the selected month
@@ -61,12 +69,16 @@ export function HabitGoalsSection({ patientId, adminId, currentMonth }: HabitGoa
       const yoga = habitGoals.find(g => g.habit_type === "yoga");
       const sleepHours = habitGoals.find(g => g.habit_type === "sleep_hours");
       const sleepQuality = habitGoals.find(g => g.habit_type === "sleep_quality");
+      const activitySessions = habitGoals.find(g => g.habit_type === "activity_sessions");
+      const activityDuration = habitGoals.find(g => g.habit_type === "activity_duration");
       
       if (screenTime) setScreenTimeGoal(screenTime.target_value);
       if (phoneUnlocks) setPhoneUnlocksGoal(phoneUnlocks.target_value);
       if (yoga) setYogaGoal(yoga.target_value);
       if (sleepHours) setSleepHoursGoal(sleepHours.target_value);
       if (sleepQuality) setSleepQualityGoal(sleepQuality.target_value);
+      if (activitySessions) setActivitySessionsGoal(activitySessions.target_value);
+      if (activityDuration) setActivityDurationGoal(activityDuration.target_value);
     } else {
       // Set defaults
       setScreenTimeGoal(90);
@@ -74,6 +86,8 @@ export function HabitGoalsSection({ patientId, adminId, currentMonth }: HabitGoa
       setYogaGoal(3);
       setSleepHoursGoal(7.5);
       setSleepQualityGoal(85);
+      setActivitySessionsGoal(4);
+      setActivityDurationGoal(30);
     }
   }, [habitGoals]);
 
@@ -87,6 +101,8 @@ export function HabitGoalsSection({ patientId, adminId, currentMonth }: HabitGoa
         { user_id: patientId, habit_type: "yoga", month: selectedMonth, target_value: yogaGoal, set_by: adminId },
         { user_id: patientId, habit_type: "sleep_hours", month: selectedMonth, target_value: sleepHoursGoal, set_by: adminId },
         { user_id: patientId, habit_type: "sleep_quality", month: selectedMonth, target_value: sleepQualityGoal, set_by: adminId },
+        { user_id: patientId, habit_type: "activity_sessions", month: selectedMonth, target_value: activitySessionsGoal, set_by: adminId },
+        { user_id: patientId, habit_type: "activity_duration", month: selectedMonth, target_value: activityDurationGoal, set_by: adminId },
       ];
 
       // Upsert each goal
@@ -194,6 +210,57 @@ export function HabitGoalsSection({ patientId, adminId, currentMonth }: HabitGoa
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      {/* Activity Sessions Goal */}
+      <div className="p-4 bg-success/10 border border-success/30 rounded-xl">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="p-2 rounded-lg bg-success/20">
+            <Activity className="h-5 w-5 text-success" />
+          </div>
+          <div>
+            <h4 className="font-display font-semibold">Meta de Actividad Física</h4>
+            <p className="text-sm text-muted-foreground">Sesiones y duración promedio por semana</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1 block">Sesiones/semana</Label>
+            <Select
+              value={String(activitySessionsGoal)}
+              onValueChange={(value) => setActivitySessionsGoal(parseInt(value))}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {activitySessionOptions.map(n => (
+                  <SelectItem key={n} value={String(n)}>
+                    {n} {n === 1 ? 'sesión' : 'sesiones'}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1 block">Duración promedio</Label>
+            <Select
+              value={String(activityDurationGoal)}
+              onValueChange={(value) => setActivityDurationGoal(parseInt(value))}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {activityDurationOptions.map(n => (
+                  <SelectItem key={n} value={String(n)}>
+                    {">= "}{n} min
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </div>
 
       {/* Screen Time Goal */}
