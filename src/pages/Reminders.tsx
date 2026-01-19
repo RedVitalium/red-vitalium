@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { HabitWeekIndicator } from "@/components/dashboard/HabitWeekIndicator";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useAuth } from "@/hooks/useAuth";
+import { useCycleData } from "@/hooks/useCycleData";
 import { Link } from "react-router-dom";
 import { 
   Bell, 
@@ -72,13 +73,7 @@ const reminderDefaults: Omit<Reminder, "enabled" | "time">[] = [
   },
 ];
 
-// Get current week of the month (1-4)
-function getCurrentWeekOfMonth(): number {
-  const now = new Date();
-  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-  const dayOfMonth = now.getDate();
-  return Math.ceil((dayOfMonth + firstDay.getDay()) / 7);
-}
+// REMOVED: No longer using month week, using cycle data instead
 
 export default function Reminders() {
   const { user } = useAuth();
@@ -89,6 +84,10 @@ export default function Reminders() {
     updateReminders,
     defaultRemindersPage 
   } = useUserSettings();
+  
+  // Get real cycle data
+  const { getCycleProgress, isLoading: isCycleLoading } = useCycleData(user?.id || null);
+  const cycleProgress = getCycleProgress();
 
   const [localBedtime, setLocalBedtime] = useState([22.5]);
   const [localSleepGoal, setLocalSleepGoal] = useState([7.5]);
@@ -164,10 +163,12 @@ export default function Reminders() {
     return formatTime(wakeTime);
   };
 
-  const currentWeek = getCurrentWeekOfMonth();
-  const isTestWeek = currentWeek === 4;
+  // Use cycle data for week calculation
+  const currentWeek = cycleProgress.currentWeekOfCycle;
+  const isTestWeek = cycleProgress.isTestWeek;
+  const hasActiveCycle = cycleProgress.hasActiveCycle;
 
-  if (isLoading) {
+  if (isLoading || isCycleLoading) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <Skeleton className="h-10 w-48 mb-8" />
@@ -220,7 +221,11 @@ export default function Reminders() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <HabitWeekIndicator />
+        <HabitWeekIndicator 
+          currentWeek={currentWeek}
+          isTestWeek={isTestWeek}
+          hasActiveCycle={hasActiveCycle}
+        />
       </motion.div>
 
       {/* Test Week Alert */}

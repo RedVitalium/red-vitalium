@@ -215,10 +215,13 @@ export type Database = {
           date_of_birth: string | null
           email: string | null
           full_name: string | null
+          height: number | null
           id: string
           sex: string | null
           updated_at: string
           user_id: string
+          waist_circumference: number | null
+          weight: number | null
         }
         Insert: {
           avatar_url?: string | null
@@ -226,10 +229,13 @@ export type Database = {
           date_of_birth?: string | null
           email?: string | null
           full_name?: string | null
+          height?: number | null
           id?: string
           sex?: string | null
           updated_at?: string
           user_id: string
+          waist_circumference?: number | null
+          weight?: number | null
         }
         Update: {
           avatar_url?: string | null
@@ -237,10 +243,13 @@ export type Database = {
           date_of_birth?: string | null
           email?: string | null
           full_name?: string | null
+          height?: number | null
           id?: string
           sex?: string | null
           updated_at?: string
           user_id?: string
+          waist_circumference?: number | null
+          weight?: number | null
         }
         Relationships: []
       }
