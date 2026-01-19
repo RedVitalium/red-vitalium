@@ -12,6 +12,7 @@ import { NotificationSettings } from "@/components/dashboard/NotificationSetting
 import { HealthConnectCard } from "@/components/dashboard/HealthConnectCard";
 import { DemoTour } from "@/components/dashboard/DemoTour";
 import { DailySurveyCard } from "@/components/dashboard/DailySurveyCard";
+import { AdminPanel } from "@/components/dashboard/AdminPanel";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useCycleData } from "@/hooks/useCycleData";
 import { useAuth } from "@/hooks/useAuth";
@@ -32,7 +33,8 @@ import {
   Snowflake,
   Leaf,
   Timer,
-  Info
+  Info,
+  Shield
 } from "lucide-react";
 
 // Helper to determine status based on value and target
@@ -63,9 +65,9 @@ const itemVariants = {
 };
 
 export default function Dashboard() {
-  const [searchParams] = useSearchParams();
+const [searchParams] = useSearchParams();
   const isDemo = searchParams.get("demo") === "true";
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [tourCompleted, setTourCompleted] = useState(false);
   
   const { 
@@ -215,9 +217,9 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
-      {/* Tabs for Categories */}
+{/* Tabs for Categories */}
       <Tabs defaultValue="psychological" className="w-full">
-        <TabsList className="w-full max-w-2xl mx-auto grid grid-cols-4 mb-8 bg-muted/50 p-1 rounded-xl">
+        <TabsList className={`w-full max-w-2xl mx-auto grid ${isAdmin ? 'grid-cols-5' : 'grid-cols-4'} mb-8 bg-muted/50 p-1 rounded-xl`}>
           <TabsTrigger 
             value="personal" 
             className="font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg"
@@ -242,6 +244,15 @@ export default function Dashboard() {
           >
             Longevidad
           </TabsTrigger>
+          {isAdmin && (
+            <TabsTrigger 
+              value="admin" 
+              className="font-medium data-[state=active]:bg-accent data-[state=active]:text-accent-foreground rounded-lg flex items-center gap-1"
+            >
+              <Shield className="h-4 w-4" />
+              Admin
+            </TabsTrigger>
+          )}
         </TabsList>
 
         {/* Personal Tab */}
@@ -585,6 +596,13 @@ export default function Dashboard() {
             </motion.div>
           </motion.div>
         </TabsContent>
+
+        {/* Admin Tab - Only visible for admin users */}
+        {isAdmin && (
+          <TabsContent value="admin">
+            <AdminPanel />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
