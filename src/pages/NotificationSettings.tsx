@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
 import { 
   Bell, 
   Clock, 
@@ -17,7 +18,8 @@ import {
   Smartphone,
   Bed,
   Cloud,
-  CloudOff
+  CloudOff,
+  ClipboardCheck
 } from "lucide-react";
 import { 
   useLocalNotifications, 
@@ -26,6 +28,7 @@ import {
 import { useUserSettings, ReminderConfig } from "@/hooks/useUserSettings";
 import { useAuth } from "@/hooks/useAuth";
 import { Capacitor } from "@capacitor/core";
+import { BreakfastTimeSetting } from "@/components/settings/BreakfastTimeSetting";
 
 const iconMap: Record<number, React.ReactNode> = {
   1: <Utensils className="h-5 w-5" />,
@@ -299,6 +302,39 @@ export default function NotificationSettingsPage() {
             <li>• Las notificaciones se activan solo durante las primeras 3 semanas del ciclo</li>
             <li>• En la semana 4 (prueba), no recibirás recordatorios</li>
             <li>• Ajusta los horarios según tu rutina diaria para mejores resultados</li>
+          </ul>
+        </Card>
+      </motion.div>
+
+      <Separator className="my-8" />
+
+      {/* Breakfast Time Setting for Daily Survey */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.7 }}
+      >
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 rounded-xl bg-accent/10">
+            <ClipboardCheck className="h-6 w-6 text-accent" />
+          </div>
+          <div>
+            <h2 className="text-xl font-display font-bold text-foreground">
+              Logros Diarios
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Recordatorio para registrar tus logros de hábitos
+            </p>
+          </div>
+        </div>
+        <BreakfastTimeSetting />
+        <Card className="p-4 bg-muted/30 mt-4">
+          <h4 className="font-medium text-sm mb-2">ℹ️ Sobre Logros Diarios</h4>
+          <ul className="text-xs text-muted-foreground space-y-1">
+            <li>• Recibirás un recordatorio 5 minutos antes de tu hora de desayuno</li>
+            <li>• La encuesta te pregunta sobre hábitos del día anterior</li>
+            <li>• Se mantiene activa durante las 4 semanas del ciclo</li>
+            <li>• Tus logros contribuyen a los premios semanales y mensuales</li>
           </ul>
         </Card>
       </motion.div>
