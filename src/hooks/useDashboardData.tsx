@@ -273,6 +273,158 @@ function getWeeklyActivityTotal(
   return Math.round(totalMinutes / 7);
 }
 
+// Helper to count activity sessions per week (number of distinct activity records)
+function getWeeklyActivitySessionCount(
+  healthData: Array<{ data_type: string; value: number; recorded_at: string }> | null
+): number {
+  if (!healthData) return 0;
+  
+  const now = new Date();
+  const currentDay = now.getDay();
+  const endOfPreviousWeek = new Date(now);
+  endOfPreviousWeek.setDate(now.getDate() - currentDay);
+  endOfPreviousWeek.setHours(0, 0, 0, 0);
+  
+  const startOfPreviousWeek = new Date(endOfPreviousWeek);
+  startOfPreviousWeek.setDate(endOfPreviousWeek.getDate() - 7);
+  
+  // Count activity_duration records for the previous week (each record = 1 session)
+  const weekData = healthData.filter(h => {
+    if (h.data_type !== 'activity_duration') return false;
+    const recordedDate = new Date(h.recorded_at);
+    return recordedDate >= startOfPreviousWeek && recordedDate < endOfPreviousWeek;
+  });
+  
+  return weekData.length;
+}
+
+// Helper to get average duration per session (for weeks with sessions)
+function getWeeklyAvgSessionDuration(
+  healthData: Array<{ data_type: string; value: number; recorded_at: string }> | null
+): number {
+  if (!healthData) return 0;
+  
+  const now = new Date();
+  const currentDay = now.getDay();
+  const endOfPreviousWeek = new Date(now);
+  endOfPreviousWeek.setDate(now.getDate() - currentDay);
+  endOfPreviousWeek.setHours(0, 0, 0, 0);
+  
+  const startOfPreviousWeek = new Date(endOfPreviousWeek);
+  startOfPreviousWeek.setDate(endOfPreviousWeek.getDate() - 7);
+  
+  const weekData = healthData.filter(h => {
+    if (h.data_type !== 'activity_duration') return false;
+    const recordedDate = new Date(h.recorded_at);
+    return recordedDate >= startOfPreviousWeek && recordedDate < endOfPreviousWeek;
+  });
+  
+  if (weekData.length === 0) return 0;
+  
+  const totalMinutes = weekData.reduce((acc, h) => acc + Number(h.value), 0);
+  return Math.round(totalMinutes / weekData.length);
+}
+
+// Helper to count yoga sessions per week from wearable activity data
+function getWeeklyYogaSessionCount(
+  healthData: Array<{ data_type: string; value: number; recorded_at: string }> | null
+): number {
+  if (!healthData) return 0;
+  
+  const now = new Date();
+  const currentDay = now.getDay();
+  const endOfPreviousWeek = new Date(now);
+  endOfPreviousWeek.setDate(now.getDate() - currentDay);
+  endOfPreviousWeek.setHours(0, 0, 0, 0);
+  
+  const startOfPreviousWeek = new Date(endOfPreviousWeek);
+  startOfPreviousWeek.setDate(endOfPreviousWeek.getDate() - 7);
+  
+  // Count yoga sessions from activity_yoga data type
+  const weekData = healthData.filter(h => {
+    if (h.data_type !== 'activity_yoga') return false;
+    const recordedDate = new Date(h.recorded_at);
+    return recordedDate >= startOfPreviousWeek && recordedDate < endOfPreviousWeek;
+  });
+  
+  return weekData.length;
+}
+
+// Helper to get weekly yoga session history for charts
+function getWeeklyYogaHistory(
+  healthData: Array<{ data_type: string; value: number; recorded_at: string }> | null,
+  weeks: number = 6
+): { value: number; date: string }[] {
+  if (!healthData) return [];
+  
+  const now = new Date();
+  const currentDay = now.getDay();
+  const endOfCurrentWeek = new Date(now);
+  endOfCurrentWeek.setDate(now.getDate() - currentDay);
+  endOfCurrentWeek.setHours(0, 0, 0, 0);
+  
+  const weeklyData: { value: number; date: string }[] = [];
+  
+  for (let i = 0; i < weeks; i++) {
+    const endOfWeek = new Date(endOfCurrentWeek);
+    endOfWeek.setDate(endOfCurrentWeek.getDate() - (i * 7));
+    
+    const startOfWeek = new Date(endOfWeek);
+    startOfWeek.setDate(endOfWeek.getDate() - 7);
+    
+    // Count yoga sessions (any activity_yoga record counts as 1 session)
+    const weekData = healthData.filter(h => {
+      if (h.data_type !== 'activity_yoga') return false;
+      const recordedDate = new Date(h.recorded_at);
+      return recordedDate >= startOfWeek && recordedDate < endOfWeek;
+    });
+    
+    weeklyData.unshift({
+      value: weekData.length, // Number of sessions
+      date: startOfWeek.toISOString()
+    });
+  }
+  
+  return weeklyData.filter(d => d.value > 0 || weeklyData.indexOf(d) === weeklyData.length - 1);
+}
+
+// Helper to get weekly session count history for activity
+function getWeeklySessionCountHistory(
+  healthData: Array<{ data_type: string; value: number; recorded_at: string }> | null,
+  weeks: number = 6
+): { value: number; date: string }[] {
+  if (!healthData) return [];
+  
+  const now = new Date();
+  const currentDay = now.getDay();
+  const endOfCurrentWeek = new Date(now);
+  endOfCurrentWeek.setDate(now.getDate() - currentDay);
+  endOfCurrentWeek.setHours(0, 0, 0, 0);
+  
+  const weeklyData: { value: number; date: string }[] = [];
+  
+  for (let i = 0; i < weeks; i++) {
+    const endOfWeek = new Date(endOfCurrentWeek);
+    endOfWeek.setDate(endOfCurrentWeek.getDate() - (i * 7));
+    
+    const startOfWeek = new Date(endOfWeek);
+    startOfWeek.setDate(endOfWeek.getDate() - 7);
+    
+    const weekData = healthData.filter(h => {
+      if (h.data_type !== 'activity_duration') return false;
+      const recordedDate = new Date(h.recorded_at);
+      return recordedDate >= startOfWeek && recordedDate < endOfWeek;
+    });
+    
+    weeklyData.unshift({
+      value: weekData.length, // Number of sessions
+      date: startOfWeek.toISOString()
+    });
+  }
+  
+  return weeklyData;
+}
+
 // Helper to get weekly activity history for charts
 function getWeeklyActivityHistory(
   healthData: Array<{ data_type: string; value: number; recorded_at: string }> | null,
@@ -528,6 +680,9 @@ export function useDashboardData() {
   const screenTimeWeeklyData = getWeeklyHistoryForChart(healthData, "screen_time");
   const activityWeeklyData = getWeeklyActivityHistory(healthData);
 
+  const sessionCountHistory = getWeeklySessionCountHistory(healthData);
+  const yogaWeeklyData = getWeeklyYogaHistory(healthData);
+
   const realHabitsData = {
     sleep: { 
       value: getHealthDataValue(healthData, "sleep_hours"), 
@@ -536,21 +691,28 @@ export function useDashboardData() {
     },
     sleepQuality: { value: getHealthDataValue(healthData, "sleep_quality"), change: 0 },
     activity: { 
-      // Use weekly average for activity (average daily minutes from previous week)
+      // Session count and average duration for activity
+      sessionCount: getWeeklyActivitySessionCount(healthData),
+      avgDuration: getWeeklyAvgSessionDuration(healthData),
       value: getWeeklyActivityTotal(healthData), 
-      change: calculateChange(activityWeeklyData.map(d => ({ value: d.value }))), 
-      data: activityWeeklyData.map(d => ({ value: d.value })),
+      change: calculateChange(sessionCountHistory.map(d => ({ value: d.value }))), 
+      data: sessionCountHistory.map(d => ({ value: d.value })),
       weeklyData: activityWeeklyData
     },
+    yoga: {
+      // Yoga sessions from wearable
+      sessionCount: getWeeklyYogaSessionCount(healthData),
+      value: getWeeklyYogaSessionCount(healthData),
+      change: calculateChange(yogaWeeklyData.map(d => ({ value: d.value }))),
+      data: yogaWeeklyData.map(d => ({ value: d.value })),
+    },
     screenTime: { 
-      // Use weekly average for screen time
       value: getWeeklyAverageValue(healthData, "screen_time"), 
       change: calculateChange(screenTimeWeeklyData.map(d => ({ value: d.value }))),
       data: screenTimeWeeklyData.map(d => ({ value: d.value })),
       weeklyData: screenTimeWeeklyData
     },
     phoneUnlocks: { 
-      // Use weekly average for phone unlocks
       value: getWeeklyAverageValue(healthData, "phone_unlocks"), 
       change: calculateChange(phoneUnlocksWeeklyData.map(d => ({ value: d.value }))), 
       data: phoneUnlocksWeeklyData.map(d => ({ value: d.value })),

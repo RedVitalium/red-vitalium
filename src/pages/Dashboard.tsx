@@ -40,8 +40,12 @@ import {
 } from "lucide-react";
 
 // Helper to determine status based on value and target
-function getStatus(value: number, target: number, isLowerBetter: boolean = false): "optimal" | "warning" | "danger" {
-  if (value === 0) return "warning";
+function getStatus(value: number, target: number, isLowerBetter: boolean = false, treatZeroAsOptimalForLower: boolean = false): "optimal" | "warning" | "danger" {
+  // For metrics where lower is better (like anxiety, stress), 0 can be optimal
+  if (value === 0) {
+    if (treatZeroAsOptimalForLower && isLowerBetter) return "optimal";
+    return "warning";
+  }
   if (isLowerBetter) {
     if (value <= target) return "optimal";
     if (value <= target * 1.2) return "warning";
@@ -354,7 +358,7 @@ const [searchParams] = useSearchParams();
                 value={psychologicalData.anxiety.value}
                 target="< 50"
                 change={psychologicalData.anxiety.change}
-                status={getStatus(psychologicalData.anxiety.value, 50, true)}
+                status={getStatus(psychologicalData.anxiety.value, 50, true, true)}
                 icon={<Brain className="h-5 w-5" />}
                 chart={psychologicalData.anxiety.data.length > 0 ? <MiniChart data={psychologicalData.anxiety.data} color="success" /> : undefined}
               />
@@ -366,7 +370,7 @@ const [searchParams] = useSearchParams();
                 value={psychologicalData.stress.value}
                 target="< 50"
                 change={psychologicalData.stress.change}
-                status={getStatus(psychologicalData.stress.value, 50, true)}
+                status={getStatus(psychologicalData.stress.value, 50, true, true)}
                 icon={<Activity className="h-5 w-5" />}
                 chart={psychologicalData.stress.data.length > 0 ? <MiniChart data={psychologicalData.stress.data} color="success" /> : undefined}
               />
@@ -378,7 +382,7 @@ const [searchParams] = useSearchParams();
                 value={psychologicalData.depression.value}
                 target="< 10"
                 change={psychologicalData.depression.change}
-                status={getStatus(psychologicalData.depression.value, 10, true)}
+                status={getStatus(psychologicalData.depression.value, 10, true, true)}
                 icon={<Frown className="h-5 w-5" />}
               />
             </motion.div>
@@ -386,7 +390,7 @@ const [searchParams] = useSearchParams();
               <MetricCard
                 title="Satisfacción con la Vida"
                 subtitle="Escala SWLS (1-10)"
-                value={psychologicalData.lifeSatisfaction.value}
+                value={Number(psychologicalData.lifeSatisfaction.value.toFixed(2))}
                 target="> 8"
                 change={psychologicalData.lifeSatisfaction.change}
                 status={getStatus(psychologicalData.lifeSatisfaction.value, 8)}
