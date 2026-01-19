@@ -433,12 +433,12 @@ const [searchParams] = useSearchParams();
               <motion.div variants={itemVariants}>
                 <MetricCard
                   title="Actividad Física"
-                  subtitle="Horas por semana"
+                  subtitle="Promedio diario (semana anterior)"
                   value={habitsData.activity.value}
-                  unit="hrs"
-                  target="> 5 horas"
+                  unit="min"
+                  target="> 30 min/día"
                   change={habitsData.activity.change}
-                  status={getStatus(habitsData.activity.value, 5)}
+                  status={getStatus(habitsData.activity.value, 30)}
                   icon={<Dumbbell className="h-5 w-5" />}
                   chart={habitsData.activity.data.length > 0 ? <MiniChart data={habitsData.activity.data} color="success" /> : undefined}
                 />
@@ -446,19 +446,20 @@ const [searchParams] = useSearchParams();
               <motion.div variants={itemVariants}>
                 <MetricCard
                   title="Tiempo en Pantalla"
-                  subtitle="Uso no laboral diario"
+                  subtitle="Promedio diario (semana anterior)"
                   value={habitsData.screenTime.value}
                   unit="min"
                   target="< 90 min"
                   change={habitsData.screenTime.change}
                   status={getStatus(habitsData.screenTime.value, 90, true)}
                   icon={<Activity className="h-5 w-5" />}
+                  chart={habitsData.screenTime.data && habitsData.screenTime.data.length > 0 ? <MiniChart data={habitsData.screenTime.data} color="warning" /> : undefined}
                 />
               </motion.div>
               <motion.div variants={itemVariants}>
                 <MetricCard
                   title="Desbloqueos de Teléfono"
-                  subtitle="Promedio diario"
+                  subtitle="Promedio diario (semana anterior)"
                   value={habitsData.phoneUnlocks.value}
                   unit="veces"
                   target="< 50"

@@ -43,8 +43,8 @@ const demoPsychologicalData = {
 const demoHabitsData = {
   sleep: { value: 7.8, change: 10, data: [{ value: 6.5 }, { value: 7 }, { value: 7.2 }, { value: 7.5 }, { value: 7.8 }, { value: 8 }] },
   sleepQuality: { value: 88, change: 5 },
-  activity: { value: 5.5, change: 15, data: [{ value: 3 }, { value: 4 }, { value: 4.5 }, { value: 5 }, { value: 5.5 }, { value: 6 }] },
-  screenTime: { value: 95, change: -8 },
+  activity: { value: 45, change: 15, data: [{ value: 30 }, { value: 35 }, { value: 38 }, { value: 40 }, { value: 45 }, { value: 50 }] },
+  screenTime: { value: 95, change: -8, data: [{ value: 120 }, { value: 115 }, { value: 108 }, { value: 102 }, { value: 98 }, { value: 95 }] },
   phoneUnlocks: { value: 58, change: -18, data: [{ value: 85 }, { value: 78 }, { value: 72 }, { value: 68 }, { value: 62 }, { value: 58 }] },
 };
 
@@ -129,7 +129,7 @@ const emptyHabitsData = {
   sleep: { value: 0, change: 0, data: [] as { value: number }[] },
   sleepQuality: { value: 0, change: 0 },
   activity: { value: 0, change: 0, data: [] as { value: number }[] },
-  screenTime: { value: 0, change: 0 },
+  screenTime: { value: 0, change: 0, data: [] as { value: number }[] },
   phoneUnlocks: { value: 0, change: 0, data: [] as { value: number }[] },
 };
 
@@ -171,6 +171,146 @@ function getHealthDataValue(healthData: Array<{ data_type: string; value: number
   if (!healthData) return 0;
   const entry = healthData.find(h => h.data_type === dataType);
   return entry?.value || 0;
+}
+
+// Helper to calculate weekly average (for metrics that update weekly)
+function getWeeklyAverageValue(
+  healthData: Array<{ data_type: string; value: number; recorded_at: string }> | null, 
+  dataType: string
+): number {
+  if (!healthData) return 0;
+  
+  // Get the start of the previous week (Sunday to Saturday)
+  const now = new Date();
+  const currentDay = now.getDay(); // 0 = Sunday
+  const endOfPreviousWeek = new Date(now);
+  endOfPreviousWeek.setDate(now.getDate() - currentDay); // Go back to last Sunday
+  endOfPreviousWeek.setHours(0, 0, 0, 0);
+  
+  const startOfPreviousWeek = new Date(endOfPreviousWeek);
+  startOfPreviousWeek.setDate(endOfPreviousWeek.getDate() - 7);
+  
+  // Filter data from the previous week
+  const weekData = healthData.filter(h => {
+    if (h.data_type !== dataType) return false;
+    const recordedDate = new Date(h.recorded_at);
+    return recordedDate >= startOfPreviousWeek && recordedDate < endOfPreviousWeek;
+  });
+  
+  if (weekData.length === 0) return 0;
+  
+  const sum = weekData.reduce((acc, h) => acc + Number(h.value), 0);
+  return Math.round(sum / weekData.length);
+}
+
+// Helper to get weekly history (averages per week) for charts
+function getWeeklyHistoryForChart(
+  healthData: Array<{ data_type: string; value: number; recorded_at: string }> | null, 
+  dataType: string,
+  weeks: number = 6
+): { value: number; date: string }[] {
+  if (!healthData) return [];
+  
+  const now = new Date();
+  const currentDay = now.getDay();
+  const endOfCurrentWeek = new Date(now);
+  endOfCurrentWeek.setDate(now.getDate() - currentDay);
+  endOfCurrentWeek.setHours(0, 0, 0, 0);
+  
+  const weeklyAverages: { value: number; date: string }[] = [];
+  
+  for (let i = 0; i < weeks; i++) {
+    const endOfWeek = new Date(endOfCurrentWeek);
+    endOfWeek.setDate(endOfCurrentWeek.getDate() - (i * 7));
+    
+    const startOfWeek = new Date(endOfWeek);
+    startOfWeek.setDate(endOfWeek.getDate() - 7);
+    
+    const weekData = healthData.filter(h => {
+      if (h.data_type !== dataType) return false;
+      const recordedDate = new Date(h.recorded_at);
+      return recordedDate >= startOfWeek && recordedDate < endOfWeek;
+    });
+    
+    if (weekData.length > 0) {
+      const sum = weekData.reduce((acc, h) => acc + Number(h.value), 0);
+      weeklyAverages.unshift({
+        value: Math.round(sum / weekData.length),
+        date: startOfWeek.toISOString()
+      });
+    }
+  }
+  
+  return weeklyAverages;
+}
+
+// Helper to calculate weekly total for activity (sum of activity_duration per week)
+function getWeeklyActivityTotal(
+  healthData: Array<{ data_type: string; value: number; recorded_at: string }> | null
+): number {
+  if (!healthData) return 0;
+  
+  const now = new Date();
+  const currentDay = now.getDay();
+  const endOfPreviousWeek = new Date(now);
+  endOfPreviousWeek.setDate(now.getDate() - currentDay);
+  endOfPreviousWeek.setHours(0, 0, 0, 0);
+  
+  const startOfPreviousWeek = new Date(endOfPreviousWeek);
+  startOfPreviousWeek.setDate(endOfPreviousWeek.getDate() - 7);
+  
+  // Sum activity_duration for the previous week
+  const weekData = healthData.filter(h => {
+    if (h.data_type !== 'activity_duration') return false;
+    const recordedDate = new Date(h.recorded_at);
+    return recordedDate >= startOfPreviousWeek && recordedDate < endOfPreviousWeek;
+  });
+  
+  if (weekData.length === 0) return 0;
+  
+  const totalMinutes = weekData.reduce((acc, h) => acc + Number(h.value), 0);
+  // Return average daily minutes (total / 7 days)
+  return Math.round(totalMinutes / 7);
+}
+
+// Helper to get weekly activity history for charts
+function getWeeklyActivityHistory(
+  healthData: Array<{ data_type: string; value: number; recorded_at: string }> | null,
+  weeks: number = 6
+): { value: number; date: string }[] {
+  if (!healthData) return [];
+  
+  const now = new Date();
+  const currentDay = now.getDay();
+  const endOfCurrentWeek = new Date(now);
+  endOfCurrentWeek.setDate(now.getDate() - currentDay);
+  endOfCurrentWeek.setHours(0, 0, 0, 0);
+  
+  const weeklyAverages: { value: number; date: string }[] = [];
+  
+  for (let i = 0; i < weeks; i++) {
+    const endOfWeek = new Date(endOfCurrentWeek);
+    endOfWeek.setDate(endOfCurrentWeek.getDate() - (i * 7));
+    
+    const startOfWeek = new Date(endOfWeek);
+    startOfWeek.setDate(endOfWeek.getDate() - 7);
+    
+    const weekData = healthData.filter(h => {
+      if (h.data_type !== 'activity_duration') return false;
+      const recordedDate = new Date(h.recorded_at);
+      return recordedDate >= startOfWeek && recordedDate < endOfWeek;
+    });
+    
+    if (weekData.length > 0) {
+      const totalMinutes = weekData.reduce((acc, h) => acc + Number(h.value), 0);
+      weeklyAverages.unshift({
+        value: Math.round(totalMinutes / 7), // Average daily minutes
+        date: startOfWeek.toISOString()
+      });
+    }
+  }
+  
+  return weeklyAverages;
 }
 
 // Helper to get health data history for charts with dates
@@ -380,9 +520,13 @@ export function useDashboardData() {
   };
 
   // Build habits data from health_data
+  // For sleep, use regular history (daily values)
   const sleepData = getHealthDataHistory(healthData, "sleep_hours");
-  const activityData = getHealthDataHistory(healthData, "activity_hours");
-  const phoneUnlocksData = getHealthDataHistory(healthData, "phone_unlocks");
+  
+  // For phone unlocks, screen time, and activity: use weekly averages
+  const phoneUnlocksWeeklyData = getWeeklyHistoryForChart(healthData, "phone_unlocks");
+  const screenTimeWeeklyData = getWeeklyHistoryForChart(healthData, "screen_time");
+  const activityWeeklyData = getWeeklyActivityHistory(healthData);
 
   const realHabitsData = {
     sleep: { 
@@ -392,15 +536,25 @@ export function useDashboardData() {
     },
     sleepQuality: { value: getHealthDataValue(healthData, "sleep_quality"), change: 0 },
     activity: { 
-      value: getHealthDataValue(healthData, "activity_hours"), 
-      change: calculateChange(activityData), 
-      data: activityData 
+      // Use weekly average for activity (average daily minutes from previous week)
+      value: getWeeklyActivityTotal(healthData), 
+      change: calculateChange(activityWeeklyData.map(d => ({ value: d.value }))), 
+      data: activityWeeklyData.map(d => ({ value: d.value })),
+      weeklyData: activityWeeklyData
     },
-    screenTime: { value: getHealthDataValue(healthData, "screen_time"), change: 0 },
+    screenTime: { 
+      // Use weekly average for screen time
+      value: getWeeklyAverageValue(healthData, "screen_time"), 
+      change: calculateChange(screenTimeWeeklyData.map(d => ({ value: d.value }))),
+      data: screenTimeWeeklyData.map(d => ({ value: d.value })),
+      weeklyData: screenTimeWeeklyData
+    },
     phoneUnlocks: { 
-      value: getHealthDataValue(healthData, "phone_unlocks"), 
-      change: calculateChange(phoneUnlocksData), 
-      data: phoneUnlocksData 
+      // Use weekly average for phone unlocks
+      value: getWeeklyAverageValue(healthData, "phone_unlocks"), 
+      change: calculateChange(phoneUnlocksWeeklyData.map(d => ({ value: d.value }))), 
+      data: phoneUnlocksWeeklyData.map(d => ({ value: d.value })),
+      weeklyData: phoneUnlocksWeeklyData
     },
   };
 
@@ -485,7 +639,7 @@ export function useDashboardData() {
     }
 
     // Activity improvement
-    if (activityData.length >= 2 && realHabitsData.activity.change > 0) {
+    if (activityWeeklyData.length >= 2 && realHabitsData.activity.change > 0) {
       improvements.push({ 
         id: "activity", 
         title: "Activo Constante", 
