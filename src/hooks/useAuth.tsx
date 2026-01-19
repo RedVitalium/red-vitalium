@@ -35,9 +35,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               .from('user_roles')
               .select('role')
               .eq('user_id', session.user.id)
+              .eq('role', 'admin')
               .maybeSingle();
             
-            setIsAdmin(data?.role === 'admin');
+            setIsAdmin(!!data);
           }, 0);
         } else {
           setIsAdmin(false);
@@ -57,9 +58,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .from('user_roles')
           .select('role')
           .eq('user_id', session.user.id)
+          .eq('role', 'admin')
           .maybeSingle()
           .then(({ data }) => {
-            setIsAdmin(data?.role === 'admin');
+            setIsAdmin(!!data);
           });
       }
       

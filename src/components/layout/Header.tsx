@@ -73,11 +73,13 @@ export function Header() {
           {/* Right Section */}
           <div className="flex items-center gap-2">
             {user && (
-              <Button variant="ghost" size="icon" className="relative">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="relative"
+                onClick={() => navigate('/notification-settings')}
+              >
                 <Bell className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 h-4 w-4 bg-danger rounded-full text-[10px] text-danger-foreground flex items-center justify-center font-medium">
-                  3
-                </span>
               </Button>
             )}
             
