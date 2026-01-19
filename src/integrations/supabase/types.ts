@@ -208,6 +208,39 @@ export type Database = {
           },
         ]
       }
+      habit_goals: {
+        Row: {
+          created_at: string
+          habit_type: string
+          id: string
+          month: number
+          set_by: string | null
+          target_value: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          habit_type: string
+          id?: string
+          month: number
+          set_by?: string | null
+          target_value: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          habit_type?: string
+          id?: string
+          month?: number
+          set_by?: string | null
+          target_value?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       health_data: {
         Row: {
           data_type: string

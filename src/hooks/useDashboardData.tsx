@@ -43,7 +43,8 @@ const demoPsychologicalData = {
 const demoHabitsData = {
   sleep: { value: 7.8, change: 10, data: [{ value: 6.5 }, { value: 7 }, { value: 7.2 }, { value: 7.5 }, { value: 7.8 }, { value: 8 }] },
   sleepQuality: { value: 88, change: 5 },
-  activity: { value: 45, change: 15, data: [{ value: 30 }, { value: 35 }, { value: 38 }, { value: 40 }, { value: 45 }, { value: 50 }] },
+  activity: { value: 45, change: 15, sessionCount: 5, avgDuration: 40, data: [{ value: 3 }, { value: 4 }, { value: 4 }, { value: 5 }, { value: 5 }, { value: 5 }], weeklyData: [] as { value: number; date: string }[] },
+  yoga: { value: 3, sessionCount: 3, change: 10, data: [{ value: 2 }, { value: 2 }, { value: 3 }, { value: 3 }] },
   screenTime: { value: 95, change: -8, data: [{ value: 120 }, { value: 115 }, { value: 108 }, { value: 102 }, { value: 98 }, { value: 95 }] },
   phoneUnlocks: { value: 58, change: -18, data: [{ value: 85 }, { value: 78 }, { value: 72 }, { value: 68 }, { value: 62 }, { value: 58 }] },
 };
@@ -128,7 +129,8 @@ const emptyPsychologicalData = {
 const emptyHabitsData = {
   sleep: { value: 0, change: 0, data: [] as { value: number }[] },
   sleepQuality: { value: 0, change: 0 },
-  activity: { value: 0, change: 0, data: [] as { value: number }[] },
+  activity: { value: 0, change: 0, sessionCount: 0, avgDuration: 0, data: [] as { value: number }[], weeklyData: [] as { value: number; date: string }[] },
+  yoga: { value: 0, sessionCount: 0, change: 0, data: [] as { value: number }[] },
   screenTime: { value: 0, change: 0, data: [] as { value: number }[] },
   phoneUnlocks: { value: 0, change: 0, data: [] as { value: number }[] },
 };

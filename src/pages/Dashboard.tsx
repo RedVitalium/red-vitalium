@@ -16,6 +16,7 @@ import { AdminPanel } from "@/components/dashboard/AdminPanel";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useCycleData } from "@/hooks/useCycleData";
 import { useUnlockedHabits } from "@/hooks/useUnlockedHabits";
+import { useHabitGoals } from "@/hooks/useHabitGoals";
 import { useAuth } from "@/hooks/useAuth";
 import { useSearchParams } from "react-router-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -96,7 +97,14 @@ const [searchParams] = useSearchParams();
 
   // Get unlocked habits
   const { isHabitUnlocked, advancedHabits: habitsList } = useUnlockedHabits();
-
+  
+  // Get habit goals from admin
+  const { 
+    screenTimeGoal, 
+    phoneUnlocksGoal, 
+    yogaGoal, 
+    activityGoals 
+  } = useHabitGoals();
   // Icon mapping for habits
   const habitIcons: Record<string, typeof Flame> = {
     sauna: Flame,
@@ -437,12 +445,12 @@ const [searchParams] = useSearchParams();
               <motion.div variants={itemVariants}>
                 <MetricCard
                   title="Actividad Física"
-                  subtitle="Promedio diario (semana anterior)"
-                  value={habitsData.activity.value}
-                  unit="min"
-                  target="> 30 min/día"
+                  subtitle={`${habitsData.activity.sessionCount || 0} sesiones de ${habitsData.activity.avgDuration || 0} min (semana)`}
+                  value={habitsData.activity.sessionCount || 0}
+                  unit="sesiones"
+                  target={`${activityGoals.sessionsPerWeek} de ${activityGoals.avgDurationMinutes} min`}
                   change={habitsData.activity.change}
-                  status={getStatus(habitsData.activity.value, 30)}
+                  status={getStatus(habitsData.activity.sessionCount || 0, activityGoals.sessionsPerWeek)}
                   icon={<Dumbbell className="h-5 w-5" />}
                   chart={habitsData.activity.data.length > 0 ? <MiniChart data={habitsData.activity.data} color="success" /> : undefined}
                 />
@@ -453,9 +461,9 @@ const [searchParams] = useSearchParams();
                   subtitle="Promedio diario (semana anterior)"
                   value={habitsData.screenTime.value}
                   unit="min"
-                  target="< 90 min"
+                  target={`< ${screenTimeGoal} min`}
                   change={habitsData.screenTime.change}
-                  status={getStatus(habitsData.screenTime.value, 90, true)}
+                  status={getStatus(habitsData.screenTime.value, screenTimeGoal, true)}
                   icon={<Activity className="h-5 w-5" />}
                   chart={habitsData.screenTime.data && habitsData.screenTime.data.length > 0 ? <MiniChart data={habitsData.screenTime.data} color="warning" /> : undefined}
                 />
@@ -466,9 +474,9 @@ const [searchParams] = useSearchParams();
                   subtitle="Promedio diario (semana anterior)"
                   value={habitsData.phoneUnlocks.value}
                   unit="veces"
-                  target="< 50"
+                  target={`< ${phoneUnlocksGoal}`}
                   change={habitsData.phoneUnlocks.change}
-                  status={getStatus(habitsData.phoneUnlocks.value, 50, true)}
+                  status={getStatus(habitsData.phoneUnlocks.value, phoneUnlocksGoal, true)}
                   icon={<Smartphone className="h-5 w-5" />}
                   chart={habitsData.phoneUnlocks.data.length > 0 ? <MiniChart data={habitsData.phoneUnlocks.data} color="warning" /> : undefined}
                 />
@@ -492,6 +500,25 @@ const [searchParams] = useSearchParams();
                   const unlocked = isHabitUnlocked(habit.id);
                   
                   if (unlocked) {
+                    // Special case for yoga - show session data
+                    if (habit.id === "yoga" && habitsData.yoga) {
+                      return (
+                        <motion.div key={habit.id} variants={itemVariants}>
+                          <MetricCard
+                            title={habit.name}
+                            subtitle={`${habitsData.yoga.sessionCount || 0} sesiones (semana anterior)`}
+                            value={habitsData.yoga.sessionCount || 0}
+                            unit="sesiones"
+                            target={`${yogaGoal} sesiones/semana`}
+                            change={habitsData.yoga.change}
+                            status={getStatus(habitsData.yoga.sessionCount || 0, yogaGoal)}
+                            icon={<Icon className="h-5 w-5" />}
+                            chart={habitsData.yoga.data.length > 0 ? <MiniChart data={habitsData.yoga.data} color="success" /> : undefined}
+                          />
+                        </motion.div>
+                      );
+                    }
+                    
                     return (
                       <motion.div key={habit.id} variants={itemVariants}>
                         <MetricCard
