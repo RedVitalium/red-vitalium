@@ -82,6 +82,16 @@ export function useHabitGoals() {
     return 3; // Default 3 sessions
   };
 
+  const getSleepHoursGoal = (): number => {
+    const goal = habitGoals.find(g => g.habit_type === "sleep_hours");
+    return goal?.target_value || 7.5; // Default 7.5 hours
+  };
+
+  const getSleepQualityGoal = (): number => {
+    const goal = habitGoals.find(g => g.habit_type === "sleep_quality");
+    return goal?.target_value || 85; // Default 85 score
+  };
+
   const getActivityGoals = () => {
     return {
       sessionsPerWeek: activityGoals?.target_sessions_per_week || 4,
@@ -95,6 +105,8 @@ export function useHabitGoals() {
     screenTimeGoal: getScreenTimeGoal(),
     phoneUnlocksGoal: getPhoneUnlocksGoal(),
     yogaGoal: getYogaGoal(),
+    sleepHoursGoal: getSleepHoursGoal(),
+    sleepQualityGoal: getSleepQualityGoal(),
     activityGoals: getActivityGoals(),
     hasGoals: habitGoals.length > 0 || !!activityGoals,
   };

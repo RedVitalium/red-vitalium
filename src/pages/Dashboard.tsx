@@ -103,6 +103,8 @@ const [searchParams] = useSearchParams();
     screenTimeGoal, 
     phoneUnlocksGoal, 
     yogaGoal, 
+    sleepHoursGoal,
+    sleepQualityGoal,
     activityGoals 
   } = useHabitGoals();
   // Icon mapping for habits
@@ -424,9 +426,9 @@ const [searchParams] = useSearchParams();
                   subtitle="Horas efectivas de sueño"
                   value={habitsData.sleep.value}
                   unit="hrs"
-                  target="> 7.5 horas"
+                  target={`> ${sleepHoursGoal} horas`}
                   change={habitsData.sleep.change}
-                  status={getStatus(habitsData.sleep.value, 7.5)}
+                  status={getStatus(habitsData.sleep.value, sleepHoursGoal)}
                   icon={<Moon className="h-5 w-5" />}
                   chart={habitsData.sleep.data.length > 0 ? <MiniChart data={habitsData.sleep.data} color="success" /> : undefined}
                 />
@@ -436,9 +438,9 @@ const [searchParams] = useSearchParams();
                   title="Calidad de Sueño"
                   subtitle="Puntuación de tracker (0-100)"
                   value={habitsData.sleepQuality.value}
-                  target="> 85"
+                  target={`> ${sleepQualityGoal}`}
                   change={habitsData.sleepQuality.change}
-                  status={getStatus(habitsData.sleepQuality.value, 85)}
+                  status={getStatus(habitsData.sleepQuality.value, sleepQualityGoal)}
                   icon={<Heart className="h-5 w-5" />}
                 />
               </motion.div>
