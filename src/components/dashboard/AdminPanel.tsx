@@ -159,6 +159,91 @@ function SurveyTimeConfig({
   );
 }
 
+// Personality Results Component
+function PersonalityResults({ patientId }: { patientId: string | undefined }) {
+  const { data: testResults = [], isLoading } = useQuery({
+    queryKey: ["patient-personality", patientId],
+    queryFn: async () => {
+      if (!patientId) return [];
+      const { data, error } = await supabase
+        .from("test_results")
+        .select("*")
+        .eq("user_id", patientId)
+        .eq("test_id", "bfi-10")
+        .order("completed_at", { ascending: false })
+        .limit(1);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!patientId,
+  });
+
+  if (!patientId) {
+    return (
+      <div className="text-sm text-muted-foreground p-4 bg-muted/30 rounded-lg">
+        Seleccione un paciente para ver sus resultados de personalidad
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="text-sm text-muted-foreground p-4 bg-muted/30 rounded-lg">
+        Cargando resultados...
+      </div>
+    );
+  }
+
+  if (testResults.length === 0) {
+    return (
+      <div className="text-sm text-muted-foreground p-4 bg-muted/30 rounded-lg">
+        El paciente aún no ha completado el test de personalidad BFI-10
+      </div>
+    );
+  }
+
+  const result = testResults[0];
+  const scores = result.scores as Record<string, number>;
+  const completedAt = new Date(result.completed_at).toLocaleDateString("es-ES", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
+  const traits = [
+    { key: "extraversion", label: "Extraversión", description: "Sociabilidad y energía" },
+    { key: "agreeableness", label: "Amabilidad", description: "Cooperación y confianza" },
+    { key: "conscientiousness", label: "Responsabilidad", description: "Organización y disciplina" },
+    { key: "neuroticism", label: "Neuroticismo", description: "Estabilidad emocional (inverso)" },
+    { key: "openness", label: "Apertura", description: "Creatividad y curiosidad" },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <p className="text-xs text-muted-foreground">Completado: {completedAt}</p>
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        {traits.map(trait => {
+          const score = scores[trait.key] || 0;
+          const percentage = (score / 5) * 100;
+          return (
+            <div key={trait.key} className="p-3 bg-muted/30 rounded-lg text-center">
+              <p className="text-2xl font-bold text-primary">{score.toFixed(1)}</p>
+              <p className="text-xs font-medium">{trait.label}</p>
+              <div className="mt-2 h-1 bg-muted rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-primary transition-all" 
+                  style={{ width: `${percentage}%` }}
+                />
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-1">{trait.description}</p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function AdminPanel() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
