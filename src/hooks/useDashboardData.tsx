@@ -14,6 +14,12 @@ export interface Achievement {
   isNew: boolean;
 }
 
+// Data point with date for evolution charts
+export interface DataPointWithDate {
+  value: number;
+  date: string;
+}
+
 // Demo data for John Doe
 const demoPersonalData = {
   name: "John Doe",
@@ -30,8 +36,8 @@ const demoPersonalData = {
 const demoPsychologicalData = {
   anxiety: { value: 42, change: -12, data: [{ value: 65 }, { value: 58 }, { value: 52 }, { value: 48 }, { value: 45 }, { value: 42 }] },
   stress: { value: 44, change: -15, data: [{ value: 70 }, { value: 62 }, { value: 55 }, { value: 50 }, { value: 48 }, { value: 44 }] },
-  depression: { value: 8, change: -5 },
-  lifeSatisfaction: { value: 7.8, change: 8 },
+  depression: { value: 8, change: -5, data: [{ value: 18 }, { value: 14 }, { value: 12 }, { value: 10 }, { value: 8 }] },
+  lifeSatisfaction: { value: 7.8, change: 8, data: [{ value: 5.5 }, { value: 6.2 }, { value: 6.8 }, { value: 7.2 }, { value: 7.8 }] },
 };
 
 const demoHabitsData = {
@@ -43,14 +49,15 @@ const demoHabitsData = {
 };
 
 const demoLongevityData = {
-  biologicalAge: { value: 42.5, change: -3 },
+  biologicalAge: { value: 42.5, change: -3, data: [{ value: 45.5 }, { value: 44.8 }, { value: 44 }, { value: 43.2 }, { value: 42.5 }] },
   waistHeightRatio: { value: 0.49, change: -2 },
-  vo2Max: { value: 47, change: 5 },
-  gripStrength: { value: 42, change: 3 },
-  balanceLeft: { value: 38, change: 8 },
-  balanceRight: { value: 42, change: 12 },
+  vo2Max: { value: 47, change: 5, data: [{ value: 42 }, { value: 43.5 }, { value: 45 }, { value: 46 }, { value: 47 }] },
+  gripStrength: { value: 42, change: 3, data: [{ value: 38 }, { value: 39 }, { value: 40 }, { value: 41 }, { value: 42 }] },
+  balanceLeft: { value: 38, change: 8, data: [{ value: 28 }, { value: 31 }, { value: 34 }, { value: 36 }, { value: 38 }] },
+  balanceRight: { value: 42, change: 12, data: [{ value: 30 }, { value: 34 }, { value: 37 }, { value: 40 }, { value: 42 }] },
   nonHdlCholesterol: { value: 95, change: -5 },
-  hrv: { value: 62, change: 10 },
+  hrv: { value: 62, change: 10, data: [{ value: 48 }, { value: 52 }, { value: 56 }, { value: 59 }, { value: 62 }] },
+  restingHr: { value: 58, change: -5, data: [{ value: 65 }, { value: 63 }, { value: 61 }, { value: 59 }, { value: 58 }] },
 };
 
 const demoWeeklyProgress = {
@@ -114,8 +121,8 @@ const emptyPersonalData = {
 const emptyPsychologicalData = {
   anxiety: { value: 0, change: 0, data: [] as { value: number }[] },
   stress: { value: 0, change: 0, data: [] as { value: number }[] },
-  depression: { value: 0, change: 0 },
-  lifeSatisfaction: { value: 0, change: 0 },
+  depression: { value: 0, change: 0, data: [] as { value: number }[] },
+  lifeSatisfaction: { value: 0, change: 0, data: [] as { value: number }[] },
 };
 
 const emptyHabitsData = {
@@ -127,14 +134,15 @@ const emptyHabitsData = {
 };
 
 const emptyLongevityData = {
-  biologicalAge: { value: 0, change: 0 },
+  biologicalAge: { value: 0, change: 0, data: [] as { value: number }[] },
   waistHeightRatio: { value: 0, change: 0 },
-  vo2Max: { value: 0, change: 0 },
-  gripStrength: { value: 0, change: 0 },
-  balanceLeft: { value: 0, change: 0 },
-  balanceRight: { value: 0, change: 0 },
+  vo2Max: { value: 0, change: 0, data: [] as { value: number }[] },
+  gripStrength: { value: 0, change: 0, data: [] as { value: number }[] },
+  balanceLeft: { value: 0, change: 0, data: [] as { value: number }[] },
+  balanceRight: { value: 0, change: 0, data: [] as { value: number }[] },
   nonHdlCholesterol: { value: 0, change: 0 },
-  hrv: { value: 0, change: 0 },
+  hrv: { value: 0, change: 0, data: [] as { value: number }[] },
+  restingHr: { value: 0, change: 0, data: [] as { value: number }[] },
 };
 
 const emptyWeeklyProgress = {
@@ -158,20 +166,43 @@ function calculateAge(dateOfBirth: string | null): number {
   return age;
 }
 
-// Helper to get health data value by type
+// Helper to get health data value by type (most recent)
 function getHealthDataValue(healthData: Array<{ data_type: string; value: number }> | null, dataType: string): number {
   if (!healthData) return 0;
   const entry = healthData.find(h => h.data_type === dataType);
   return entry?.value || 0;
 }
 
-// Helper to get health data history for charts
+// Helper to get health data history for charts with dates
+function getHealthDataHistoryWithDates(
+  healthData: Array<{ data_type: string; value: number; recorded_at: string }> | null, 
+  dataType: string
+): DataPointWithDate[] {
+  if (!healthData) return [];
+  return healthData
+    .filter(h => h.data_type === dataType)
+    .map(h => ({ value: Number(h.value), date: h.recorded_at }))
+    .slice(0, 10)
+    .reverse();
+}
+
+// Helper to get health data history for charts (simple)
 function getHealthDataHistory(healthData: Array<{ data_type: string; value: number }> | null, dataType: string): { value: number }[] {
   if (!healthData) return [];
   return healthData
     .filter(h => h.data_type === dataType)
-    .map(h => ({ value: h.value }))
-    .slice(0, 6);
+    .map(h => ({ value: Number(h.value) }))
+    .slice(0, 6)
+    .reverse();
+}
+
+// Helper to calculate change percentage
+function calculateChange(data: { value: number }[]): number {
+  if (data.length < 2) return 0;
+  const first = data[0].value;
+  const last = data[data.length - 1].value;
+  if (first === 0) return 0;
+  return Math.round(((last - first) / Math.abs(first)) * 100);
 }
 
 export function useDashboardData() {
@@ -205,7 +236,7 @@ export function useDashboardData() {
         .select("*")
         .eq("user_id", user.id)
         .order("recorded_at", { ascending: false })
-        .limit(50);
+        .limit(100);
       if (error) throw error;
       return data;
     },
@@ -222,9 +253,9 @@ export function useDashboardData() {
         .select("*")
         .eq("user_id", user.id)
         .order("recorded_at", { ascending: false })
-        .limit(1);
+        .limit(10);
       if (error) throw error;
-      return data?.[0] || null;
+      return data || [];
     },
     enabled: !!user?.id && !isDemo,
   });
@@ -256,88 +287,178 @@ export function useDashboardData() {
       weeklyProgress: demoWeeklyProgress,
       achievements: demoAchievements,
       hasData: true,
+      hasEnoughDataForAchievements: true,
+      testResults: null,
     };
   }
 
   // Check if user has any real data
-  const hasRealData = !!(healthData?.length || biomarkersData || testResults?.length);
+  const hasRealData = !!(healthData?.length || biomarkersData?.length || testResults?.length);
 
   // Build personal data from profile and biomarkers
   const realPersonalData = profileData ? {
     name: profileData.full_name || "",
     age: calculateAge(profileData.date_of_birth),
     sex: profileData.sex || "",
-    height: getHealthDataValue(healthData, "height"),
-    weight: getHealthDataValue(healthData, "weight"),
-    waistHeightRatio: getHealthDataValue(healthData, "waist_height_ratio"),
-    biologicalAge: biomarkersData?.biological_age || 0,
+    height: profileData.height || 0,
+    weight: profileData.weight || 0,
+    waistHeightRatio: profileData.waist_circumference && profileData.height 
+      ? Number((profileData.waist_circumference / 100 / profileData.height).toFixed(2))
+      : 0,
+    biologicalAge: biomarkersData?.[0]?.biological_age || 0,
     vo2Max: getHealthDataValue(healthData, "vo2_max"),
     hba1c: getHealthDataValue(healthData, "hba1c"),
   } : emptyPersonalData;
 
-  // Build psychological data from test results (scores is JSON)
-  const getTestScore = (testName: string): number => {
-    const test = testResults?.find(t => t.test_name.toLowerCase().includes(testName.toLowerCase()));
-    if (!test?.scores) return 0;
-    const scores = test.scores as Record<string, number>;
-    return scores.total || scores.score || Object.values(scores)[0] || 0;
+  // Build psychological data from test results (DASS-21 and SWLS)
+  const getDASS21Scores = () => {
+    const dassTests = testResults?.filter(t => t.test_id === "dass-21") || [];
+    if (dassTests.length === 0) return { depression: 0, anxiety: 0, stress: 0 };
+    
+    const latest = dassTests[0];
+    const scores = latest.scores as Record<string, any>;
+    return {
+      depression: scores.depression || 0,
+      anxiety: scores.anxiety || 0,
+      stress: scores.stress || 0,
+    };
   };
 
+  const getSWLSScore = () => {
+    const swlsTests = testResults?.filter(t => t.test_id === "swls") || [];
+    if (swlsTests.length === 0) return 0;
+    const scores = swlsTests[0].scores as Record<string, any>;
+    return scores.total || 0;
+  };
+
+  // Get historical data for psychological metrics
+  const getDASS21History = (metric: 'depression' | 'anxiety' | 'stress') => {
+    const dassTests = testResults?.filter(t => t.test_id === "dass-21") || [];
+    return dassTests.map(t => {
+      const scores = t.scores as Record<string, any>;
+      return { value: scores[metric] || 0 };
+    }).reverse();
+  };
+
+  const getSWLSHistory = () => {
+    const swlsTests = testResults?.filter(t => t.test_id === "swls") || [];
+    return swlsTests.map(t => {
+      const scores = t.scores as Record<string, any>;
+      return { value: scores.total || 0 };
+    }).reverse();
+  };
+
+  const dassScores = getDASS21Scores();
+  const swlsScore = getSWLSScore();
+
+  const anxietyData = getDASS21History('anxiety');
+  const stressData = getDASS21History('stress');
+  const depressionData = getDASS21History('depression');
+  const swlsData = getSWLSHistory();
+
   const realPsychologicalData = {
-    anxiety: { value: getTestScore("ansiedad") || getTestScore("anxiety"), change: 0, data: [] as { value: number }[] },
-    stress: { value: getTestScore("estrés") || getTestScore("stress"), change: 0, data: [] as { value: number }[] },
-    depression: { value: getTestScore("depresión") || getTestScore("depression"), change: 0 },
-    lifeSatisfaction: { value: getTestScore("satisfacción") || getTestScore("satisfaction"), change: 0 },
+    anxiety: { 
+      value: dassScores.anxiety, 
+      change: calculateChange(anxietyData), 
+      data: anxietyData 
+    },
+    stress: { 
+      value: dassScores.stress, 
+      change: calculateChange(stressData), 
+      data: stressData 
+    },
+    depression: { 
+      value: dassScores.depression, 
+      change: calculateChange(depressionData),
+      data: depressionData 
+    },
+    lifeSatisfaction: { 
+      value: swlsScore > 0 ? (swlsScore / 35 * 10) : 0, // Normalize to 0-10 scale
+      change: calculateChange(swlsData),
+      data: swlsData
+    },
   };
 
   // Build habits data from health_data
+  const sleepData = getHealthDataHistory(healthData, "sleep_hours");
+  const activityData = getHealthDataHistory(healthData, "activity_hours");
+  const phoneUnlocksData = getHealthDataHistory(healthData, "phone_unlocks");
+
   const realHabitsData = {
     sleep: { 
       value: getHealthDataValue(healthData, "sleep_hours"), 
-      change: 0, 
-      data: getHealthDataHistory(healthData, "sleep_hours") 
+      change: calculateChange(sleepData), 
+      data: sleepData 
     },
     sleepQuality: { value: getHealthDataValue(healthData, "sleep_quality"), change: 0 },
     activity: { 
       value: getHealthDataValue(healthData, "activity_hours"), 
-      change: 0, 
-      data: getHealthDataHistory(healthData, "activity_hours") 
+      change: calculateChange(activityData), 
+      data: activityData 
     },
     screenTime: { value: getHealthDataValue(healthData, "screen_time"), change: 0 },
     phoneUnlocks: { 
       value: getHealthDataValue(healthData, "phone_unlocks"), 
-      change: 0, 
-      data: getHealthDataHistory(healthData, "phone_unlocks") 
+      change: calculateChange(phoneUnlocksData), 
+      data: phoneUnlocksData 
     },
   };
 
   // Build longevity data from biomarkers and health_data
+  const vo2MaxData = getHealthDataHistory(healthData, "vo2_max");
+  const gripStrengthData = getHealthDataHistory(healthData, "grip_strength");
+  const balanceLeftData = getHealthDataHistory(healthData, "balance_left");
+  const balanceRightData = getHealthDataHistory(healthData, "balance_right");
+  const hrvData = getHealthDataHistory(healthData, "hrv");
+  const restingHrData = getHealthDataHistory(healthData, "resting_heart_rate");
+
+  // Get biological age history from biomarkers
+  const bioAgeData = biomarkersData?.map(b => ({ value: Number(b.biological_age) || 0 })).reverse() || [];
+
   const realLongevityData = {
-    biologicalAge: { value: biomarkersData?.biological_age || 0, change: 0 },
-    waistHeightRatio: { value: getHealthDataValue(healthData, "waist_height_ratio"), change: 0 },
-    vo2Max: { value: getHealthDataValue(healthData, "vo2_max"), change: 0 },
-    gripStrength: { value: getHealthDataValue(healthData, "grip_strength"), change: 0 },
-    balanceLeft: { value: getHealthDataValue(healthData, "balance_left"), change: 0 },
-    balanceRight: { value: getHealthDataValue(healthData, "balance_right"), change: 0 },
+    biologicalAge: { 
+      value: biomarkersData?.[0]?.biological_age || 0, 
+      change: calculateChange(bioAgeData),
+      data: bioAgeData
+    },
+    waistHeightRatio: { value: realPersonalData.waistHeightRatio, change: 0 },
+    vo2Max: { 
+      value: getHealthDataValue(healthData, "vo2_max"), 
+      change: calculateChange(vo2MaxData),
+      data: vo2MaxData
+    },
+    gripStrength: { 
+      value: getHealthDataValue(healthData, "grip_strength"), 
+      change: calculateChange(gripStrengthData),
+      data: gripStrengthData
+    },
+    balanceLeft: { 
+      value: getHealthDataValue(healthData, "balance_left"), 
+      change: calculateChange(balanceLeftData),
+      data: balanceLeftData
+    },
+    balanceRight: { 
+      value: getHealthDataValue(healthData, "balance_right"), 
+      change: calculateChange(balanceRightData),
+      data: balanceRightData
+    },
     nonHdlCholesterol: { value: getHealthDataValue(healthData, "non_hdl_cholesterol"), change: 0 },
-    hrv: { value: getHealthDataValue(healthData, "hrv"), change: 0 },
+    hrv: { 
+      value: getHealthDataValue(healthData, "hrv"), 
+      change: calculateChange(hrvData),
+      data: hrvData
+    },
+    restingHr: {
+      value: getHealthDataValue(healthData, "resting_heart_rate"),
+      change: calculateChange(restingHrData),
+      data: restingHrData
+    },
   };
 
   // Calculate monthly achievements based on improvements
-  // For now, we need historical data to calculate real changes
-  // Get the month's start to filter data
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  
-  // Check if user has at least 7 days of data (minimum for achievements)
   const hasEnoughData = (() => {
-    if (!healthData?.length) return false;
-    const sortedDates = healthData
-      .map(h => new Date(h.recorded_at))
-      .sort((a, b) => a.getTime() - b.getTime());
-    if (sortedDates.length < 2) return false;
-    const daysDiff = Math.floor((sortedDates[sortedDates.length - 1].getTime() - sortedDates[0].getTime()) / (1000 * 60 * 60 * 24));
-    return daysDiff >= 7;
+    if (!healthData?.length && !testResults?.length) return false;
+    return (healthData?.length || 0) >= 2 || (testResults?.length || 0) >= 2;
   })();
 
   // Calculate real achievements from data improvements
@@ -352,63 +473,48 @@ export function useDashboardData() {
       icon: "trophy" | "star" | "medal" | "improvement";
     }> = [];
 
-    // Calculate sleep improvement
-    const sleepData = healthData?.filter(h => h.data_type === "sleep_hours" || h.data_type === "sleep_quality") || [];
-    if (sleepData.length >= 2) {
-      const oldAvg = sleepData.slice(-3).reduce((sum, h) => sum + Number(h.value), 0) / Math.min(3, sleepData.length);
-      const newAvg = sleepData.slice(0, 3).reduce((sum, h) => sum + Number(h.value), 0) / Math.min(3, sleepData.length);
-      if (oldAvg > 0) {
-        const improvement = Math.round(((newAvg - oldAvg) / oldAvg) * 100);
-        if (improvement > 0) {
-          improvements.push({ id: "sleep", title: "Campeón del Sueño", metric: "Calidad de sueño", improvement, icon: "trophy" });
-        }
-      }
+    // Sleep improvement
+    if (sleepData.length >= 2 && realHabitsData.sleep.change > 0) {
+      improvements.push({ 
+        id: "sleep", 
+        title: "Campeón del Sueño", 
+        metric: "Calidad de sueño", 
+        improvement: Math.abs(realHabitsData.sleep.change), 
+        icon: "trophy" 
+      });
     }
 
-    // Calculate activity improvement
-    const activityData = healthData?.filter(h => h.data_type === "activity_hours" || h.data_type === "steps") || [];
-    if (activityData.length >= 2) {
-      const oldAvg = activityData.slice(-3).reduce((sum, h) => sum + Number(h.value), 0) / Math.min(3, activityData.length);
-      const newAvg = activityData.slice(0, 3).reduce((sum, h) => sum + Number(h.value), 0) / Math.min(3, activityData.length);
-      if (oldAvg > 0) {
-        const improvement = Math.round(((newAvg - oldAvg) / oldAvg) * 100);
-        if (improvement > 0) {
-          improvements.push({ id: "activity", title: "Activo Constante", metric: "Actividad física", improvement, icon: "medal" });
-        }
-      }
+    // Activity improvement
+    if (activityData.length >= 2 && realHabitsData.activity.change > 0) {
+      improvements.push({ 
+        id: "activity", 
+        title: "Activo Constante", 
+        metric: "Actividad física", 
+        improvement: realHabitsData.activity.change, 
+        icon: "medal" 
+      });
     }
 
-    // Calculate HRV improvement
-    const hrvData = healthData?.filter(h => h.data_type === "hrv") || [];
-    if (hrvData.length >= 2) {
-      const oldAvg = hrvData.slice(-3).reduce((sum, h) => sum + Number(h.value), 0) / Math.min(3, hrvData.length);
-      const newAvg = hrvData.slice(0, 3).reduce((sum, h) => sum + Number(h.value), 0) / Math.min(3, hrvData.length);
-      if (oldAvg > 0) {
-        const improvement = Math.round(((newAvg - oldAvg) / oldAvg) * 100);
-        if (improvement > 0) {
-          improvements.push({ id: "hrv", title: "Mejor Recuperación", metric: "Variabilidad cardíaca", improvement, icon: "star" });
-        }
-      }
+    // HRV improvement
+    if (hrvData.length >= 2 && realLongevityData.hrv.change > 0) {
+      improvements.push({ 
+        id: "hrv", 
+        title: "Mejor Recuperación", 
+        metric: "Variabilidad cardíaca", 
+        improvement: realLongevityData.hrv.change, 
+        icon: "star" 
+      });
     }
 
-    // Calculate stress/anxiety reduction from test results
-    if (testResults && testResults.length >= 2) {
-      const anxietyTests = testResults.filter(t => 
-        t.test_name.toLowerCase().includes("ansiedad") || 
-        t.test_name.toLowerCase().includes("anxiety") ||
-        t.test_name.toLowerCase().includes("estrés") ||
-        t.test_name.toLowerCase().includes("stress")
-      );
-      if (anxietyTests.length >= 2) {
-        const newestScore = (anxietyTests[0].scores as Record<string, number>).total || 0;
-        const oldestScore = (anxietyTests[anxietyTests.length - 1].scores as Record<string, number>).total || 0;
-        if (oldestScore > 0 && newestScore < oldestScore) {
-          const improvement = Math.round(((oldestScore - newestScore) / oldestScore) * 100);
-          if (improvement > 0) {
-            improvements.push({ id: "stress", title: "Manejo del Estrés", metric: "Reducción de estrés", improvement, icon: "improvement" });
-          }
-        }
-      }
+    // Anxiety/stress reduction (negative change is good)
+    if (anxietyData.length >= 2 && realPsychologicalData.anxiety.change < 0) {
+      improvements.push({ 
+        id: "stress", 
+        title: "Manejo del Estrés", 
+        metric: "Reducción de ansiedad", 
+        improvement: Math.abs(realPsychologicalData.anxiety.change), 
+        icon: "improvement" 
+      });
     }
 
     // Sort by improvement and assign medal types
@@ -417,7 +523,7 @@ export function useDashboardData() {
     return improvements.slice(0, 4).map((item, index) => ({
       ...item,
       type: (index === 0 ? "gold" : index === 1 ? "silver" : "bronze") as "gold" | "silver" | "bronze",
-      isNew: index === 0, // Mark the top achievement as new
+      isNew: index === 0,
     }));
   };
 
@@ -434,5 +540,6 @@ export function useDashboardData() {
     achievements: hasEnoughData ? realAchievements : emptyAchievements,
     hasData: hasRealData,
     hasEnoughDataForAchievements: hasEnoughData,
+    testResults,
   };
 }

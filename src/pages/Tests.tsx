@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -6,6 +6,10 @@ import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { 
   Brain, 
   Users, 
@@ -101,13 +105,7 @@ interface ScheduledTest {
   status: TestStatus;
   scheduledDate: string;
   completedDate?: string;
-  scores?: {
-    depression?: number;
-    anxiety?: number;
-    stress?: number;
-    total?: number;
-    interpretations?: Record<string, string>;
-  };
+  scores?: Record<string, number>;
   nextAvailableDate?: string;
 }
 
@@ -118,22 +116,39 @@ interface TestResult {
 }
 
 export default function Tests() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [selectedTest, setSelectedTest] = useState<TestId | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [isComplete, setIsComplete] = useState(false);
   const [testResult, setTestResult] = useState<TestResult | null>(null);
 
-  // Simulated completed tests (in real app, this would come from database)
-  const [completedTestDates] = useState<Record<TestId, string | null>>({
-    "dass-21": "2025-01-05", // Completed 6 days ago
-    "bfi-10": null,
-    "swls": "2024-11-15", // Completed 2 months ago
+  // Fetch test results from database
+  const { data: dbTestResults = [], refetch: refetchResults } = useQuery({
+    queryKey: ["test_results", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const { data, error } = await supabase
+        .from("test_results")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("completed_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.id,
   });
+
+  // Get last completion date for each test type
+  const getLastCompletionDate = (testId: TestId): string | null => {
+    const result = dbTestResults.find(r => r.test_id === testId);
+    return result ? result.completed_at : null;
+  };
 
   // Calculate if test is available based on frequency limits
   const isTestAvailable = (testId: TestId): { available: boolean; daysRemaining: number; nextDate: string | null } => {
-    const lastCompleted = completedTestDates[testId];
+    const lastCompleted = getLastCompletionDate(testId);
     if (!lastCompleted) return { available: true, daysRemaining: 0, nextDate: null };
 
     const lastDate = new Date(lastCompleted);
@@ -151,27 +166,51 @@ export default function Tests() {
     };
   };
 
+  // Mutation to save test results
+  const saveResultMutation = useMutation({
+    mutationFn: async (result: TestResult) => {
+      if (!user?.id) throw new Error("User not authenticated");
+      
+      const testName = tests[result.testId].fullName;
+      
+      const { error } = await supabase
+        .from("test_results")
+        .insert({
+          user_id: user.id,
+          test_id: result.testId,
+          test_name: testName,
+          scores: {
+            ...result.scores,
+            interpretations: result.interpretations,
+          },
+        });
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["test_results", user?.id] });
+      toast.success("Resultados guardados correctamente");
+    },
+    onError: (error) => {
+      console.error("Error saving test result:", error);
+      toast.error("Error al guardar los resultados");
+    },
+  });
+
   const scheduledTests: ScheduledTest[] = useMemo(() => {
-    return [
-      { 
-        id: "dass-21" as TestId, 
-        status: isTestAvailable("dass-21").available ? "pending" : "locked",
-        scheduledDate: "2025-01-15",
-        nextAvailableDate: isTestAvailable("dass-21").nextDate || undefined,
-      },
-      { 
-        id: "bfi-10" as TestId, 
-        status: "pending",
-        scheduledDate: "2025-01-08",
-      },
-      { 
-        id: "swls" as TestId, 
-        status: isTestAvailable("swls").available ? "pending" : "locked",
-        scheduledDate: "2025-01-20",
-        nextAvailableDate: isTestAvailable("swls").nextDate || undefined,
-      },
-    ];
-  }, [completedTestDates]);
+    return (["dass-21", "bfi-10", "swls"] as TestId[]).map(testId => {
+      const availability = isTestAvailable(testId);
+      const lastCompleted = getLastCompletionDate(testId);
+      
+      return { 
+        id: testId, 
+        status: availability.available ? "pending" : "locked" as TestStatus,
+        scheduledDate: new Date().toISOString().split('T')[0],
+        completedDate: lastCompleted || undefined,
+        nextAvailableDate: availability.nextDate || undefined,
+      };
+    });
+  }, [dbTestResults]);
 
   const getQuestionsForTest = (testId: TestId) => {
     switch (testId) {
@@ -217,7 +256,7 @@ export default function Tests() {
   const questions = selectedTest ? getQuestionsForTest(selectedTest) : [];
   const scaleOptions = selectedTest ? getScaleOptionsForTest(selectedTest) : [];
 
-  const nextQuestion = () => {
+  const nextQuestion = async () => {
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(prev => prev + 1);
     } else {
@@ -259,6 +298,9 @@ export default function Tests() {
         result = { testId: selectedTest!, scores: {}, interpretations: {} };
       }
 
+      // Save to database
+      await saveResultMutation.mutateAsync(result);
+      
       setTestResult(result);
       setIsComplete(true);
     }
@@ -364,9 +406,9 @@ export default function Tests() {
             </Button>
             <Button
               onClick={nextQuestion}
-              disabled={answers[currentQuestion] === undefined}
+              disabled={answers[currentQuestion] === undefined || saveResultMutation.isPending}
             >
-              {currentQuestion === questions.length - 1 ? "Finalizar" : "Siguiente"}
+              {saveResultMutation.isPending ? "Guardando..." : currentQuestion === questions.length - 1 ? "Finalizar" : "Siguiente"}
               <ChevronRight className="h-4 w-4 ml-2" />
             </Button>
           </div>
@@ -391,7 +433,7 @@ export default function Tests() {
             ¡Test Completado!
           </h1>
           <p className="text-muted-foreground mb-8">
-            Tus resultados han sido registrados y serán analizados por tu psicólogo.
+            Tus resultados han sido guardados y serán analizados por tu psicólogo.
           </p>
           
           <div className="bg-card rounded-2xl p-6 border border-border mb-8 text-left">
@@ -481,6 +523,7 @@ export default function Tests() {
           const test = tests[scheduled.id];
           const Icon = test.icon;
           const availability = isTestAvailable(scheduled.id);
+          const hasCompleted = !!scheduled.completedDate;
 
           return (
             <motion.div
@@ -511,7 +554,7 @@ export default function Tests() {
                   <div className={`p-3 rounded-xl bg-${test.color}/10`}>
                     <Icon className={`h-6 w-6 text-${test.color}`} />
                   </div>
-                  {scheduled.status === "completed" ? (
+                  {hasCompleted && scheduled.status === "locked" ? (
                     <span className="inline-flex items-center gap-1 text-xs font-medium text-success bg-success/10 px-2 py-1 rounded-full">
                       <CheckCircle2 className="h-3 w-3" />
                       Completado
@@ -524,7 +567,7 @@ export default function Tests() {
                   ) : (
                     <span className="inline-flex items-center gap-1 text-xs font-medium text-warning bg-warning/10 px-2 py-1 rounded-full">
                       <Clock className="h-3 w-3" />
-                      Pendiente
+                      Disponible
                     </span>
                   )}
                 </div>
@@ -545,9 +588,9 @@ export default function Tests() {
                   <span>{test.questions} preguntas</span>
                 </div>
 
-                {scheduled.status === "completed" ? (
+                {scheduled.status === "locked" && hasCompleted ? (
                   <div className="bg-success/10 rounded-lg p-3 text-center">
-                    <p className="text-sm text-muted-foreground">Completado</p>
+                    <p className="text-sm text-success font-medium">✓ Completado recientemente</p>
                   </div>
                 ) : scheduled.status === "locked" ? (
                   <Button disabled className="w-full">
