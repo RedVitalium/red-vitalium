@@ -190,13 +190,56 @@ export default function Admin() {
     toast.success("Edad biológica calculada correctamente");
   };
 
+  // Mutation to save biomarkers
+  const saveBiomarkersMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedPatient) {
+        throw new Error("No patient selected");
+      }
+      
+      const { error } = await supabase.from("biomarkers").insert({
+        user_id: selectedPatient,
+        recorded_by: user?.id,
+        albumin: biomarkers.albumin,
+        creatinine: biomarkers.creatinine,
+        glucose: biomarkers.glucose,
+        c_reactive_protein: biomarkers.crp,
+        lymphocyte_percentage: biomarkers.lymphocytePercent,
+        mean_cell_volume: biomarkers.mcv,
+        red_cell_distribution_width: biomarkers.rdw,
+        alkaline_phosphatase: biomarkers.alkalinePhosphatase,
+        white_blood_cell_count: biomarkers.whiteBloodCellCount,
+        biological_age: biologicalAgeResult?.phenotypicAge,
+      });
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["patient-biomarkers", selectedPatient] });
+      toast.success("Biomarcadores guardados correctamente");
+    },
+    onError: (error) => {
+      toast.error("Error al guardar biomarcadores: " + error.message);
+    },
+  });
+
   const handleSaveBiomarkers = () => {
     if (!selectedPatient) {
       toast.error("Por favor seleccione un paciente");
       return;
     }
-    // Here you would save to database
-    toast.success("Biomarcadores guardados correctamente");
+    
+    // Validate that at least some biomarkers are filled
+    const hasBiomarkers = Object.entries(biomarkers).some(
+      ([key, value]) => key !== "chronologicalAge" && value !== undefined
+    );
+    
+    if (!hasBiomarkers) {
+      toast.error("Por favor ingrese al menos un biomarcador");
+      return;
+    }
+    
+    saveBiomarkersMutation.mutate();
   };
 
   const toggleHabitUnlock = (habitId: string) => {
@@ -455,9 +498,13 @@ export default function Admin() {
               </div>
 
               <div className="flex gap-4 mt-8">
-                <Button onClick={handleSaveBiomarkers} className="gap-2">
+                <Button 
+                  onClick={handleSaveBiomarkers} 
+                  disabled={saveBiomarkersMutation.isPending}
+                  className="gap-2"
+                >
                   <Save className="h-4 w-4" />
-                  Guardar Biomarcadores
+                  {saveBiomarkersMutation.isPending ? "Guardando..." : "Guardar Biomarcadores"}
                 </Button>
                 <Button variant="outline" onClick={handleCalculateBiologicalAge} className="gap-2">
                   <Calculator className="h-4 w-4" />
