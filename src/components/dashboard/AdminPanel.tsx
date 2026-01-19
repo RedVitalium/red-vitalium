@@ -42,6 +42,7 @@ import {
 } from "@/lib/biological-age";
 import { calculateVO2Max, getVO2MaxReferenceRange } from "@/lib/vo2max-calculator";
 import { getReferenceRange } from "@/lib/health-reference-values";
+import { HabitGoalsSection } from "./HabitGoalsSection";
 
 // Locked habits that can be unlocked by admin
 const advancedHabits = [
@@ -1722,6 +1723,26 @@ export function AdminPanel() {
                 patientId={selectedPatient?.user_id} 
                 adminId={user?.id}
               />
+
+              {/* Monthly Progressive Goals Section */}
+              <div className="mt-8 pt-6 border-t">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 rounded-lg bg-warning/10">
+                    <TrendingUp className="h-5 w-5 text-warning" />
+                  </div>
+                  <div>
+                    <h3 className="font-display font-semibold">Metas Mensuales Progresivas</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Configure metas de pantalla, desbloqueos y yoga que se ajustan mes a mes
+                    </p>
+                  </div>
+                </div>
+                <HabitGoalsSection 
+                  patientId={selectedPatient?.user_id} 
+                  adminId={user?.id}
+                  currentMonth={activeCycle ? Math.ceil((Date.now() - new Date(activeCycle.started_at).getTime()) / (28 * 24 * 60 * 60 * 1000)) + 1 : 1}
+                />
+              </div>
 
               {/* Advanced Habits Section */}
               <div className="mt-8 pt-6 border-t">

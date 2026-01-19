@@ -1,0 +1,101 @@
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./useAuth";
+import { useCycleData } from "./useCycleData";
+
+export function useHabitGoals() {
+  const { user } = useAuth();
+  const { getCycleProgress } = useCycleData(user?.id || null);
+  const cycleProgress = getCycleProgress();
+  
+  // Calculate current month of cycle (1-based)
+  const currentCycleMonth = Math.ceil(cycleProgress.daysSinceCycleStart / 28) || 1;
+
+  // Fetch habit goals for the current month
+  const { data: habitGoals = [], isLoading } = useQuery({
+    queryKey: ["user-habit-goals", user?.id, currentCycleMonth],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const { data, error } = await supabase
+        .from("habit_goals")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("month", currentCycleMonth);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.id,
+  });
+
+  // Fetch activity goals
+  const { data: activityGoals } = useQuery({
+    queryKey: ["user-activity-goals", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from("activity_goals")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  // Fetch yoga goal from unlocked_habits
+  const { data: yogaHabit } = useQuery({
+    queryKey: ["user-yoga-habit", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from("unlocked_habits")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("habit_id", "yoga")
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  // Get specific goals with defaults
+  const getScreenTimeGoal = (): number => {
+    const goal = habitGoals.find(g => g.habit_type === "screen_time");
+    return goal?.target_value || 90; // Default 90 min
+  };
+
+  const getPhoneUnlocksGoal = (): number => {
+    const goal = habitGoals.find(g => g.habit_type === "phone_unlocks");
+    return goal?.target_value || 50; // Default 50 unlocks
+  };
+
+  const getYogaGoal = (): number => {
+    // First check habit_goals table (monthly goals)
+    const monthlyGoal = habitGoals.find(g => g.habit_type === "yoga");
+    if (monthlyGoal) return monthlyGoal.target_value;
+    
+    // Fall back to unlocked_habits goal
+    if (yogaHabit?.target_sessions_per_week) return yogaHabit.target_sessions_per_week;
+    
+    return 3; // Default 3 sessions
+  };
+
+  const getActivityGoals = () => {
+    return {
+      sessionsPerWeek: activityGoals?.target_sessions_per_week || 4,
+      avgDurationMinutes: activityGoals?.target_avg_duration_minutes || 30,
+    };
+  };
+
+  return {
+    isLoading,
+    currentCycleMonth,
+    screenTimeGoal: getScreenTimeGoal(),
+    phoneUnlocksGoal: getPhoneUnlocksGoal(),
+    yogaGoal: getYogaGoal(),
+    activityGoals: getActivityGoals(),
+    hasGoals: habitGoals.length > 0 || !!activityGoals,
+  };
+}
