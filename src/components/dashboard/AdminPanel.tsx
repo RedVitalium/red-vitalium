@@ -57,6 +57,106 @@ interface PatientProfile {
   sex: string | null;
 }
 
+// Survey Time Configuration Component
+function SurveyTimeConfig({ 
+  patientId, 
+  currentBreakfastTime 
+}: { 
+  patientId: string | undefined; 
+  currentBreakfastTime: string | null;
+}) {
+  const [surveyTime, setSurveyTime] = useState(currentBreakfastTime?.slice(0, 5) || "08:00");
+  const [isSaving, setIsSaving] = useState(false);
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (currentBreakfastTime) {
+      setSurveyTime(currentBreakfastTime.slice(0, 5));
+    }
+  }, [currentBreakfastTime]);
+
+  const handleSave = async () => {
+    if (!patientId) return;
+    setIsSaving(true);
+    try {
+      // Check if settings exist
+      const { data: existing } = await supabase
+        .from("user_settings")
+        .select("id")
+        .eq("user_id", patientId)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase
+          .from("user_settings")
+          .update({ breakfast_time: surveyTime + ":00" })
+          .eq("user_id", patientId);
+      } else {
+        await supabase
+          .from("user_settings")
+          .insert({ user_id: patientId, breakfast_time: surveyTime + ":00" });
+      }
+      
+      queryClient.invalidateQueries({ queryKey: ["patient-settings", patientId] });
+      toast.success("Hora de encuesta actualizada");
+    } catch (error) {
+      toast.error("Error al guardar la hora");
+    }
+    setIsSaving(false);
+  };
+
+  const getReminderTime = () => {
+    const [hours, minutes] = surveyTime.split(":").map(Number);
+    let newMinutes = minutes - 5;
+    let newHours = hours;
+    if (newMinutes < 0) {
+      newMinutes += 60;
+      newHours = (newHours - 1 + 24) % 24;
+    }
+    return `${newHours.toString().padStart(2, "0")}:${newMinutes.toString().padStart(2, "0")}`;
+  };
+
+  return (
+    <div className="p-4 bg-accent/10 border border-accent/30 rounded-xl mb-6">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="p-2 rounded-lg bg-accent/20">
+          <Clock className="h-5 w-5 text-accent" />
+        </div>
+        <div>
+          <h4 className="font-display font-semibold">Hora de la Encuesta Diaria</h4>
+          <p className="text-sm text-muted-foreground">
+            El paciente recibirá un recordatorio 5 minutos antes de esta hora
+          </p>
+        </div>
+      </div>
+      <div className="flex items-end gap-4">
+        <div className="flex-1 space-y-2">
+          <Label htmlFor="survey-time">Hora del desayuno / encuesta</Label>
+          <Input
+            id="survey-time"
+            type="time"
+            value={surveyTime}
+            onChange={(e) => setSurveyTime(e.target.value)}
+            className="max-w-xs"
+          />
+          <p className="text-xs text-muted-foreground">
+            Recordatorio a las: <span className="font-medium text-accent">{getReminderTime()}</span>
+          </p>
+        </div>
+        <Button 
+          onClick={handleSave} 
+          disabled={isSaving || !patientId}
+          size="sm"
+          className="gap-2"
+        >
+          <Save className="h-4 w-4" />
+          {isSaving ? "Guardando..." : "Guardar"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export function AdminPanel() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -97,13 +197,29 @@ export function AdminPanel() {
       if (searchEmail.length < 3) return [];
       const { data, error } = await supabase
         .from("profiles")
-        .select("user_id, full_name, email, date_of_birth, sex")
+        .select("user_id, full_name, email, date_of_birth, sex, weight, height, waist_circumference")
         .ilike("email", `%${searchEmail}%`)
         .limit(10);
       if (error) throw error;
       return data || [];
     },
     enabled: searchEmail.length >= 3,
+  });
+
+  // Fetch full profile for selected patient
+  const { data: fullPatientProfile } = useQuery({
+    queryKey: ["patient-profile", selectedPatient?.user_id],
+    queryFn: async () => {
+      if (!selectedPatient) return null;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", selectedPatient.user_id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedPatient,
   });
 
   // Fetch active cycle for selected patient
@@ -173,9 +289,23 @@ export function AdminPanel() {
     setUnlockedHabits(patientUnlockedHabits);
   }, [patientUnlockedHabits]);
 
-  // Update personal data when patient is selected
+  // Update personal data when full patient profile is loaded
   useEffect(() => {
-    if (selectedPatient) {
+    if (fullPatientProfile) {
+      setPersonalData({
+        full_name: fullPatientProfile.full_name || "",
+        date_of_birth: fullPatientProfile.date_of_birth || "",
+        sex: fullPatientProfile.sex || "",
+        height: fullPatientProfile.height?.toString() || "",
+        weight: fullPatientProfile.weight?.toString() || "",
+        waist: fullPatientProfile.waist_circumference?.toString() || "",
+      });
+    }
+  }, [fullPatientProfile]);
+
+  // Reset personal data when patient changes (but no profile loaded yet)
+  useEffect(() => {
+    if (selectedPatient && !fullPatientProfile) {
       setPersonalData({
         full_name: selectedPatient.full_name || "",
         date_of_birth: selectedPatient.date_of_birth || "",
@@ -185,7 +315,8 @@ export function AdminPanel() {
         waist: "",
       });
     }
-  }, [selectedPatient]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPatient?.user_id]);
 
   // Mutation to start a cycle
   const startCycleMutation = useMutation({
@@ -240,15 +371,19 @@ export function AdminPanel() {
       const { error } = await supabase
         .from("profiles")
         .update({
-          full_name: data.full_name,
+          full_name: data.full_name || null,
           date_of_birth: data.date_of_birth || null,
           sex: data.sex || null,
+          weight: data.weight ? parseFloat(data.weight) : null,
+          height: data.height ? parseFloat(data.height) : null,
+          waist_circumference: data.waist ? parseFloat(data.waist) : null,
         })
         .eq("user_id", selectedPatient.user_id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["search-patients"] });
+      queryClient.invalidateQueries({ queryKey: ["patient-profile", selectedPatient?.user_id] });
       toast.success("Perfil actualizado correctamente");
     },
     onError: (error) => {
@@ -864,6 +999,12 @@ export function AdminPanel() {
                   </p>
                 </div>
               </div>
+
+              {/* Survey Time Configuration */}
+              <SurveyTimeConfig 
+                patientId={selectedPatient?.user_id} 
+                currentBreakfastTime={patientSettings?.breakfast_time || null}
+              />
 
               {/* Add new question form */}
               <div className="p-4 bg-muted/30 rounded-xl mb-6">
