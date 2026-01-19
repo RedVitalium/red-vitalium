@@ -15,6 +15,7 @@ import { DailySurveyCard } from "@/components/dashboard/DailySurveyCard";
 import { AdminPanel } from "@/components/dashboard/AdminPanel";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useCycleData } from "@/hooks/useCycleData";
+import { useUnlockedHabits } from "@/hooks/useUnlockedHabits";
 import { useAuth } from "@/hooks/useAuth";
 import { useSearchParams } from "react-router-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -34,7 +35,8 @@ import {
   Leaf,
   Timer,
   Info,
-  Shield
+  Shield,
+  Sparkles
 } from "lucide-react";
 
 // Helper to determine status based on value and target
@@ -87,6 +89,17 @@ const [searchParams] = useSearchParams();
   const cycleProgress = isDemo 
     ? { cycleStartDate: new Date(), currentWeekOfCycle: 3, daysSinceCycleStart: 18, cycleProgress: 64, hasActiveCycle: true, isTestWeek: false, weeksUntilTest: 1 }
     : getCycleProgress();
+
+  // Get unlocked habits
+  const { isHabitUnlocked, advancedHabits: habitsList } = useUnlockedHabits();
+
+  // Icon mapping for habits
+  const habitIcons: Record<string, typeof Flame> = {
+    sauna: Flame,
+    cold_bath: Snowflake,
+    meditation: Brain,
+    yoga: Leaf,
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -457,36 +470,45 @@ const [searchParams] = useSearchParams();
               </motion.div>
             </div>
 
-            {/* Locked Habits - Advanced Features */}
+            {/* Advanced Habits - Dynamic based on unlock status */}
             <div>
               <h3 className="text-lg font-display font-bold mb-4 text-muted-foreground flex items-center gap-2">
                 <Timer className="h-5 w-5" />
                 Hábitos Avanzados
-                <span className="text-xs font-normal bg-muted px-2 py-1 rounded-full ml-2">
-                  Se desbloquean al estabilizar hábitos básicos
-                </span>
+                {!habitsList.some(h => isHabitUnlocked(h.id)) && (
+                  <span className="text-xs font-normal bg-muted px-2 py-1 rounded-full ml-2">
+                    Se desbloquean al estabilizar hábitos básicos
+                  </span>
+                )}
               </h3>
               <div className="grid md:grid-cols-2 gap-4">
-                <LockedHabitCard
-                  title="Saunas"
-                  description="Sesiones de sauna para recuperación y longevidad"
-                  icon={Flame}
-                />
-                <LockedHabitCard
-                  title="Baños Fríos"
-                  description="Exposición al frío para resiliencia metabólica"
-                  icon={Snowflake}
-                />
-                <LockedHabitCard
-                  title="Meditación"
-                  description="Práctica de mindfulness y atención plena"
-                  icon={Brain}
-                />
-                <LockedHabitCard
-                  title="Yoga"
-                  description="Flexibilidad, equilibrio y conexión mente-cuerpo"
-                  icon={Leaf}
-                />
+                {habitsList.map((habit) => {
+                  const Icon = habitIcons[habit.id] || Sparkles;
+                  const unlocked = isHabitUnlocked(habit.id);
+                  
+                  if (unlocked) {
+                    return (
+                      <motion.div key={habit.id} variants={itemVariants}>
+                        <MetricCard
+                          title={habit.name}
+                          subtitle={habit.description}
+                          value="Activo"
+                          status="optimal"
+                          icon={<Icon className="h-5 w-5" />}
+                        />
+                      </motion.div>
+                    );
+                  }
+                  
+                  return (
+                    <LockedHabitCard
+                      key={habit.id}
+                      title={habit.name}
+                      description={habit.description}
+                      icon={Icon}
+                    />
+                  );
+                })}
               </div>
             </div>
           </motion.div>

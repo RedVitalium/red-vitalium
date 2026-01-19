@@ -40,6 +40,8 @@ import {
   validateBiomarkers,
   BloodBiomarkers 
 } from "@/lib/biological-age";
+import { calculateVO2Max, getVO2MaxReferenceRange } from "@/lib/vo2max-calculator";
+import { getReferenceRange } from "@/lib/health-reference-values";
 
 // Locked habits that can be unlocked by admin
 const advancedHabits = [
@@ -189,6 +191,16 @@ export function AdminPanel() {
   });
   
   const [biologicalAgeResult, setBiologicalAgeResult] = useState<ReturnType<typeof calculateBiologicalAge> | null>(null);
+
+  // Manual health data form state
+  const [healthMetrics, setHealthMetrics] = useState({
+    balanceLeft: "",
+    balanceRight: "",
+    gripStrength: "",
+    restingHeartRate: "",
+    maxHeartRate: "",
+  });
+  const [vo2MaxResult, setVo2MaxResult] = useState<ReturnType<typeof calculateVO2Max> | null>(null);
 
   // Search patients by email
   const { data: searchResults = [], isLoading: isSearching } = useQuery({
@@ -591,6 +603,80 @@ export function AdminPanel() {
     toast.success("Edad biológica calculada correctamente");
   };
 
+  // Calculate VO2Max from heart rate data
+  const handleCalculateVO2Max = () => {
+    const age = calculateAge(personalData.date_of_birth);
+    const sex = personalData.sex === "female" ? "female" : "male";
+    const rhr = parseFloat(healthMetrics.restingHeartRate);
+    const maxHr = healthMetrics.maxHeartRate ? parseFloat(healthMetrics.maxHeartRate) : undefined;
+
+    if (!age || age <= 0) {
+      toast.error("Por favor ingrese la fecha de nacimiento del paciente primero");
+      return;
+    }
+    if (!rhr || rhr <= 0) {
+      toast.error("Por favor ingrese la frecuencia cardíaca en reposo");
+      return;
+    }
+
+    const result = calculateVO2Max({
+      age,
+      sex,
+      restingHeartRate: rhr,
+      maxHeartRate: maxHr,
+    });
+    setVo2MaxResult(result);
+    toast.success("VO2Max calculado correctamente");
+  };
+
+  // Mutation to save health metrics
+  const saveHealthMetricsMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedPatient) throw new Error("No patient selected");
+      
+      const metricsToSave: Array<{ data_type: string; value: number; unit: string }> = [];
+      
+      if (healthMetrics.balanceLeft) {
+        metricsToSave.push({ data_type: "balance_left", value: parseFloat(healthMetrics.balanceLeft), unit: "seg" });
+      }
+      if (healthMetrics.balanceRight) {
+        metricsToSave.push({ data_type: "balance_right", value: parseFloat(healthMetrics.balanceRight), unit: "seg" });
+      }
+      if (healthMetrics.gripStrength) {
+        metricsToSave.push({ data_type: "grip_strength", value: parseFloat(healthMetrics.gripStrength), unit: "kg" });
+      }
+      if (healthMetrics.restingHeartRate) {
+        metricsToSave.push({ data_type: "resting_heart_rate", value: parseFloat(healthMetrics.restingHeartRate), unit: "bpm" });
+      }
+      if (healthMetrics.maxHeartRate) {
+        metricsToSave.push({ data_type: "max_heart_rate", value: parseFloat(healthMetrics.maxHeartRate), unit: "bpm" });
+      }
+      if (vo2MaxResult) {
+        metricsToSave.push({ data_type: "vo2_max", value: vo2MaxResult.vo2Max, unit: "ml/kg/min" });
+      }
+
+      for (const metric of metricsToSave) {
+        const { error } = await supabase
+          .from("health_data")
+          .insert({
+            user_id: selectedPatient.user_id,
+            data_type: metric.data_type,
+            value: metric.value,
+            unit: metric.unit,
+            source: "admin_manual",
+          });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["health_data", selectedPatient?.user_id] });
+      toast.success("Métricas de salud guardadas correctamente");
+    },
+    onError: (error) => {
+      toast.error("Error al guardar métricas: " + error.message);
+    },
+  });
+
   const selectPatient = (patient: PatientProfile) => {
     setSelectedPatient(patient);
     setSearchEmail("");
@@ -674,7 +760,7 @@ export function AdminPanel() {
       {/* Admin Tabs - Only show when patient is selected */}
       {selectedPatient && (
         <Tabs defaultValue="personal" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 max-w-2xl">
+          <TabsList className="grid w-full grid-cols-6 max-w-3xl">
             <TabsTrigger value="personal" className="flex items-center gap-2 text-xs">
               <UserCircle className="h-4 w-4" />
               Personal
@@ -682,6 +768,10 @@ export function AdminPanel() {
             <TabsTrigger value="cycle" className="flex items-center gap-2 text-xs">
               <Calendar className="h-4 w-4" />
               Ciclo
+            </TabsTrigger>
+            <TabsTrigger value="metrics" className="flex items-center gap-2 text-xs">
+              <TrendingUp className="h-4 w-4" />
+              Métricas
             </TabsTrigger>
             <TabsTrigger value="biomarkers" className="flex items-center gap-2 text-xs">
               <Droplets className="h-4 w-4" />
@@ -884,6 +974,136 @@ export function AdminPanel() {
                     <Play className="h-4 w-4" />
                     Iniciar Ciclo
                   </Button>
+                </motion.div>
+              )}
+            </Card>
+          </TabsContent>
+
+          {/* Physical Metrics Tab */}
+          <TabsContent value="metrics">
+            <Card className="p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-display font-bold">Métricas Físicas</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Ingrese equilibrio, fuerza de agarre y datos cardíacos
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="balanceLeft">Equilibrio Pierna Izq. (seg)</Label>
+                  <Input
+                    id="balanceLeft"
+                    type="number"
+                    step="1"
+                    placeholder="Ej: 30"
+                    value={healthMetrics.balanceLeft}
+                    onChange={(e) => setHealthMetrics(prev => ({ ...prev, balanceLeft: e.target.value }))}
+                  />
+                  <p className="text-xs text-muted-foreground">Ojos cerrados, una pierna</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="balanceRight">Equilibrio Pierna Der. (seg)</Label>
+                  <Input
+                    id="balanceRight"
+                    type="number"
+                    step="1"
+                    placeholder="Ej: 32"
+                    value={healthMetrics.balanceRight}
+                    onChange={(e) => setHealthMetrics(prev => ({ ...prev, balanceRight: e.target.value }))}
+                  />
+                  <p className="text-xs text-muted-foreground">Ojos cerrados, una pierna</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="gripStrength">Fuerza de Agarre (kg)</Label>
+                  <Input
+                    id="gripStrength"
+                    type="number"
+                    step="0.5"
+                    placeholder="Ej: 42"
+                    value={healthMetrics.gripStrength}
+                    onChange={(e) => setHealthMetrics(prev => ({ ...prev, gripStrength: e.target.value }))}
+                  />
+                  <p className="text-xs text-muted-foreground">Dinamómetro, mano dominante</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="restingHR">FC en Reposo (bpm)</Label>
+                  <Input
+                    id="restingHR"
+                    type="number"
+                    step="1"
+                    placeholder="Ej: 62"
+                    value={healthMetrics.restingHeartRate}
+                    onChange={(e) => setHealthMetrics(prev => ({ ...prev, restingHeartRate: e.target.value }))}
+                  />
+                  <p className="text-xs text-muted-foreground">Al despertar, antes de levantarse</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="maxHR">FC Máxima (bpm) - Opcional</Label>
+                  <Input
+                    id="maxHR"
+                    type="number"
+                    step="1"
+                    placeholder="Ej: 185"
+                    value={healthMetrics.maxHeartRate}
+                    onChange={(e) => setHealthMetrics(prev => ({ ...prev, maxHeartRate: e.target.value }))}
+                  />
+                  <p className="text-xs text-muted-foreground">Se estimará si no se proporciona</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4 mt-8">
+                <Button 
+                  onClick={() => saveHealthMetricsMutation.mutate()}
+                  disabled={saveHealthMetricsMutation.isPending}
+                  className="gap-2"
+                >
+                  <Save className="h-4 w-4" />
+                  Guardar Métricas
+                </Button>
+                <Button variant="outline" onClick={handleCalculateVO2Max} className="gap-2">
+                  <Calculator className="h-4 w-4" />
+                  Calcular VO2Max
+                </Button>
+              </div>
+
+              {vo2MaxResult && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-6 grid md:grid-cols-3 gap-4"
+                >
+                  <Card className="p-4 bg-primary/5 border-primary/20">
+                    <p className="text-sm text-muted-foreground">VO2 Máx Estimado</p>
+                    <p className="text-3xl font-display font-bold text-primary">
+                      {vo2MaxResult.vo2Max} ml/kg/min
+                    </p>
+                  </Card>
+                  <Card className="p-4">
+                    <p className="text-sm text-muted-foreground">Clasificación</p>
+                    <p className={`text-xl font-display font-bold ${
+                      vo2MaxResult.rating === 'superior' || vo2MaxResult.rating === 'excellent' ? 'text-success' :
+                      vo2MaxResult.rating === 'good' ? 'text-primary' :
+                      vo2MaxResult.rating === 'fair' ? 'text-warning' : 'text-destructive'
+                    }`}>
+                      {vo2MaxResult.rating === 'superior' ? '🌟 Superior' :
+                       vo2MaxResult.rating === 'excellent' ? '✅ Excelente' :
+                       vo2MaxResult.rating === 'good' ? '👍 Bueno' :
+                       vo2MaxResult.rating === 'fair' ? '⚠️ Regular' : '🔴 Bajo'}
+                    </p>
+                  </Card>
+                  <Card className="p-4">
+                    <p className="text-sm text-muted-foreground">Percentil</p>
+                    <p className="text-xl font-display font-bold">
+                      Top {100 - vo2MaxResult.percentile}%
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">{vo2MaxResult.description}</p>
+                  </Card>
                 </motion.div>
               )}
             </Card>
