@@ -95,6 +95,89 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_survey_questions: {
+        Row: {
+          created_at: string
+          display_order: number
+          follow_up_label: string | null
+          follow_up_options: Json | null
+          habit_category: string | null
+          id: string
+          is_active: boolean
+          question_text: string
+          question_type: string
+          updated_at: string
+          week_end: number
+          week_start: number
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          follow_up_label?: string | null
+          follow_up_options?: Json | null
+          habit_category?: string | null
+          id?: string
+          is_active?: boolean
+          question_text: string
+          question_type?: string
+          updated_at?: string
+          week_end?: number
+          week_start?: number
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          follow_up_label?: string | null
+          follow_up_options?: Json | null
+          habit_category?: string | null
+          id?: string
+          is_active?: boolean
+          question_text?: string
+          question_type?: string
+          updated_at?: string
+          week_end?: number
+          week_start?: number
+        }
+        Relationships: []
+      }
+      daily_survey_responses: {
+        Row: {
+          answer: boolean
+          created_at: string
+          follow_up_value: number | null
+          id: string
+          question_id: string
+          response_date: string
+          user_id: string
+        }
+        Insert: {
+          answer: boolean
+          created_at?: string
+          follow_up_value?: number | null
+          id?: string
+          question_id: string
+          response_date?: string
+          user_id: string
+        }
+        Update: {
+          answer?: boolean
+          created_at?: string
+          follow_up_value?: number | null
+          id?: string
+          question_id?: string
+          response_date?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_survey_responses_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "daily_survey_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       health_data: {
         Row: {
           data_type: string
@@ -260,6 +343,7 @@ export type Database = {
       user_settings: {
         Row: {
           bedtime: number | null
+          breakfast_time: string | null
           created_at: string
           id: string
           notification_settings: Json | null
@@ -271,6 +355,7 @@ export type Database = {
         }
         Insert: {
           bedtime?: number | null
+          breakfast_time?: string | null
           created_at?: string
           id?: string
           notification_settings?: Json | null
@@ -282,6 +367,7 @@ export type Database = {
         }
         Update: {
           bedtime?: number | null
+          breakfast_time?: string | null
           created_at?: string
           id?: string
           notification_settings?: Json | null

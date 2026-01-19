@@ -208,6 +208,71 @@ export function useLocalNotifications() {
     }
   };
 
+  // Schedule daily survey reminder based on breakfast time
+  const scheduleDailySurveyReminder = useCallback(async (breakfastTime: string): Promise<boolean> => {
+    if (!isNative) {
+      console.log("Notifications: Not running on native platform");
+      return false;
+    }
+
+    if (!hasPermission) {
+      const granted = await requestPermissions();
+      if (!granted) {
+        console.log("Notification permission not granted");
+        return false;
+      }
+    }
+
+    try {
+      // Parse breakfast time and calculate 5 minutes before
+      const [hours, minutes] = breakfastTime.split(":").map(Number);
+      let reminderMinutes = minutes - 5;
+      let reminderHours = hours;
+
+      if (reminderMinutes < 0) {
+        reminderMinutes += 60;
+        reminderHours -= 1;
+        if (reminderHours < 0) reminderHours = 23;
+      }
+
+      // Cancel existing daily survey notification
+      try {
+        await LocalNotifications.cancel({
+          notifications: [{ id: 1000 }],
+        });
+      } catch (e) {
+        // Ignore if doesn't exist
+      }
+
+      // Schedule daily survey reminder
+      await LocalNotifications.schedule({
+        notifications: [
+          {
+            id: 1000,
+            title: "📋 Logros Diarios",
+            body: "¿Lograste tus metas de hábitos ayer? Registra tu progreso",
+            schedule: {
+              on: {
+                hour: reminderHours,
+                minute: reminderMinutes,
+              },
+              repeats: true,
+              allowWhileIdle: true,
+            },
+            sound: "default",
+            smallIcon: "ic_stat_icon_config_sample",
+            iconColor: "#6366f1",
+          },
+        ],
+      });
+      console.log("Scheduled daily survey reminder at", `${reminderHours}:${reminderMinutes}`);
+      return true;
+    } catch (error) {
+      console.error("Error scheduling daily survey reminder:", error);
+      return false;
+    }
+  }, [isNative, hasPermission]);
+
   return {
     hasPermission,
     isNative,
@@ -215,5 +280,6 @@ export function useLocalNotifications() {
     scheduleHabitReminders,
     cancelAllNotifications,
     scheduleTestNotification,
+    scheduleDailySurveyReminder,
   };
 }

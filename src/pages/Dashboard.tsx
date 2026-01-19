@@ -11,6 +11,7 @@ import { LockedHabitCard } from "@/components/dashboard/LockedHabitCard";
 import { NotificationSettings } from "@/components/dashboard/NotificationSettings";
 import { HealthConnectCard } from "@/components/dashboard/HealthConnectCard";
 import { DemoTour } from "@/components/dashboard/DemoTour";
+import { DailySurveyCard } from "@/components/dashboard/DailySurveyCard";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useCycleData } from "@/hooks/useCycleData";
 import { useAuth } from "@/hooks/useAuth";
@@ -179,6 +180,12 @@ export default function Dashboard() {
           
           {/* Health Connect Card */}
           <HealthConnectCard />
+          
+          {/* Daily Survey - shows during all 4 weeks */}
+          <DailySurveyCard 
+            currentWeek={cycleProgress.currentWeekOfCycle}
+            hasActiveCycle={cycleProgress.hasActiveCycle}
+          />
           
           {/* Show reminders only for weeks 1-3 when cycle is active */}
           {cycleProgress.hasActiveCycle && cycleProgress.currentWeekOfCycle <= 3 ? (
