@@ -159,6 +159,264 @@ function SurveyTimeConfig({
   );
 }
 
+// Activity Goals Section Component
+function ActivityGoalsSection({ 
+  patientId, 
+  adminId 
+}: { 
+  patientId: string | undefined; 
+  adminId: string | undefined;
+}) {
+  const queryClient = useQueryClient();
+  const [sessionsGoal, setSessionsGoal] = useState(4);
+  const [durationGoal, setDurationGoal] = useState(30);
+
+  // Fetch existing goals
+  const { data: activityGoals, isLoading } = useQuery({
+    queryKey: ["activity-goals", patientId],
+    queryFn: async () => {
+      if (!patientId) return null;
+      const { data, error } = await supabase
+        .from("activity_goals")
+        .select("*")
+        .eq("user_id", patientId)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!patientId,
+  });
+
+  // Update local state when data loads
+  useEffect(() => {
+    if (activityGoals) {
+      setSessionsGoal(activityGoals.target_sessions_per_week || 4);
+      setDurationGoal(activityGoals.target_avg_duration_minutes || 30);
+    }
+  }, [activityGoals]);
+
+  const saveGoalsMutation = useMutation({
+    mutationFn: async () => {
+      if (!patientId) throw new Error("No patient selected");
+      
+      const goalData = {
+        user_id: patientId,
+        target_sessions_per_week: sessionsGoal,
+        target_avg_duration_minutes: durationGoal,
+        set_by: adminId,
+      };
+
+      // Upsert - insert or update
+      const { error } = await supabase
+        .from("activity_goals")
+        .upsert(goalData, { onConflict: 'user_id' });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["activity-goals", patientId] });
+      toast.success("Metas de actividad guardadas");
+    },
+    onError: (error) => {
+      toast.error("Error al guardar metas: " + error.message);
+    },
+  });
+
+  if (!patientId) {
+    return (
+      <div className="p-4 bg-muted/30 rounded-lg text-sm text-muted-foreground">
+        Seleccione un paciente para configurar metas de actividad
+      </div>
+    );
+  }
+
+  const sessionOptions = [1, 2, 3, 4, 5, 6, 7];
+  const durationOptions = [15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90];
+
+  return (
+    <div className="p-4 bg-accent/10 border border-accent/30 rounded-xl">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="p-2 rounded-lg bg-accent/20">
+          <Activity className="h-5 w-5 text-accent" />
+        </div>
+        <div>
+          <h4 className="font-display font-semibold">Metas de Actividad Física</h4>
+          <p className="text-sm text-muted-foreground">
+            Configure el número de sesiones y duración promedio por semana
+          </p>
+        </div>
+      </div>
+      
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Sesiones por Semana</Label>
+          <Select
+            value={String(sessionsGoal)}
+            onValueChange={(value) => setSessionsGoal(parseInt(value))}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {sessionOptions.map(n => (
+                <SelectItem key={n} value={String(n)}>{n} {n === 1 ? 'sesión' : 'sesiones'}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label>Duración Promedio por Sesión</Label>
+          <Select
+            value={String(durationGoal)}
+            onValueChange={(value) => setDurationGoal(parseInt(value))}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {durationOptions.map(n => (
+                <SelectItem key={n} value={String(n)}>{n} minutos</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      
+      <Button 
+        onClick={() => saveGoalsMutation.mutate()}
+        disabled={saveGoalsMutation.isPending || isLoading}
+        size="sm"
+        className="mt-4 gap-2"
+      >
+        <Save className="h-4 w-4" />
+        {saveGoalsMutation.isPending ? "Guardando..." : "Guardar Metas"}
+      </Button>
+    </div>
+  );
+}
+
+// Habit Unlock Card with frequency dropdown
+function HabitUnlockCard({
+  habit,
+  unlocked,
+  patientId,
+  adminId,
+  onToggle,
+  isToggling,
+}: {
+  habit: { id: string; name: string; description: string };
+  unlocked: boolean;
+  patientId: string | undefined;
+  adminId: string | undefined;
+  onToggle: () => void;
+  isToggling: boolean;
+}) {
+  const queryClient = useQueryClient();
+  const [targetSessions, setTargetSessions] = useState(3);
+
+  // Fetch habit goal
+  const { data: habitGoal } = useQuery({
+    queryKey: ["habit-goal", patientId, habit.id],
+    queryFn: async () => {
+      if (!patientId) return null;
+      const { data, error } = await supabase
+        .from("unlocked_habits")
+        .select("target_sessions_per_week")
+        .eq("user_id", patientId)
+        .eq("habit_id", habit.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!patientId && unlocked,
+  });
+
+  useEffect(() => {
+    if (habitGoal?.target_sessions_per_week) {
+      setTargetSessions(habitGoal.target_sessions_per_week);
+    }
+  }, [habitGoal]);
+
+  const updateGoalMutation = useMutation({
+    mutationFn: async (sessions: number) => {
+      if (!patientId) throw new Error("No patient selected");
+      const { error } = await supabase
+        .from("unlocked_habits")
+        .update({ target_sessions_per_week: sessions })
+        .eq("user_id", patientId)
+        .eq("habit_id", habit.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["habit-goal", patientId, habit.id] });
+      toast.success("Meta de frecuencia actualizada");
+    },
+    onError: (error) => {
+      toast.error("Error: " + error.message);
+    },
+  });
+
+  const handleSessionChange = (value: string) => {
+    const sessions = parseInt(value);
+    setTargetSessions(sessions);
+    if (unlocked) {
+      updateGoalMutation.mutate(sessions);
+    }
+  };
+
+  const sessionOptions = [1, 2, 3, 4, 5, 6, 7];
+
+  return (
+    <motion.div
+      whileHover={{ scale: 1.02 }}
+      className={`p-4 rounded-xl border-2 transition-all ${
+        unlocked 
+          ? 'bg-success/10 border-success/30' 
+          : 'bg-muted/30 border-muted'
+      }`}
+    >
+      <div className="flex items-center justify-between mb-2">
+        <div>
+          <h3 className="font-display font-semibold">{habit.name}</h3>
+          <p className="text-sm text-muted-foreground">{habit.description}</p>
+        </div>
+        <Button
+          variant={unlocked ? "default" : "outline"}
+          size="icon"
+          className={unlocked ? "bg-success hover:bg-success/90" : ""}
+          disabled={isToggling}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggle();
+          }}
+        >
+          {unlocked ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
+        </Button>
+      </div>
+      
+      {unlocked && (
+        <div className="mt-3 pt-3 border-t border-success/20">
+          <div className="flex items-center gap-2">
+            <Label className="text-xs whitespace-nowrap">Meta semanal:</Label>
+            <Select
+              value={String(targetSessions)}
+              onValueChange={handleSessionChange}
+            >
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {sessionOptions.map(n => (
+                  <SelectItem key={n} value={String(n)}>{n} {n === 1 ? 'vez' : 'veces'}/semana</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
 // Personality Results Component
 function PersonalityResults({ patientId }: { patientId: string | undefined }) {
   const { data: testResults = [], isLoading } = useQuery({
@@ -1452,47 +1710,45 @@ export function AdminPanel() {
                   <Activity className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-display font-bold">Hábitos Avanzados</h2>
+                  <h2 className="text-xl font-display font-bold">Hábitos y Metas de Actividad</h2>
                   <p className="text-sm text-muted-foreground">
-                    Desbloquee hábitos para pacientes que han estabilizado los básicos
+                    Configure metas de actividad física y desbloquee hábitos avanzados
                   </p>
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                {advancedHabits.map(habit => {
-                  const unlocked = unlockedHabits.includes(habit.id);
-                  return (
-                    <motion.div
-                      key={habit.id}
-                      whileHover={{ scale: 1.02 }}
-                      className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${
-                        unlocked 
-                          ? 'bg-success/10 border-success/30' 
-                          : 'bg-muted/30 border-muted'
-                      }`}
-                      onClick={() => toggleHabitMutation.mutate({ 
-                        habitId: habit.id, 
-                        unlock: !unlocked 
-                      })}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="font-display font-semibold">{habit.name}</h3>
-                          <p className="text-sm text-muted-foreground">{habit.description}</p>
-                        </div>
-                        <Button
-                          variant={unlocked ? "default" : "outline"}
-                          size="icon"
-                          className={unlocked ? "bg-success hover:bg-success/90" : ""}
-                          disabled={toggleHabitMutation.isPending}
-                        >
-                          {unlocked ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
-                        </Button>
-                      </div>
-                    </motion.div>
-                  );
-                })}
+              {/* Physical Activity Goals Section */}
+              <ActivityGoalsSection 
+                patientId={selectedPatient?.user_id} 
+                adminId={user?.id}
+              />
+
+              {/* Advanced Habits Section */}
+              <div className="mt-8 pt-6 border-t">
+                <h3 className="font-display font-semibold mb-4">Hábitos Avanzados</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Desbloquee hábitos para pacientes que han estabilizado los básicos
+                </p>
+                <div className="grid md:grid-cols-2 gap-4">
+                  {advancedHabits.map(habit => {
+                    const habitData = patientUnlockedHabits.find(h => h === habit.id);
+                    const unlocked = unlockedHabits.includes(habit.id);
+                    return (
+                      <HabitUnlockCard
+                        key={habit.id}
+                        habit={habit}
+                        unlocked={unlocked}
+                        patientId={selectedPatient?.user_id}
+                        adminId={user?.id}
+                        onToggle={() => toggleHabitMutation.mutate({ 
+                          habitId: habit.id, 
+                          unlock: !unlocked 
+                        })}
+                        isToggling={toggleHabitMutation.isPending}
+                      />
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Personality Test Results Section */}

@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_goals: {
+        Row: {
+          created_at: string
+          id: string
+          set_by: string | null
+          target_avg_duration_minutes: number
+          target_sessions_per_week: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          set_by?: string | null
+          target_avg_duration_minutes?: number
+          target_sessions_per_week?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          set_by?: string | null
+          target_avg_duration_minutes?: number
+          target_sessions_per_week?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       appointments: {
         Row: {
           appointment_date: string
@@ -284,6 +314,8 @@ export type Database = {
         Row: {
           habit_id: string
           id: string
+          target_avg_duration_minutes: number | null
+          target_sessions_per_week: number | null
           unlocked_at: string
           unlocked_by: string | null
           user_id: string
@@ -291,6 +323,8 @@ export type Database = {
         Insert: {
           habit_id: string
           id?: string
+          target_avg_duration_minutes?: number | null
+          target_sessions_per_week?: number | null
           unlocked_at?: string
           unlocked_by?: string | null
           user_id: string
@@ -298,6 +332,8 @@ export type Database = {
         Update: {
           habit_id?: string
           id?: string
+          target_avg_duration_minutes?: number | null
+          target_sessions_per_week?: number | null
           unlocked_at?: string
           unlocked_by?: string | null
           user_id?: string
