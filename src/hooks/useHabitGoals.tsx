@@ -93,9 +93,13 @@ export function useHabitGoals() {
   };
 
   const getActivityGoals = () => {
+    // First check habit_goals table for monthly progressive goals
+    const sessionsGoal = habitGoals.find(g => g.habit_type === "activity_sessions");
+    const durationGoal = habitGoals.find(g => g.habit_type === "activity_duration");
+    
     return {
-      sessionsPerWeek: activityGoals?.target_sessions_per_week || 4,
-      avgDurationMinutes: activityGoals?.target_avg_duration_minutes || 30,
+      sessionsPerWeek: sessionsGoal?.target_value || activityGoals?.target_sessions_per_week || 4,
+      avgDurationMinutes: durationGoal?.target_value || activityGoals?.target_avg_duration_minutes || 30,
     };
   };
 
