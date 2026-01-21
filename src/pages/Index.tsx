@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import vitaliumLogo from "@/assets/vitalium-logo.png";
+import appLogo from "@/assets/app-logo.png";
 import { 
   Activity, 
   Brain, 
@@ -11,7 +11,8 @@ import {
   Calendar, 
   BarChart3,
   ArrowRight,
-  Check
+  Check,
+  LogIn
 } from "lucide-react";
 
 const features = [
@@ -63,6 +64,26 @@ const itemVariants = {
 export default function Index() {
   return (
     <div className="min-h-screen">
+      {/* Header with white background for contrast */}
+      <header className="bg-white shadow-sm sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img
+              src={appLogo}
+              alt="Vitalium"
+              className="h-10 w-auto"
+            />
+            <span className="text-xl font-display font-bold text-secondary">VITALIUM</span>
+          </div>
+          <Button asChild variant="outline" className="gap-2">
+            <Link to="/auth">
+              <LogIn className="h-4 w-4" />
+              Ingresar
+            </Link>
+          </Button>
+        </div>
+      </header>
+
       {/* Hero Section */}
       <section className="relative bg-gradient-to-b from-secondary via-secondary/95 to-primary/90 text-secondary-foreground overflow-hidden">
         {/* Background Effects */}
@@ -79,7 +100,7 @@ export default function Index() {
             className="text-center max-w-4xl mx-auto"
           >
             <motion.img
-              src={vitaliumLogo}
+              src={appLogo}
               alt="Vitalium"
               className="h-32 w-auto mx-auto mb-8"
               initial={{ scale: 0.8, opacity: 0 }}
