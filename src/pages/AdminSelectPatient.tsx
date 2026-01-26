@@ -41,14 +41,16 @@ export default function AdminSelectPatient() {
     },
   });
 
-  // Filter patients based on search
-  const filteredPatients = patients.filter(patient => {
-    const search = searchTerm.toLowerCase();
-    return (
-      patient.full_name?.toLowerCase().includes(search) ||
-      patient.email?.toLowerCase().includes(search)
-    );
-  });
+  // Filter patients based on search - only show results when user is actively searching
+  const filteredPatients = searchTerm.trim().length >= 2 
+    ? patients.filter(patient => {
+        const search = searchTerm.toLowerCase();
+        return (
+          patient.full_name?.toLowerCase().includes(search) ||
+          patient.email?.toLowerCase().includes(search)
+        );
+      })
+    : [];
 
   const calculateAge = (dateOfBirth: string | null): number | null => {
     if (!dateOfBirth) return null;
@@ -68,6 +70,7 @@ export default function AdminSelectPatient() {
       fullName: patient.full_name || 'Sin nombre',
       email: patient.email || undefined,
     });
+    setCurrentMode('admin'); // Ensure we're in admin mode
     navigate('/dashboard');
   };
 
@@ -102,7 +105,7 @@ export default function AdminSelectPatient() {
             Seleccionar Paciente
           </h1>
           <p className="text-muted-foreground">
-            Elige el paciente cuyo dashboard deseas visualizar
+            Busca el paciente cuyo dashboard deseas visualizar
           </p>
         </motion.div>
 
@@ -131,16 +134,26 @@ export default function AdminSelectPatient() {
           transition={{ delay: 0.2 }}
         >
           <Card className="overflow-hidden">
-            {isLoading ? (
+            {isLoading && searchTerm.trim().length >= 2 ? (
               <div className="p-8 text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
-                <p className="text-muted-foreground">Cargando pacientes...</p>
+                <p className="text-muted-foreground">Buscando pacientes...</p>
+              </div>
+            ) : searchTerm.trim().length < 2 ? (
+              <div className="p-8 text-center">
+                <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">
+                  Escribe al menos 2 caracteres para buscar un paciente
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Puedes buscar por nombre o email
+                </p>
               </div>
             ) : filteredPatients.length === 0 ? (
               <div className="p-8 text-center">
                 <User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">
-                  {searchTerm ? 'No se encontraron pacientes' : 'No hay pacientes registrados'}
+                  No se encontraron pacientes con "{searchTerm}"
                 </p>
               </div>
             ) : (
