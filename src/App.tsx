@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { AuthProvider } from "./hooks/useAuth";
+import { AdminModeProvider } from "./hooks/useAdminMode";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { MainLayout } from "./components/layout/MainLayout";
 import Index from "./pages/Index";
@@ -14,6 +15,7 @@ import Tests from "./pages/Tests";
 import Appointments from "./pages/Appointments";
 import Reminders from "./pages/Reminders";
 import Admin from "./pages/Admin";
+import AdminSelectPatient from "./pages/AdminSelectPatient";
 import NotificationSettings from "./pages/NotificationSettings";
 import NotFound from "./pages/NotFound";
 
@@ -25,50 +27,58 @@ const isNativeApp = Capacitor.isNativePlatform();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            {/* Native app goes directly to auth, web shows landing page */}
-            <Route path="/" element={isNativeApp ? <Navigate to="/auth" replace /> : <Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route element={<MainLayout />}>
-              <Route path="/dashboard" element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/tests" element={
-                <ProtectedRoute>
-                  <Tests />
-                </ProtectedRoute>
-              } />
-              <Route path="/appointments" element={
-                <ProtectedRoute>
-                  <Appointments />
-                </ProtectedRoute>
-              } />
-              <Route path="/reminders" element={
-                <ProtectedRoute>
-                  <Reminders />
-                </ProtectedRoute>
-              } />
-              <Route path="/settings/notifications" element={
-                <ProtectedRoute>
-                  <NotificationSettings />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin" element={
+      <AdminModeProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              {/* Native app goes directly to auth, web shows landing page */}
+              <Route path="/" element={isNativeApp ? <Navigate to="/auth" replace /> : <Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route element={<MainLayout />}>
+                <Route path="/dashboard" element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/tests" element={
+                  <ProtectedRoute>
+                    <Tests />
+                  </ProtectedRoute>
+                } />
+                <Route path="/appointments" element={
+                  <ProtectedRoute>
+                    <Appointments />
+                  </ProtectedRoute>
+                } />
+                <Route path="/reminders" element={
+                  <ProtectedRoute>
+                    <Reminders />
+                  </ProtectedRoute>
+                } />
+                <Route path="/settings/notifications" element={
+                  <ProtectedRoute>
+                    <NotificationSettings />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin" element={
+                  <ProtectedRoute requireAdmin>
+                    <Admin />
+                  </ProtectedRoute>
+                } />
+              </Route>
+              {/* Admin patient selection page - outside MainLayout for cleaner look */}
+              <Route path="/admin/select-patient" element={
                 <ProtectedRoute requireAdmin>
-                  <Admin />
+                  <AdminSelectPatient />
                 </ProtectedRoute>
               } />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AdminModeProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
