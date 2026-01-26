@@ -1,5 +1,6 @@
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "./useAuth";
+import { useAdminMode } from "./useAdminMode";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -499,80 +500,86 @@ function calculateChange(data: { value: number }[]): number {
   return Math.round(((last - first) / Math.abs(first)) * 100);
 }
 
-export function useDashboardData() {
+export function useDashboardData(overrideUserId?: string) {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const { targetUserId: adminTargetUserId, isViewingAsAdmin } = useAdminMode();
   const isDemo = searchParams.get("demo") === "true";
+  
+  // Use override if provided, otherwise use admin mode target, otherwise current user
+  const targetUserId = overrideUserId || adminTargetUserId || user?.id;
 
   // Fetch real user profile data
   const { data: profileData } = useQuery({
-    queryKey: ["profile", user?.id],
+    queryKey: ["profile", targetUserId],
     queryFn: async () => {
-      if (!user?.id) return null;
+      if (!targetUserId) return null;
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", targetUserId)
         .single();
       if (error) throw error;
       return data;
     },
-    enabled: !!user?.id && !isDemo,
+    enabled: !!targetUserId && !isDemo,
   });
 
   // Fetch real health data
   const { data: healthData } = useQuery({
-    queryKey: ["health_data", user?.id],
+    queryKey: ["health_data", targetUserId],
     queryFn: async () => {
-      if (!user?.id) return null;
+      if (!targetUserId) return null;
       const { data, error } = await supabase
         .from("health_data")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", targetUserId)
         .order("recorded_at", { ascending: false })
         .limit(100);
       if (error) throw error;
       return data;
     },
-    enabled: !!user?.id && !isDemo,
+    enabled: !!targetUserId && !isDemo,
   });
 
   // Fetch biomarkers
   const { data: biomarkersData } = useQuery({
-    queryKey: ["biomarkers", user?.id],
+    queryKey: ["biomarkers", targetUserId],
     queryFn: async () => {
-      if (!user?.id) return null;
+      if (!targetUserId) return null;
       const { data, error } = await supabase
         .from("biomarkers")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", targetUserId)
         .order("recorded_at", { ascending: false })
         .limit(10);
       if (error) throw error;
       return data || [];
     },
-    enabled: !!user?.id && !isDemo,
+    enabled: !!targetUserId && !isDemo,
   });
 
   // Fetch test results
   const { data: testResults } = useQuery({
-    queryKey: ["test_results", user?.id],
+    queryKey: ["test_results", targetUserId],
     queryFn: async () => {
-      if (!user?.id) return null;
+      if (!targetUserId) return null;
       const { data, error } = await supabase
         .from("test_results")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", targetUserId)
         .order("completed_at", { ascending: false });
       if (error) throw error;
       return data;
     },
-    enabled: !!user?.id && !isDemo,
+    enabled: !!targetUserId && !isDemo,
   });
 
   if (isDemo) {
     return {
       isDemo: true,
+      isViewingAsAdmin: false,
+      targetUserId: null,
       userName: "John",
       personalData: demoPersonalData,
       psychologicalData: demoPsychologicalData,
@@ -849,6 +856,8 @@ export function useDashboardData() {
 
   return {
     isDemo: false,
+    isViewingAsAdmin,
+    targetUserId,
     userName: profileData?.full_name?.split(" ")[0] || "Usuario",
     personalData: hasRealData ? realPersonalData : emptyPersonalData,
     psychologicalData: hasRealData ? realPsychologicalData : emptyPsychologicalData,

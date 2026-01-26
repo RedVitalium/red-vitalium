@@ -503,7 +503,11 @@ function PersonalityResults({ patientId }: { patientId: string | undefined }) {
   );
 }
 
-export function AdminPanel() {
+interface AdminPanelProps {
+  preselectedPatientId?: string | null;
+}
+
+export function AdminPanel({ preselectedPatientId }: AdminPanelProps = {}) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [searchEmail, setSearchEmail] = useState("");
@@ -519,6 +523,29 @@ export function AdminPanel() {
     weight: "",
     waist: "",
   });
+
+  // Auto-select patient if preselectedPatientId is provided
+  const { data: preselectedPatient } = useQuery({
+    queryKey: ["preselected-patient", preselectedPatientId],
+    queryFn: async () => {
+      if (!preselectedPatientId) return null;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, email, date_of_birth, sex")
+        .eq("user_id", preselectedPatientId)
+        .maybeSingle();
+      if (error) throw error;
+      return data as PatientProfile | null;
+    },
+    enabled: !!preselectedPatientId,
+  });
+
+  // Effect to auto-select preselected patient
+  useEffect(() => {
+    if (preselectedPatient && !selectedPatient) {
+      setSelectedPatient(preselectedPatient);
+    }
+  }, [preselectedPatient, selectedPatient]);
 
   // Biomarker form state
   const [biomarkers, setBiomarkers] = useState<Partial<BloodBiomarkers>>({

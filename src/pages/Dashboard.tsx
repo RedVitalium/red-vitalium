@@ -18,6 +18,7 @@ import { useCycleData } from "@/hooks/useCycleData";
 import { useUnlockedHabits } from "@/hooks/useUnlockedHabits";
 import { useHabitGoals } from "@/hooks/useHabitGoals";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminMode } from "@/hooks/useAdminMode";
 import { useSearchParams } from "react-router-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
@@ -75,6 +76,7 @@ export default function Dashboard() {
 const [searchParams] = useSearchParams();
   const isDemo = searchParams.get("demo") === "true";
   const { user, isAdmin } = useAuth();
+  const { isViewingAsAdmin, selectedPatient, targetUserId } = useAdminMode();
   const [tourCompleted, setTourCompleted] = useState(false);
   
   const { 
@@ -89,8 +91,9 @@ const [searchParams] = useSearchParams();
     hasEnoughDataForAchievements
   } = useDashboardData();
 
-  // Get cycle data for real users
-  const { getCycleProgress } = useCycleData(isDemo ? null : user?.id || null);
+  // Get cycle data - use targetUserId when viewing as admin, otherwise current user
+  const cycleUserId = isViewingAsAdmin ? targetUserId : (isDemo ? null : user?.id || null);
+  const { getCycleProgress } = useCycleData(cycleUserId);
   const cycleProgress = isDemo 
     ? { cycleStartDate: new Date(), currentWeekOfCycle: 3, daysSinceCycleStart: 18, cycleProgress: 64, hasActiveCycle: true, isTestWeek: false, weeksUntilTest: 1 }
     : getCycleProgress();
@@ -123,7 +126,6 @@ const [searchParams] = useSearchParams();
       )}
       
       {/* Welcome Section */}
-      {/* Welcome Section */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -132,6 +134,8 @@ const [searchParams] = useSearchParams();
         <h1 className="text-3xl font-display font-bold text-foreground mb-2">
           {isDemo ? (
             <>Bienvenido, <span className="gradient-text">John</span> <span className="text-sm font-normal text-muted-foreground">(Demo)</span></>
+          ) : isViewingAsAdmin && selectedPatient ? (
+            <>Dashboard de <span className="gradient-text">{selectedPatient.fullName}</span> <span className="text-sm font-normal text-muted-foreground">(Vista Admin)</span></>
           ) : (
             <>Bienvenido, <span className="gradient-text">{userName}</span></>
           )}
@@ -139,7 +143,9 @@ const [searchParams] = useSearchParams();
         <p className="text-muted-foreground">
           {isDemo 
             ? "Explora el dashboard con datos de ejemplo" 
-            : "Aquí está tu resumen de salud y bienestar"
+            : isViewingAsAdmin
+              ? "Estás viendo este dashboard con permisos de administrador"
+              : "Aquí está tu resumen de salud y bienestar"
           }
         </p>
       </motion.div>
@@ -246,7 +252,7 @@ const [searchParams] = useSearchParams();
 
 {/* Tabs for Categories */}
       <Tabs defaultValue="psychological" className="w-full">
-        <TabsList className={`w-full max-w-2xl mx-auto grid ${isAdmin ? 'grid-cols-5' : 'grid-cols-4'} mb-8 bg-muted/50 p-1 rounded-xl`}>
+        <TabsList className={`w-full max-w-2xl mx-auto grid ${(isAdmin || isViewingAsAdmin) ? 'grid-cols-5' : 'grid-cols-4'} mb-8 bg-muted/50 p-1 rounded-xl`}>
           <TabsTrigger 
             value="personal" 
             className="font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg"
@@ -271,13 +277,13 @@ const [searchParams] = useSearchParams();
           >
             Longevidad
           </TabsTrigger>
-          {isAdmin && (
+          {(isAdmin || isViewingAsAdmin) && (
             <TabsTrigger 
               value="admin" 
               className="font-medium data-[state=active]:bg-accent data-[state=active]:text-accent-foreground rounded-lg flex items-center gap-1"
             >
               <Shield className="h-4 w-4" />
-              Admin
+              {isViewingAsAdmin ? 'Editar' : 'Admin'}
             </TabsTrigger>
           )}
         </TabsList>
@@ -653,10 +659,10 @@ const [searchParams] = useSearchParams();
           </motion.div>
         </TabsContent>
 
-        {/* Admin Tab - Only visible for admin users */}
-        {isAdmin && (
+        {/* Admin Tab - Only visible for admin users or when viewing as admin */}
+        {(isAdmin || isViewingAsAdmin) && (
           <TabsContent value="admin">
-            <AdminPanel />
+            <AdminPanel preselectedPatientId={isViewingAsAdmin ? targetUserId : undefined} />
           </TabsContent>
         )}
       </Tabs>
