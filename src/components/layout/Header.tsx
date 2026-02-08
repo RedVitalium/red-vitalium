@@ -135,8 +135,8 @@ export function Header() {
                 className="h-14 w-auto transition-transform group-hover:scale-105"
               />
               <div className="hidden sm:block">
-                <h1 className="text-xl font-display font-bold text-primary">Vitalium</h1>
-                <p className="text-xs text-muted-foreground">Salud, Rendimiento y Longevidad</p>
+                <h1 className="text-xl font-display font-bold text-primary">Red Vitalium</h1>
+                <p className="text-xs text-muted-foreground">Longevidad y Bienestar</p>
               </div>
             </Link>
 

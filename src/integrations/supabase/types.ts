@@ -271,6 +271,139 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_professionals: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          patient_id: string
+          professional_id: string
+          specialty: Database["public"]["Enums"]["specialty"]
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          patient_id: string
+          professional_id: string
+          specialty: Database["public"]["Enums"]["specialty"]
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          patient_id?: string
+          professional_id?: string
+          specialty?: Database["public"]["Enums"]["specialty"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_professionals_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      professional_notes: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_visible_to_others: boolean
+          note_type: string
+          patient_id: string
+          professional_id: string
+          specialty: Database["public"]["Enums"]["specialty"]
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_visible_to_others?: boolean
+          note_type?: string
+          patient_id: string
+          professional_id: string
+          specialty: Database["public"]["Enums"]["specialty"]
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_visible_to_others?: boolean
+          note_type?: string
+          patient_id?: string
+          professional_id?: string
+          specialty?: Database["public"]["Enums"]["specialty"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_notes_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      professionals: {
+        Row: {
+          bio: string | null
+          consultation_price: number | null
+          created_at: string
+          id: string
+          is_active: boolean
+          is_verified: boolean
+          license_number: string | null
+          location: string | null
+          office_address: string | null
+          specialty: Database["public"]["Enums"]["specialty"]
+          updated_at: string
+          user_id: string
+          years_experience: number | null
+        }
+        Insert: {
+          bio?: string | null
+          consultation_price?: number | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_verified?: boolean
+          license_number?: string | null
+          location?: string | null
+          office_address?: string | null
+          specialty: Database["public"]["Enums"]["specialty"]
+          updated_at?: string
+          user_id: string
+          years_experience?: number | null
+        }
+        Update: {
+          bio?: string | null
+          consultation_price?: number | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_verified?: boolean
+          license_number?: string | null
+          location?: string | null
+          office_address?: string | null
+          specialty?: Database["public"]["Enums"]["specialty"]
+          updated_at?: string
+          user_id?: string
+          years_experience?: number | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -457,11 +590,48 @@ export type Database = {
         }
         Relationships: []
       }
+      user_subscriptions: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          plan: Database["public"]["Enums"]["subscription_plan"]
+          started_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          plan?: Database["public"]["Enums"]["subscription_plan"]
+          started_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          plan?: Database["public"]["Enums"]["subscription_plan"]
+          started_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      get_professional_specialty: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["specialty"]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -469,9 +639,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_professional: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "patient"
+      app_role: "admin" | "patient" | "professional"
+      specialty: "psychology" | "nutrition" | "medicine" | "physiotherapy"
+      subscription_plan: "plata" | "oro" | "platino" | "black"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -599,7 +772,9 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "patient"],
+      app_role: ["admin", "patient", "professional"],
+      specialty: ["psychology", "nutrition", "medicine", "physiotherapy"],
+      subscription_plan: ["plata", "oro", "platino", "black"],
     },
   },
 } as const

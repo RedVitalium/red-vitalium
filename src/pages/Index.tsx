@@ -12,39 +12,69 @@ import {
   BarChart3,
   ArrowRight,
   Check,
-  LogIn
+  LogIn,
+  Users,
+  Shield,
+  Sparkles
 } from "lucide-react";
 
 const features = [
   {
-    icon: Activity,
-    title: "Monitoreo de Biomarcadores",
-    description: "Conecta tus dispositivos wearables y visualiza sueño, VFC, actividad física y más",
+    icon: Brain,
+    title: "Bienestar Psicológico",
+    description: "Tests validados y seguimiento continuo con psicólogos certificados",
   },
   {
-    icon: Brain,
-    title: "Evaluación Psicológica",
-    description: "Tests validados (DASS-21, BFI-10, SWLS) para monitorear tu bienestar mental",
+    icon: Activity,
+    title: "Optimización Metabólica",
+    description: "Nutrición basada en datos reales y progreso medible",
   },
   {
     icon: Heart,
-    title: "Hábitos Saludables",
-    description: "Recordatorios inteligentes para comidas, sueño y rutinas diarias",
+    title: "Salud Sistémica",
+    description: "Chequeos médicos trimestrales y biomarcadores completos",
   },
   {
     icon: BarChart3,
-    title: "Dashboard Visual",
-    description: "Gráficos con sistema de semáforo para entender tu progreso de un vistazo",
+    title: "Dashboard de Datos",
+    description: "Monitoreo continuo con wearables y báscula inteligente",
   },
   {
-    icon: Calendar,
-    title: "Gestión de Citas",
-    description: "Agenda consultas con especialistas en psicología y bienestar",
+    icon: Users,
+    title: "Red de Profesionales",
+    description: "Acceso a especialistas certificados en la metodología Vitalium",
   },
   {
     icon: Smartphone,
     title: "Integración Digital",
-    description: "Conecta con Health Connect y monitorea tu bienestar digital",
+    description: "Conecta tus dispositivos y visualiza tu progreso en tiempo real",
+  },
+];
+
+const plans = [
+  {
+    name: "Plan Plata",
+    subtitle: "Fundamentos Conductuales",
+    features: ["Psicología", "Formación de hábitos", "Monitoreo de sueño y actividad"],
+    color: "from-gray-400 to-gray-500",
+  },
+  {
+    name: "Plan Oro",
+    subtitle: "Optimización Metabólica",
+    features: ["Todo de Plata", "Nutrición personalizada", "Marcadores metabólicos"],
+    color: "from-yellow-400 to-amber-500",
+  },
+  {
+    name: "Plan Platino",
+    subtitle: "Salud Sistémica",
+    features: ["Todo de Oro", "Medicina preventiva", "Biomarcadores completos"],
+    color: "from-slate-300 to-slate-400",
+  },
+  {
+    name: "Plan Black",
+    subtitle: "Integridad Estructural",
+    features: ["Todo de Platino", "Fisioterapia", "Programa integral"],
+    color: "from-gray-800 to-gray-900",
   },
 ];
 
@@ -70,10 +100,10 @@ export default function Index() {
           <div className="flex items-center gap-3">
             <img
               src={appLogo}
-              alt="Vitalium"
+              alt="Red Vitalium"
               className="h-10 w-auto"
             />
-            <span className="text-xl font-display font-bold text-secondary">VITALIUM</span>
+            <span className="text-xl font-display font-bold text-secondary">RED VITALIUM</span>
           </div>
           <Button asChild variant="outline" className="gap-2">
             <Link to="/auth">
@@ -101,7 +131,7 @@ export default function Index() {
           >
             <motion.img
               src={appLogo}
-              alt="Vitalium"
+              alt="Red Vitalium"
               className="h-32 w-auto mx-auto mb-8"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -109,13 +139,13 @@ export default function Index() {
             />
             
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-extrabold mb-6 leading-tight">
-              Salud, Rendimiento <br className="hidden md:block"/>
-              y <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">Longevidad</span>
+              Longevidad y Bienestar <br className="hidden md:block"/>
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">Basado en Datos</span>
             </h1>
             
             <p className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-10 leading-relaxed">
-              El <span className="font-semibold text-white">modelo híbrido</span> definitivo en medicina preventiva. 
-              Fusionamos ciencia avanzada, tecnología de datos y bienestar integral para potenciar tu vida.
+              La <span className="font-semibold text-white">red de salud de alta fidelidad</span> que conecta 
+              profesionales certificados, tecnología de monitoreo y ciencia avanzada para optimizar tu vida.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -124,7 +154,7 @@ export default function Index() {
                 size="lg" 
                 className="bg-white text-primary hover:bg-gray-100 font-bold text-lg px-8 py-6 rounded-full shadow-lg hover:shadow-xl transition-all hover:-translate-y-1"
               >
-                <Link to="/dashboard?demo=true">
+                <Link to="/my-dashboard?demo=true">
                   Ver Demo
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
@@ -154,8 +184,74 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Value Proposition */}
+      <section className="py-16 bg-background">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
+              ¿Por qué Red Vitalium?
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Profesionales "vetados" de alta calidad + programa basado en datos reales + flexibilidad geográfica = progreso medible hacia la longevidad
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center p-6"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Shield className="h-7 w-7 text-primary" />
+              </div>
+              <h3 className="font-display font-bold text-lg mb-2">Para el Paciente</h3>
+              <p className="text-sm text-muted-foreground">
+                Acceso a profesionales de alta calidad con un programa basado en datos reales, no supuestos
+              </p>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="text-center p-6"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Users className="h-7 w-7 text-primary" />
+              </div>
+              <h3 className="font-display font-bold text-lg mb-2">Para el Profesional</h3>
+              <p className="text-sm text-muted-foreground">
+                Flujo constante de pacientes y acceso a herramientas de monitoreo de última generación
+              </p>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="text-center p-6"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Sparkles className="h-7 w-7 text-primary" />
+              </div>
+              <h3 className="font-display font-bold text-lg mb-2">Metodología Vitalium</h3>
+              <p className="text-sm text-muted-foreground">
+                Enfoque en hábitos sostenibles, no solo síntomas. Supervisión y auditoría del progreso
+              </p>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
-      <section className="py-20 bg-background">
+      <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -167,7 +263,7 @@ export default function Index() {
               Tu Salud, Integrada
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              Combinamos lo mejor de la medicina presencial con el poder del monitoreo digital continuo
+              Combinamos lo mejor de la atención presencial con el poder del monitoreo digital continuo
             </p>
           </motion.div>
 
@@ -197,87 +293,47 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Benefits Section */}
-      <section className="py-20 bg-muted/30">
+      {/* Plans Section */}
+      <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-6">
-                El Modelo <span className="gradient-text">Vitalium</span>
-              </h2>
-              <p className="text-muted-foreground mb-8 text-lg">
-                Un enfoque integral que combina psicología, nutrición, actividad física y monitoreo 
-                de biomarcadores para optimizar tu salud y longevidad.
-              </p>
-              <ul className="space-y-4">
-                {[
-                  "Evaluaciones psicológicas validadas científicamente",
-                  "Monitoreo continuo de biomarcadores de salud",
-                  "Sistema de gamificación para mantener la motivación",
-                  "Recordatorios personalizados para hábitos saludables",
-                  "Dashboard visual con sistema de semáforo",
-                ].map((item, index) => (
-                  <li key={index} className="flex items-center gap-3">
-                    <div className="w-6 h-6 rounded-full bg-success/20 flex items-center justify-center">
-                      <Check className="h-4 w-4 text-success" />
-                    </div>
-                    <span className="text-foreground">{item}</span>
-                  </li>
-                ))}
-              </ul>
-              <Button asChild size="lg" className="mt-8">
-                <Link to="/dashboard">
-                  Comenzar Ahora
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-            </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
+              Escalera de Valor
+            </h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              Comienza con los fundamentos y escala según tu progreso y objetivos
+            </p>
+          </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="relative"
-            >
-              <Card className="p-8 bg-gradient-to-br from-primary via-primary to-accent/50 text-primary-foreground">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl" />
-                <div className="relative z-10">
-                  <h3 className="text-2xl font-display font-bold mb-4">
-                    ¿Por qué Vitalium?
-                  </h3>
-                  <ul className="space-y-4 text-primary-foreground/90">
-                    <li className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Check className="h-4 w-4" />
-                      </div>
-                      <span>Enfoque preventivo basado en evidencia científica</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Check className="h-4 w-4" />
-                      </div>
-                      <span>Atención personalizada con profesionales de salud</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Check className="h-4 w-4" />
-                      </div>
-                      <span>Tecnología de monitoreo continuo con wearables</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Check className="h-4 w-4" />
-                      </div>
-                      <span>Sistema de gamificación que te mantiene motivado</span>
-                    </li>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+            {plans.map((plan, index) => (
+              <motion.div
+                key={plan.name}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Card className="p-6 h-full relative overflow-hidden">
+                  <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${plan.color}`} />
+                  <h3 className="font-display font-bold text-lg mb-1">{plan.name}</h3>
+                  <p className="text-sm text-muted-foreground mb-4">{plan.subtitle}</p>
+                  <ul className="space-y-2">
+                    {plan.features.map((feature, i) => (
+                      <li key={i} className="flex items-center gap-2 text-sm">
+                        <Check className="h-4 w-4 text-success flex-shrink-0" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
                   </ul>
-                </div>
-              </Card>
-            </motion.div>
+                </Card>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
@@ -294,15 +350,38 @@ export default function Index() {
               Empieza tu Transformación
             </h2>
             <p className="text-gray-400 max-w-2xl mx-auto mb-10 text-lg">
-              Agenda tu primera consulta en nuestra clínica en Villahermosa, Tabasco, 
-              y toma el control de tu salud futura hoy mismo.
+              Visita nuestras oficinas de captación en Villahermosa, Tabasco, 
+              para conocer el programa y comenzar tu viaje hacia la longevidad.
             </p>
+            <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
+              <Button 
+                asChild 
+                size="lg"
+                className="bg-white text-primary hover:bg-gray-100 font-bold rounded-full"
+              >
+                <Link to="/appointments">
+                  <Calendar className="h-5 w-5 mr-2" />
+                  Agendar Cita
+                </Link>
+              </Button>
+              <Button 
+                asChild 
+                variant="outline" 
+                size="lg"
+                className="border-2 border-white text-white hover:bg-white hover:text-primary rounded-full bg-transparent"
+              >
+                <Link to="/find-professionals">
+                  <Users className="h-5 w-5 mr-2" />
+                  Ver Profesionales
+                </Link>
+              </Button>
+            </div>
             <div className="flex flex-col md:flex-row justify-center gap-6">
               <a 
-                href="mailto:info@vitalium.mx" 
+                href="mailto:info@redvitalium.mx" 
                 className="flex items-center justify-center gap-3 bg-gray-800 hover:bg-gray-700 py-4 px-8 rounded-xl transition border border-gray-700"
               >
-                <span>info@vitalium.mx</span>
+                <span>info@redvitalium.mx</span>
               </a>
               <a 
                 href="tel:+529931234567" 
@@ -314,6 +393,14 @@ export default function Index() {
           </motion.div>
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="bg-secondary/95 text-secondary-foreground py-8 border-t border-gray-800">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-sm opacity-70">© 2025 Red Vitalium. Todos los derechos reservados.</p>
+          <p className="text-xs mt-2 opacity-50">Longevidad y Bienestar Basado en Datos</p>
+        </div>
+      </footer>
     </div>
   );
 }
