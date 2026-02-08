@@ -8,11 +8,24 @@ import { AuthProvider } from "./hooks/useAuth";
 import { AdminModeProvider } from "./hooks/useAdminMode";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { MainLayout } from "./components/layout/MainLayout";
+
+// Pages
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import HomeMenu from "./pages/HomeMenu";
+import Profile from "./pages/Profile";
+import MyDashboard from "./pages/MyDashboard";
 import Dashboard from "./pages/Dashboard";
+import DashboardAchievements from "./pages/dashboard/DashboardAchievements";
+import DashboardHabits from "./pages/dashboard/DashboardHabits";
+import DashboardPsychological from "./pages/dashboard/DashboardPsychological";
+import DashboardLongevity from "./pages/dashboard/DashboardLongevity";
+import DashboardBodyComposition from "./pages/dashboard/DashboardBodyComposition";
+import DashboardMetabolic from "./pages/dashboard/DashboardMetabolic";
 import Tests from "./pages/Tests";
-import Appointments from "./pages/Appointments";
+import AppointmentsNew from "./pages/AppointmentsNew";
+import FindProfessionals from "./pages/FindProfessionals";
+import ProfessionalMode from "./pages/ProfessionalMode";
 import Reminders from "./pages/Reminders";
 import Admin from "./pages/Admin";
 import AdminSelectPatient from "./pages/AdminSelectPatient";
@@ -33,47 +46,126 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              {/* Native app goes directly to auth, web shows landing page */}
+              {/* Landing page - only for web, native goes to auth */}
               <Route path="/" element={isNativeApp ? <Navigate to="/auth" replace /> : <Index />} />
               <Route path="/auth" element={<Auth />} />
-              <Route element={<MainLayout />}>
-                <Route path="/dashboard" element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                } />
-                <Route path="/tests" element={
-                  <ProtectedRoute>
-                    <Tests />
-                  </ProtectedRoute>
-                } />
-                <Route path="/appointments" element={
-                  <ProtectedRoute>
-                    <Appointments />
-                  </ProtectedRoute>
-                } />
-                <Route path="/reminders" element={
-                  <ProtectedRoute>
-                    <Reminders />
-                  </ProtectedRoute>
-                } />
-                <Route path="/settings/notifications" element={
-                  <ProtectedRoute>
-                    <NotificationSettings />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin" element={
-                  <ProtectedRoute requireAdmin>
-                    <Admin />
-                  </ProtectedRoute>
-                } />
-              </Route>
-              {/* Admin patient selection page - outside MainLayout for cleaner look */}
+              
+              {/* New home menu - protected, first page after login */}
+              <Route path="/home" element={
+                <ProtectedRoute>
+                  <HomeMenu />
+                </ProtectedRoute>
+              } />
+              
+              {/* Profile page */}
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              } />
+              
+              {/* My Dashboard menu */}
+              <Route path="/my-dashboard" element={
+                <ProtectedRoute>
+                  <MyDashboard />
+                </ProtectedRoute>
+              } />
+              
+              {/* Dashboard sub-pages */}
+              <Route path="/dashboard/achievements" element={
+                <ProtectedRoute>
+                  <DashboardAchievements />
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/habits" element={
+                <ProtectedRoute>
+                  <DashboardHabits />
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/psychological" element={
+                <ProtectedRoute>
+                  <DashboardPsychological />
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/longevity" element={
+                <ProtectedRoute>
+                  <DashboardLongevity />
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/body-composition" element={
+                <ProtectedRoute>
+                  <DashboardBodyComposition />
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/metabolic" element={
+                <ProtectedRoute>
+                  <DashboardMetabolic />
+                </ProtectedRoute>
+              } />
+              
+              {/* Legacy dashboard route */}
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } />
+              
+              {/* Appointments with dropdowns */}
+              <Route path="/appointments" element={<AppointmentsNew />} />
+              
+              {/* Find professionals */}
+              <Route path="/find-professionals" element={
+                <ProtectedRoute>
+                  <FindProfessionals />
+                </ProtectedRoute>
+              } />
+              
+              {/* Professional mode */}
+              <Route path="/professional" element={
+                <ProtectedRoute>
+                  <ProfessionalMode />
+                </ProtectedRoute>
+              } />
+              
+              {/* Tests */}
+              <Route path="/tests" element={
+                <ProtectedRoute>
+                  <Tests />
+                </ProtectedRoute>
+              } />
+              
+              {/* Reminders */}
+              <Route path="/reminders" element={
+                <ProtectedRoute>
+                  <Reminders />
+                </ProtectedRoute>
+              } />
+              
+              {/* Notification settings */}
+              <Route path="/notification-settings" element={
+                <ProtectedRoute>
+                  <NotificationSettings />
+                </ProtectedRoute>
+              } />
+              <Route path="/settings/notifications" element={
+                <ProtectedRoute>
+                  <NotificationSettings />
+                </ProtectedRoute>
+              } />
+              
+              {/* Admin routes */}
+              <Route path="/admin" element={
+                <ProtectedRoute requireAdmin>
+                  <Admin />
+                </ProtectedRoute>
+              } />
               <Route path="/admin/select-patient" element={
                 <ProtectedRoute requireAdmin>
                   <AdminSelectPatient />
                 </ProtectedRoute>
               } />
+              
+              {/* 404 */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

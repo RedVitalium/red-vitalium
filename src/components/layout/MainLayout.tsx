@@ -10,8 +10,8 @@ export function MainLayout() {
       </main>
       <footer className="bg-secondary text-secondary-foreground py-8">
         <div className="container mx-auto px-4 text-center">
-          <p className="text-sm opacity-70">© 2025 Vitalium. Todos los derechos reservados.</p>
-          <p className="text-xs mt-2 opacity-50">Salud, Rendimiento y Longevidad</p>
+          <p className="text-sm opacity-70">© 2025 Red Vitalium. Todos los derechos reservados.</p>
+          <p className="text-xs mt-2 opacity-50">Longevidad y Bienestar Basado en Datos</p>
         </div>
       </footer>
     </div>

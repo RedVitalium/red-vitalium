@@ -1,0 +1,262 @@
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { ArrowLeft, Edit2, Save, X, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useAuth } from "@/hooks/useAuth";
+import { useUserRoles, planLabels } from "@/hooks/useUserRoles";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import appLogo from "@/assets/app-logo.png";
+
+interface ProfileData {
+  full_name: string | null;
+  email: string | null;
+  date_of_birth: string | null;
+  sex: string | null;
+  height: number | null;
+  weight: number | null;
+  waist_circumference: number | null;
+}
+
+// Fields that patients CAN edit themselves
+const editableFields = ['full_name', 'date_of_birth', 'sex'];
+
+// Fields that only professionals/admins can edit
+const professionalOnlyFields = ['height', 'weight', 'waist_circumference'];
+
+export default function Profile() {
+  const { user } = useAuth();
+  const { subscription } = useUserRoles();
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedProfile, setEditedProfile] = useState<ProfileData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    async function fetchProfile() {
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('full_name, email, date_of_birth, sex, height, weight, waist_circumference')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+      } else if (data) {
+        setProfile(data);
+        setEditedProfile(data);
+      }
+      setIsLoading(false);
+    }
+
+    fetchProfile();
+  }, [user]);
+
+  const handleSave = async () => {
+    if (!user || !editedProfile) return;
+
+    setIsSaving(true);
+    
+    // Only update editable fields
+    const updateData = {
+      full_name: editedProfile.full_name,
+      date_of_birth: editedProfile.date_of_birth,
+      sex: editedProfile.sex,
+    };
+
+    const { error } = await supabase
+      .from('profiles')
+      .update(updateData)
+      .eq('user_id', user.id);
+
+    if (error) {
+      toast.error('Error al guardar los cambios');
+      console.error('Error updating profile:', error);
+    } else {
+      setProfile(editedProfile);
+      setIsEditing(false);
+      toast.success('Perfil actualizado correctamente');
+    }
+
+    setIsSaving(false);
+  };
+
+  const handleCancel = () => {
+    setEditedProfile(profile);
+    setIsEditing(false);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border/50">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link to="/home" className="p-2 hover:bg-muted rounded-lg transition-colors">
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+            <img src={appLogo} alt="Red Vitalium" className="h-8 w-auto" />
+            <span className="text-lg font-display font-bold text-primary">Mi Perfil</span>
+          </div>
+          
+          {!isEditing ? (
+            <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+              <Edit2 className="h-4 w-4 mr-2" />
+              Editar
+            </Button>
+          ) : (
+            <div className="flex gap-2">
+              <Button variant="ghost" size="sm" onClick={handleCancel}>
+                <X className="h-4 w-4 mr-1" />
+                Cancelar
+              </Button>
+              <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                <Save className="h-4 w-4 mr-1" />
+                Guardar
+              </Button>
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8 max-w-xl">
+        {/* Avatar & Plan */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-8"
+        >
+          <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <User className="h-12 w-12 text-primary" />
+          </div>
+          <h2 className="text-xl font-display font-bold text-foreground">
+            {profile?.full_name || 'Sin nombre'}
+          </h2>
+          <p className="text-muted-foreground text-sm">{profile?.email}</p>
+          {subscription && (
+            <span className="inline-block mt-2 text-xs font-medium px-3 py-1 rounded-full bg-primary/10 text-primary">
+              {planLabels[subscription]}
+            </span>
+          )}
+        </motion.div>
+
+        {/* Profile Form */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <Card className="p-6">
+            <h3 className="text-lg font-display font-semibold mb-6 text-foreground">
+              Datos Personales
+            </h3>
+            
+            <div className="space-y-5">
+              {/* Editable fields */}
+              <div className="space-y-2">
+                <Label htmlFor="full_name">Nombre Completo</Label>
+                {isEditing ? (
+                  <Input
+                    id="full_name"
+                    value={editedProfile?.full_name || ''}
+                    onChange={(e) => setEditedProfile(prev => prev ? {...prev, full_name: e.target.value} : null)}
+                  />
+                ) : (
+                  <p className="text-foreground py-2">{profile?.full_name || 'Sin datos'}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="date_of_birth">Fecha de Nacimiento</Label>
+                {isEditing ? (
+                  <Input
+                    id="date_of_birth"
+                    type="date"
+                    value={editedProfile?.date_of_birth || ''}
+                    onChange={(e) => setEditedProfile(prev => prev ? {...prev, date_of_birth: e.target.value} : null)}
+                  />
+                ) : (
+                  <p className="text-foreground py-2">{profile?.date_of_birth || 'Sin datos'}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="sex">Sexo</Label>
+                {isEditing ? (
+                  <Select
+                    value={editedProfile?.sex || ''}
+                    onValueChange={(value) => setEditedProfile(prev => prev ? {...prev, sex: value} : null)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">Masculino</SelectItem>
+                      <SelectItem value="female">Femenino</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <p className="text-foreground py-2">
+                    {profile?.sex === 'male' ? 'Masculino' : profile?.sex === 'female' ? 'Femenino' : 'Sin datos'}
+                  </p>
+                )}
+              </div>
+
+              {/* Divider */}
+              <div className="h-px bg-border my-6" />
+
+              <p className="text-xs text-muted-foreground mb-4">
+                Los siguientes datos son ingresados por tu equipo de profesionales:
+              </p>
+
+              {/* Read-only fields for patients */}
+              <div className="space-y-2">
+                <Label>Altura</Label>
+                <p className="text-foreground py-2 bg-muted/30 px-3 rounded-md">
+                  {profile?.height ? `${profile.height} m` : 'Sin datos'}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Peso</Label>
+                <p className="text-foreground py-2 bg-muted/30 px-3 rounded-md">
+                  {profile?.weight ? `${profile.weight} kg` : 'Sin datos'}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Circunferencia de Cintura</Label>
+                <p className="text-foreground py-2 bg-muted/30 px-3 rounded-md">
+                  {profile?.waist_circumference ? `${profile.waist_circumference} cm` : 'Sin datos'}
+                </p>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+      </main>
+    </div>
+  );
+}

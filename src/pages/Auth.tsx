@@ -36,7 +36,7 @@ export default function Auth() {
       toast.error('Error al iniciar sesión', { description: error.message });
     } else {
       toast.success('¡Bienvenido de vuelta!');
-      navigate('/dashboard');
+      navigate('/home');
     }
     
     setLoading(false);
@@ -54,7 +54,7 @@ export default function Auth() {
       toast.success('¡Cuenta creada exitosamente!', { 
         description: 'Ya puedes iniciar sesión.' 
       });
-      navigate('/dashboard');
+      navigate('/home');
     }
     
     setLoading(false);
@@ -112,15 +112,15 @@ export default function Auth() {
           <CardHeader className="text-center space-y-4">
             <motion.img
               src={appLogo}
-              alt="Vitalium"
+              alt="Red Vitalium"
               className="h-24 w-auto mx-auto"
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2 }}
             />
             <div>
-              <CardTitle className="text-2xl font-display">Bienvenido a Vitalium</CardTitle>
-              <CardDescription>Salud, Rendimiento y Longevidad</CardDescription>
+              <CardTitle className="text-2xl font-display">Bienvenido a Red Vitalium</CardTitle>
+              <CardDescription>Longevidad y Bienestar Basado en Datos</CardDescription>
             </div>
           </CardHeader>
           
