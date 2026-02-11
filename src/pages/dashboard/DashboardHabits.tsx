@@ -34,16 +34,18 @@ export default function DashboardHabits() {
   const [searchParams] = useSearchParams();
   const isDemo = searchParams.get("demo") === "true";
   const { user } = useAuth();
-  const { isViewingAsAdmin, selectedPatient } = useAdminMode();
+  const { isViewingAsAdmin, selectedPatient, targetUserId } = useAdminMode();
   const backPath = isViewingAsAdmin ? "/professional/history" : "/my-dashboard";
   
-  const { habitsData } = useDashboardData();
-  const { getCycleProgress } = useCycleData(isDemo ? null : user?.id || null);
+  const effectiveUserId = isViewingAsAdmin ? targetUserId : user?.id;
+  
+  const { habitsData } = useDashboardData(isViewingAsAdmin ? targetUserId || undefined : undefined);
+  const { getCycleProgress } = useCycleData(isDemo ? null : effectiveUserId || null);
   const cycleProgress = isDemo 
     ? { currentWeekOfCycle: 3, hasActiveCycle: true, isTestWeek: false }
     : getCycleProgress();
     
-  const { isHabitUnlocked, advancedHabits } = useUnlockedHabits();
+  const { isHabitUnlocked, advancedHabits } = useUnlockedHabits(isViewingAsAdmin ? effectiveUserId || undefined : undefined);
   const { 
     screenTimeGoal, 
     phoneUnlocksGoal, 
@@ -51,7 +53,7 @@ export default function DashboardHabits() {
     sleepHoursGoal,
     sleepQualityGoal,
     activityGoals 
-  } = useHabitGoals();
+  } = useHabitGoals(isViewingAsAdmin ? effectiveUserId || undefined : undefined);
 
   // For professional: determine selected month for goals
   const { data: activeCycle } = useQuery({
