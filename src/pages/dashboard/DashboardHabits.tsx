@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Activity, Moon, Dumbbell, Smartphone, Timer, Sparkles } from "lucide-react";
@@ -5,11 +6,15 @@ import { MetricCard } from "@/components/dashboard/MetricCard";
 import { MiniChart } from "@/components/dashboard/MiniChart";
 import { LockedHabitCard } from "@/components/dashboard/LockedHabitCard";
 import { HabitWeekIndicator } from "@/components/dashboard/HabitWeekIndicator";
+import { ProfessionalHabitEditor, InlineGoalEditor } from "@/components/dashboard/ProfessionalHabitEditor";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useCycleData } from "@/hooks/useCycleData";
 import { useUnlockedHabits } from "@/hooks/useUnlockedHabits";
 import { useHabitGoals } from "@/hooks/useHabitGoals";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminMode } from "@/hooks/useAdminMode";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import appLogo from "@/assets/app-logo.png";
 
 function getStatus(value: number, target: number, isLowerBetter: boolean = false): "optimal" | "warning" | "danger" {
@@ -25,17 +30,12 @@ function getStatus(value: number, target: number, isLowerBetter: boolean = false
   }
 }
 
-const habitIcons: Record<string, typeof Activity> = {
-  sauna: Activity,
-  cold_bath: Activity,
-  meditation: Activity,
-  yoga: Activity,
-};
-
 export default function DashboardHabits() {
   const [searchParams] = useSearchParams();
   const isDemo = searchParams.get("demo") === "true";
   const { user } = useAuth();
+  const { isViewingAsAdmin, selectedPatient } = useAdminMode();
+  const backPath = isViewingAsAdmin ? "/professional/history" : "/my-dashboard";
   
   const { habitsData } = useDashboardData();
   const { getCycleProgress } = useCycleData(isDemo ? null : user?.id || null);
@@ -53,12 +53,42 @@ export default function DashboardHabits() {
     activityGoals 
   } = useHabitGoals();
 
+  // For professional: determine selected month for goals
+  const { data: activeCycle } = useQuery({
+    queryKey: ["patient-cycle-for-month", selectedPatient?.userId],
+    queryFn: async () => {
+      if (!selectedPatient?.userId) return null;
+      const { data } = await supabase
+        .from("user_cycles").select("*").eq("user_id", selectedPatient.userId).eq("is_active", true).maybeSingle();
+      return data;
+    },
+    enabled: !!selectedPatient?.userId && isViewingAsAdmin,
+  });
+
+  const [selectedMonth, setSelectedMonth] = useState(1);
+  useEffect(() => {
+    if (activeCycle) {
+      const days = Math.floor((Date.now() - new Date(activeCycle.started_at).getTime()) / (1000*60*60*24));
+      setSelectedMonth(Math.ceil(days / 28) || 1);
+    }
+  }, [activeCycle]);
+
+  const patientId = isViewingAsAdmin ? selectedPatient?.userId : undefined;
+
+  // Goal editing options
+  const sleepHoursOptions = [6, 6.5, 7, 7.5, 8, 8.5, 9];
+  const sleepQualityOptions = [70, 75, 80, 85, 90, 95, 100];
+  const activitySessionOptions = [1, 2, 3, 4, 5, 6, 7];
+  const activityDurationOptions = [15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90];
+  const screenTimeOptions = [30, 45, 60, 75, 90, 105, 120, 135, 150, 180, 210, 240];
+  const phoneUnlocksOptions = [20, 30, 40, 50, 60, 70, 80, 90, 100, 120, 150];
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border/50">
         <div className="container mx-auto px-4 py-4 flex items-center gap-3">
-          <Link to="/my-dashboard" className="p-2 hover:bg-muted rounded-lg transition-colors">
+          <Link to={backPath} className="p-2 hover:bg-muted rounded-lg transition-colors">
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <img src={appLogo} alt="Red Vitalium" className="h-8 w-auto" />
@@ -66,6 +96,11 @@ export default function DashboardHabits() {
           {isDemo && (
             <span className="ml-auto text-xs bg-accent/20 text-accent px-2 py-1 rounded-full">
               Demo
+            </span>
+          )}
+          {isViewingAsAdmin && selectedPatient && (
+            <span className="ml-auto text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+              {selectedPatient.fullName}
             </span>
           )}
         </div>
@@ -93,57 +128,85 @@ export default function DashboardHabits() {
           transition={{ delay: 0.1 }}
           className="grid md:grid-cols-2 gap-4 mb-8"
         >
-          <MetricCard
-            title="Sueño"
-            subtitle="Horas efectivas de sueño"
-            value={habitsData.sleep.value}
-            unit="hrs"
-            target={`> ${sleepHoursGoal} horas`}
-            change={habitsData.sleep.change}
-            status={getStatus(habitsData.sleep.value, sleepHoursGoal)}
-            icon={<Moon className="h-5 w-5" />}
-            chart={habitsData.sleep.data.length > 0 ? <MiniChart data={habitsData.sleep.data} color="success" /> : undefined}
-          />
-          <MetricCard
-            title="Calidad de Sueño"
-            subtitle="Puntuación de tracker (0-100)"
-            value={habitsData.sleepQuality.value}
-            target={`> ${sleepQualityGoal}`}
-            change={habitsData.sleepQuality.change}
-            status={getStatus(habitsData.sleepQuality.value, sleepQualityGoal)}
-            icon={<Activity className="h-5 w-5" />}
-          />
-          <MetricCard
-            title="Actividad Física"
-            subtitle={`${habitsData.activity.sessionCount || 0} sesiones de ${habitsData.activity.avgDuration || 0} min`}
-            value={habitsData.activity.sessionCount || 0}
-            unit="sesiones"
-            target={`${activityGoals.sessionsPerWeek} de ${activityGoals.avgDurationMinutes} min`}
-            change={habitsData.activity.change}
-            status={getStatus(habitsData.activity.sessionCount || 0, activityGoals.sessionsPerWeek)}
-            icon={<Dumbbell className="h-5 w-5" />}
-            chart={habitsData.activity.data.length > 0 ? <MiniChart data={habitsData.activity.data} color="success" /> : undefined}
-          />
-          <MetricCard
-            title="Tiempo en Pantalla"
-            subtitle="Promedio diario (semana anterior)"
-            value={habitsData.screenTime.value}
-            unit="min"
-            target={`< ${screenTimeGoal} min`}
-            change={habitsData.screenTime.change}
-            status={getStatus(habitsData.screenTime.value, screenTimeGoal, true)}
-            icon={<Smartphone className="h-5 w-5" />}
-          />
-          <MetricCard
-            title="Desbloqueos de Teléfono"
-            subtitle="Promedio diario (semana anterior)"
-            value={habitsData.phoneUnlocks.value}
-            unit="veces"
-            target={`< ${phoneUnlocksGoal}`}
-            change={habitsData.phoneUnlocks.change}
-            status={getStatus(habitsData.phoneUnlocks.value, phoneUnlocksGoal, true)}
-            icon={<Smartphone className="h-5 w-5" />}
-          />
+          <div>
+            <MetricCard
+              title="Sueño"
+              subtitle="Horas efectivas de sueño"
+              value={habitsData.sleep.value}
+              unit="hrs"
+              target={`> ${sleepHoursGoal} horas`}
+              change={habitsData.sleep.change}
+              status={getStatus(habitsData.sleep.value, sleepHoursGoal)}
+              icon={<Moon className="h-5 w-5" />}
+              chart={habitsData.sleep.data.length > 0 ? <MiniChart data={habitsData.sleep.data} color="success" /> : undefined}
+            />
+            {isViewingAsAdmin && patientId && (
+              <InlineGoalEditor habitType="sleep_hours" currentValue={sleepHoursGoal} options={sleepHoursOptions} unit="hrs" patientId={patientId} selectedMonth={selectedMonth} />
+            )}
+          </div>
+          <div>
+            <MetricCard
+              title="Calidad de Sueño"
+              subtitle="Puntuación de tracker (0-100)"
+              value={habitsData.sleepQuality.value}
+              target={`> ${sleepQualityGoal}`}
+              change={habitsData.sleepQuality.change}
+              status={getStatus(habitsData.sleepQuality.value, sleepQualityGoal)}
+              icon={<Activity className="h-5 w-5" />}
+            />
+            {isViewingAsAdmin && patientId && (
+              <InlineGoalEditor habitType="sleep_quality" currentValue={sleepQualityGoal} options={sleepQualityOptions} unit="pts" patientId={patientId} selectedMonth={selectedMonth} />
+            )}
+          </div>
+          <div>
+            <MetricCard
+              title="Actividad Física"
+              subtitle={`${habitsData.activity.sessionCount || 0} sesiones de ${habitsData.activity.avgDuration || 0} min`}
+              value={habitsData.activity.sessionCount || 0}
+              unit="sesiones"
+              target={`${activityGoals.sessionsPerWeek} de ${activityGoals.avgDurationMinutes} min`}
+              change={habitsData.activity.change}
+              status={getStatus(habitsData.activity.sessionCount || 0, activityGoals.sessionsPerWeek)}
+              icon={<Dumbbell className="h-5 w-5" />}
+              chart={habitsData.activity.data.length > 0 ? <MiniChart data={habitsData.activity.data} color="success" /> : undefined}
+            />
+            {isViewingAsAdmin && patientId && (
+              <div className="space-y-1">
+                <InlineGoalEditor habitType="activity_sessions" currentValue={activityGoals.sessionsPerWeek} options={activitySessionOptions} unit="ses/sem" patientId={patientId} selectedMonth={selectedMonth} />
+                <InlineGoalEditor habitType="activity_duration" currentValue={activityGoals.avgDurationMinutes} options={activityDurationOptions} unit="min" patientId={patientId} selectedMonth={selectedMonth} />
+              </div>
+            )}
+          </div>
+          <div>
+            <MetricCard
+              title="Tiempo en Pantalla"
+              subtitle="Promedio diario (semana anterior)"
+              value={habitsData.screenTime.value}
+              unit="min"
+              target={`< ${screenTimeGoal} min`}
+              change={habitsData.screenTime.change}
+              status={getStatus(habitsData.screenTime.value, screenTimeGoal, true)}
+              icon={<Smartphone className="h-5 w-5" />}
+            />
+            {isViewingAsAdmin && patientId && (
+              <InlineGoalEditor habitType="screen_time" currentValue={screenTimeGoal} options={screenTimeOptions} unit="min" patientId={patientId} selectedMonth={selectedMonth} />
+            )}
+          </div>
+          <div>
+            <MetricCard
+              title="Desbloqueos de Teléfono"
+              subtitle="Promedio diario (semana anterior)"
+              value={habitsData.phoneUnlocks.value}
+              unit="veces"
+              target={`< ${phoneUnlocksGoal}`}
+              change={habitsData.phoneUnlocks.change}
+              status={getStatus(habitsData.phoneUnlocks.value, phoneUnlocksGoal, true)}
+              icon={<Smartphone className="h-5 w-5" />}
+            />
+            {isViewingAsAdmin && patientId && (
+              <InlineGoalEditor habitType="phone_unlocks" currentValue={phoneUnlocksGoal} options={phoneUnlocksOptions} unit="desbloq" patientId={patientId} selectedMonth={selectedMonth} />
+            )}
+          </div>
         </motion.div>
 
         {/* Advanced Habits */}
@@ -163,17 +226,21 @@ export default function DashboardHabits() {
               if (unlocked) {
                 if (habit.id === "yoga" && habitsData.yoga) {
                   return (
-                    <MetricCard
-                      key={habit.id}
-                      title={habit.name}
-                      subtitle={`${habitsData.yoga.sessionCount || 0} sesiones (semana anterior)`}
-                      value={habitsData.yoga.sessionCount || 0}
-                      unit="sesiones"
-                      target={`${yogaGoal} sesiones/semana`}
-                      change={habitsData.yoga.change}
-                      status={getStatus(habitsData.yoga.sessionCount || 0, yogaGoal)}
-                      icon={<Sparkles className="h-5 w-5" />}
-                    />
+                    <div key={habit.id}>
+                      <MetricCard
+                        title={habit.name}
+                        subtitle={`${habitsData.yoga.sessionCount || 0} sesiones (semana anterior)`}
+                        value={habitsData.yoga.sessionCount || 0}
+                        unit="sesiones"
+                        target={`${yogaGoal} sesiones/semana`}
+                        change={habitsData.yoga.change}
+                        status={getStatus(habitsData.yoga.sessionCount || 0, yogaGoal)}
+                        icon={<Sparkles className="h-5 w-5" />}
+                      />
+                      {isViewingAsAdmin && patientId && (
+                        <InlineGoalEditor habitType="yoga" currentValue={yogaGoal} options={[1,2,3,4,5,6,7]} unit="ses/sem" patientId={patientId} selectedMonth={selectedMonth} />
+                      )}
+                    </div>
                   );
                 }
                 return (
@@ -199,6 +266,21 @@ export default function DashboardHabits() {
             })}
           </div>
         </motion.div>
+
+        {/* Professional Editing Panel */}
+        {isViewingAsAdmin && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mt-8"
+          >
+            <h3 className="text-lg font-display font-bold mb-4 text-primary">
+              Panel de Gestión
+            </h3>
+            <ProfessionalHabitEditor />
+          </motion.div>
+        )}
       </main>
     </div>
   );
