@@ -81,7 +81,7 @@ export default function ProfessionalMode() {
       email: patient.email || undefined,
     });
     setCurrentMode('admin'); // Reuse admin mode for professional viewing
-    navigate('/dashboard');
+    navigate('/professional/patient');
   };
 
   if (!isProfessional) {
