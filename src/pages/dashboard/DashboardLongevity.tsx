@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Heart, Timer, Dumbbell, Activity, TrendingUp } from "lucide-react";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { useAdminMode } from "@/hooks/useAdminMode";
 import appLogo from "@/assets/app-logo.png";
 
 function getStatus(value: number, target: number, isLowerBetter: boolean = false): "optimal" | "warning" | "danger" {
@@ -21,6 +22,8 @@ function getStatus(value: number, target: number, isLowerBetter: boolean = false
 export default function DashboardLongevity() {
   const [searchParams] = useSearchParams();
   const isDemo = searchParams.get("demo") === "true";
+  const { isViewingAsAdmin } = useAdminMode();
+  const backPath = isViewingAsAdmin ? "/professional/history" : "/my-dashboard";
   
   const { personalData, longevityData } = useDashboardData();
 
@@ -29,7 +32,7 @@ export default function DashboardLongevity() {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border/50">
         <div className="container mx-auto px-4 py-4 flex items-center gap-3">
-          <Link to="/my-dashboard" className="p-2 hover:bg-muted rounded-lg transition-colors">
+          <Link to={backPath} className="p-2 hover:bg-muted rounded-lg transition-colors">
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <img src={appLogo} alt="Red Vitalium" className="h-8 w-auto" />

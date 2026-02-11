@@ -7,12 +7,15 @@ import { WeeklyProgress } from "@/components/dashboard/WeeklyProgress";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useCycleData } from "@/hooks/useCycleData";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminMode } from "@/hooks/useAdminMode";
 import appLogo from "@/assets/app-logo.png";
 
 export default function DashboardAchievements() {
   const [searchParams] = useSearchParams();
   const isDemo = searchParams.get("demo") === "true";
   const { user } = useAuth();
+  const { isViewingAsAdmin } = useAdminMode();
+  const backPath = isViewingAsAdmin ? "/professional/history" : "/my-dashboard";
   
   const { 
     weeklyProgress, 
@@ -30,7 +33,7 @@ export default function DashboardAchievements() {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border/50">
         <div className="container mx-auto px-4 py-4 flex items-center gap-3">
-          <Link to="/my-dashboard" className="p-2 hover:bg-muted rounded-lg transition-colors">
+          <Link to={backPath} className="p-2 hover:bg-muted rounded-lg transition-colors">
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <img src={appLogo} alt="Red Vitalium" className="h-8 w-auto" />
