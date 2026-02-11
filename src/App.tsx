@@ -26,8 +26,8 @@ import Tests from "./pages/Tests";
 import AppointmentsNew from "./pages/AppointmentsNew";
 import FindProfessionals from "./pages/FindProfessionals";
 import ProfessionalMode from "./pages/ProfessionalMode";
-import ProfessionalPatientView from "./pages/ProfessionalPatientView";
 import ProfessionalHistory from "./pages/ProfessionalHistory";
+import ProfessionalClinicalHistory from "./pages/ProfessionalClinicalHistory";
 import Reminders from "./pages/Reminders";
 import Admin from "./pages/Admin";
 import AdminSelectPatient from "./pages/AdminSelectPatient";
@@ -128,14 +128,14 @@ const App = () => (
                   <ProfessionalMode />
                 </ProtectedRoute>
               } />
-              <Route path="/professional/patient" element={
-                <ProtectedRoute>
-                  <ProfessionalPatientView />
-                </ProtectedRoute>
-              } />
               <Route path="/professional/history" element={
                 <ProtectedRoute>
                   <ProfessionalHistory />
+                </ProtectedRoute>
+              } />
+              <Route path="/professional/clinical-history" element={
+                <ProtectedRoute>
+                  <ProfessionalClinicalHistory />
                 </ProtectedRoute>
               } />
               

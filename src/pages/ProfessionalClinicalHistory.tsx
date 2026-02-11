@@ -1,0 +1,269 @@
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Link, useNavigate } from "react-router-dom";
+import { 
+  ArrowLeft, Brain, Apple, Stethoscope, Dumbbell,
+  Plus, Edit2, Save, X, User, FileText
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAdminMode } from "@/hooks/useAdminMode";
+import { useAuth } from "@/hooks/useAuth";
+import { useUserRoles, specialtyLabels, Specialty } from "@/hooks/useUserRoles";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import appLogo from "@/assets/app-logo.png";
+import { useEffect } from "react";
+
+const clinicalSections: { id: Specialty; label: string; icon: React.ElementType }[] = [
+  { id: 'psychology', label: 'Psicológico', icon: Brain },
+  { id: 'nutrition', label: 'Alimentación', icon: Apple },
+  { id: 'medicine', label: 'Médico', icon: Stethoscope },
+  { id: 'physiotherapy', label: 'Físico', icon: Dumbbell },
+];
+
+interface ProfessionalNote {
+  id: string;
+  content: string;
+  note_type: string;
+  specialty: Specialty;
+  is_visible_to_others: boolean;
+  created_at: string;
+  updated_at: string;
+  professional_id: string;
+}
+
+export default function ProfessionalClinicalHistory() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { selectedPatient, isViewingAsAdmin } = useAdminMode();
+  const { professionalData } = useUserRoles();
+  const queryClient = useQueryClient();
+  const [newNote, setNewNote] = useState("");
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState("");
+
+  useEffect(() => {
+    if (!isViewingAsAdmin || !selectedPatient) {
+      navigate('/professional');
+    }
+  }, [isViewingAsAdmin, selectedPatient, navigate]);
+
+  const { data: professionalId } = useQuery({
+    queryKey: ['professional-id', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('professionals')
+        .select('id')
+        .eq('user_id', user!.id)
+        .maybeSingle();
+      return data?.id || null;
+    },
+    enabled: !!user,
+  });
+
+  const { data: notes = [] } = useQuery({
+    queryKey: ['professional-notes', selectedPatient?.userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('professional_notes')
+        .select('*')
+        .eq('patient_id', selectedPatient!.userId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []) as ProfessionalNote[];
+    },
+    enabled: !!selectedPatient,
+  });
+
+  const addNoteMutation = useMutation({
+    mutationFn: async (content: string) => {
+      if (!professionalId || !selectedPatient || !professionalData) throw new Error("Missing data");
+      const { error } = await supabase.from('professional_notes').insert({
+        patient_id: selectedPatient.userId,
+        professional_id: professionalId,
+        specialty: professionalData.specialty,
+        content,
+        note_type: 'clinical',
+        is_visible_to_others: true,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['professional-notes'] });
+      setNewNote("");
+      toast.success("Nota agregada a la historia clínica");
+    },
+    onError: (e) => toast.error("Error: " + e.message),
+  });
+
+  const updateNoteMutation = useMutation({
+    mutationFn: async ({ id, content }: { id: string; content: string }) => {
+      const { error } = await supabase.from('professional_notes')
+        .update({ content })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['professional-notes'] });
+      setEditingNoteId(null);
+      toast.success("Nota actualizada");
+    },
+    onError: (e) => toast.error("Error: " + e.message),
+  });
+
+  if (!selectedPatient || !professionalData) return null;
+
+  const mySpecialty = professionalData.specialty;
+
+  const renderNotesForSpecialty = (specialty: Specialty) => {
+    const sectionNotes = notes.filter(n => n.specialty === specialty);
+    const isMySpecialty = specialty === mySpecialty;
+
+    return (
+      <div className="space-y-4">
+        {/* Add note form - only for own specialty */}
+        {isMySpecialty && (
+          <Card className="p-4">
+            <Textarea
+              placeholder="Escribir nueva nota clínica..."
+              value={newNote}
+              onChange={(e) => setNewNote(e.target.value)}
+              className="mb-3"
+              rows={3}
+            />
+            <Button
+              size="sm"
+              onClick={() => addNoteMutation.mutate(newNote)}
+              disabled={!newNote.trim() || addNoteMutation.isPending}
+              className="gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Agregar Nota
+            </Button>
+          </Card>
+        )}
+
+        {sectionNotes.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-6">
+            No hay notas en esta sección
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {sectionNotes.map(note => {
+              const isOwn = note.professional_id === professionalId;
+              return (
+                <Card key={note.id} className={`p-4 ${!isOwn ? 'bg-muted/30' : ''}`}>
+                  {editingNoteId === note.id ? (
+                    <div>
+                      <Textarea
+                        value={editContent}
+                        onChange={(e) => setEditContent(e.target.value)}
+                        rows={3}
+                        className="mb-2"
+                      />
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={() => updateNoteMutation.mutate({ id: note.id, content: editContent })} disabled={updateNoteMutation.isPending} className="gap-1">
+                          <Save className="h-3 w-3" /> Guardar
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => setEditingNoteId(null)} className="gap-1">
+                          <X className="h-3 w-3" /> Cancelar
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-sm text-foreground whitespace-pre-wrap">{note.content}</p>
+                      <div className="flex items-center justify-between mt-2">
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(note.created_at), "d MMM yyyy, HH:mm", { locale: es })}
+                        </p>
+                        {isOwn && (
+                          <Button size="sm" variant="ghost" onClick={() => { setEditingNoteId(note.id); setEditContent(note.content); }} className="gap-1 h-7 text-xs">
+                            <Edit2 className="h-3 w-3" /> Editar
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border/50">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link to="/professional/history" className="p-2 hover:bg-muted rounded-lg transition-colors">
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+            <img src={appLogo} alt="Red Vitalium" className="h-8 w-auto" />
+            <span className="text-lg font-display font-bold text-primary">Historia Clínica</span>
+          </div>
+          <span className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full">
+            {specialtyLabels[professionalData.specialty]}
+          </span>
+        </div>
+      </header>
+
+      {/* Patient Banner */}
+      <div className="bg-primary/5 border-b border-primary/20">
+        <div className="container mx-auto px-4 py-3 max-w-xl flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+            <User className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <p className="font-medium text-foreground">{selectedPatient.fullName}</p>
+            {selectedPatient.email && (
+              <p className="text-xs text-muted-foreground">{selectedPatient.email}</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <main className="container mx-auto px-4 py-6 max-w-xl">
+        <Tabs defaultValue={mySpecialty} className="w-full">
+          <TabsList className="w-full grid grid-cols-4 mb-4">
+            {clinicalSections.map(section => {
+              const Icon = section.icon;
+              return (
+                <TabsTrigger key={section.id} value={section.id} className="flex flex-col items-center gap-1 text-xs py-2">
+                  <Icon className="h-4 w-4" />
+                  <span className="hidden sm:inline">{section.label}</span>
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+
+          {clinicalSections.map(section => (
+            <TabsContent key={section.id} value={section.id}>
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <div className="flex items-center gap-2 mb-4">
+                  <section.icon className="h-5 w-5 text-primary" />
+                  <h2 className="text-lg font-display font-bold text-foreground">{section.label}</h2>
+                  {section.id === mySpecialty && (
+                    <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full ml-auto">
+                      Tu especialidad
+                    </span>
+                  )}
+                </div>
+                {renderNotesForSpecialty(section.id)}
+              </motion.div>
+            </TabsContent>
+          ))}
+        </Tabs>
+      </main>
+    </div>
+  );
+}
