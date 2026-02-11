@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAdminMode } from "@/hooks/useAdminMode";
 import { useAuth } from "@/hooks/useAuth";
@@ -81,6 +82,23 @@ export default function ProfessionalClinicalHistory() {
     enabled: !!selectedPatient,
   });
 
+  // Fetch BFI-10 personality test results for the patient
+  const { data: bfiResult } = useQuery({
+    queryKey: ['bfi-result', selectedPatient?.userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('test_results')
+        .select('*')
+        .eq('user_id', selectedPatient!.userId)
+        .eq('test_id', 'bfi-10')
+        .order('completed_at', { ascending: false })
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedPatient,
+  });
+
   const addNoteMutation = useMutation({
     mutationFn: async (content: string) => {
       if (!professionalId || !selectedPatient || !professionalData) throw new Error("Missing data");
@@ -120,6 +138,57 @@ export default function ProfessionalClinicalHistory() {
   if (!selectedPatient || !professionalData) return null;
 
   const mySpecialty = professionalData.specialty;
+
+  const traitLabels: Record<string, string> = {
+    extraversion: "Extraversión",
+    agreeableness: "Amabilidad",
+    conscientiousness: "Responsabilidad",
+    neuroticism: "Neuroticismo",
+    openness: "Apertura",
+  };
+
+  const renderPersonalityResults = () => {
+    if (!bfiResult) {
+      return (
+        <Card className="p-4 mb-4 bg-muted/30">
+          <p className="text-sm text-muted-foreground text-center">
+            El paciente aún no ha completado el test de personalidad (BFI-10)
+          </p>
+        </Card>
+      );
+    }
+
+    const scores = bfiResult.scores as Record<string, number>;
+
+    return (
+      <Card className="p-4 mb-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Brain className="h-4 w-4 text-primary" />
+            Perfil de Personalidad (BFI-10)
+          </h3>
+          <span className="text-xs text-muted-foreground">
+            {format(new Date(bfiResult.completed_at), "d MMM yyyy", { locale: es })}
+          </span>
+        </div>
+        <div className="space-y-3">
+          {Object.entries(traitLabels).map(([key, label]) => {
+            const value = scores[key] || 0;
+            const percentage = (value / 5) * 100;
+            return (
+              <div key={key}>
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="text-muted-foreground">{label}</span>
+                  <span className="font-medium text-foreground">{value.toFixed(1)} / 5</span>
+                </div>
+                <Progress value={percentage} className="h-2" />
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+    );
+  };
 
   const renderNotesForSpecialty = (specialty: Specialty) => {
     const sectionNotes = notes.filter(n => n.specialty === specialty);
@@ -258,6 +327,10 @@ export default function ProfessionalClinicalHistory() {
                     </span>
                   )}
                 </div>
+
+                {/* Personality results - only in psychology tab */}
+                {section.id === 'psychology' && renderPersonalityResults()}
+
                 {renderNotesForSpecialty(section.id)}
               </motion.div>
             </TabsContent>
