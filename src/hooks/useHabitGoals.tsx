@@ -3,9 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { useCycleData } from "./useCycleData";
 
-export function useHabitGoals() {
+export function useHabitGoals(overrideUserId?: string) {
   const { user } = useAuth();
-  const { getCycleProgress } = useCycleData(user?.id || null);
+  const effectiveUserId = overrideUserId || user?.id || null;
+  const { getCycleProgress } = useCycleData(effectiveUserId);
   const cycleProgress = getCycleProgress();
   
   // Calculate current month of cycle (1-based)
@@ -15,49 +16,49 @@ export function useHabitGoals() {
   const { data: habitGoals = [], isLoading } = useQuery({
     queryKey: ["user-habit-goals", user?.id, currentCycleMonth],
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!effectiveUserId) return [];
       const { data, error } = await supabase
         .from("habit_goals")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", effectiveUserId)
         .eq("month", currentCycleMonth);
       if (error) throw error;
       return data || [];
     },
-    enabled: !!user?.id,
+    enabled: !!effectiveUserId,
   });
 
   // Fetch activity goals
   const { data: activityGoals } = useQuery({
-    queryKey: ["user-activity-goals", user?.id],
+    queryKey: ["user-activity-goals", effectiveUserId],
     queryFn: async () => {
-      if (!user?.id) return null;
+      if (!effectiveUserId) return null;
       const { data, error } = await supabase
         .from("activity_goals")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", effectiveUserId)
         .maybeSingle();
       if (error) throw error;
       return data;
     },
-    enabled: !!user?.id,
+    enabled: !!effectiveUserId,
   });
 
   // Fetch yoga goal from unlocked_habits
   const { data: yogaHabit } = useQuery({
-    queryKey: ["user-yoga-habit", user?.id],
+    queryKey: ["user-yoga-habit", effectiveUserId],
     queryFn: async () => {
-      if (!user?.id) return null;
+      if (!effectiveUserId) return null;
       const { data, error } = await supabase
         .from("unlocked_habits")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", effectiveUserId)
         .eq("habit_id", "yoga")
         .maybeSingle();
       if (error) throw error;
       return data;
     },
-    enabled: !!user?.id,
+    enabled: !!effectiveUserId,
   });
 
   // Get specific goals with defaults

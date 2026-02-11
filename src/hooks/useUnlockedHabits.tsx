@@ -9,21 +9,22 @@ const ADVANCED_HABITS = [
   { id: "yoga", name: "Yoga", description: "Flexibilidad, equilibrio y conexión mente-cuerpo" },
 ];
 
-export function useUnlockedHabits() {
+export function useUnlockedHabits(overrideUserId?: string) {
   const { user } = useAuth();
+  const effectiveUserId = overrideUserId || user?.id;
 
   const { data: unlockedHabitIds = [], isLoading, refetch } = useQuery({
-    queryKey: ["unlocked-habits", user?.id],
+    queryKey: ["unlocked-habits", effectiveUserId],
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!effectiveUserId) return [];
       const { data, error } = await supabase
         .from("unlocked_habits")
         .select("habit_id")
-        .eq("user_id", user.id);
+        .eq("user_id", effectiveUserId);
       if (error) throw error;
       return data.map(h => h.habit_id);
     },
-    enabled: !!user?.id,
+    enabled: !!effectiveUserId,
   });
 
   const isHabitUnlocked = (habitId: string): boolean => {
