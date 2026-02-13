@@ -29,7 +29,7 @@ export default function DashboardPsychological() {
   const [searchParams] = useSearchParams();
   const isDemo = searchParams.get("demo") === "true";
   const { isViewingAsAdmin } = useAdminMode();
-  const backPath = isViewingAsAdmin ? "/professional/history" : "/my-dashboard";
+  const backPath = isViewingAsAdmin ? "/professional/history" : `/my-dashboard${isDemo ? '?demo=true' : ''}`;
   
   const { psychologicalData } = useDashboardData();
 

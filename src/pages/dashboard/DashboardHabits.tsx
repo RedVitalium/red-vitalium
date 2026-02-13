@@ -35,7 +35,7 @@ export default function DashboardHabits() {
   const isDemo = searchParams.get("demo") === "true";
   const { user } = useAuth();
   const { isViewingAsAdmin, selectedPatient, targetUserId } = useAdminMode();
-  const backPath = isViewingAsAdmin ? "/professional/history" : "/my-dashboard";
+  const backPath = isViewingAsAdmin ? "/professional/history" : `/my-dashboard${isDemo ? '?demo=true' : ''}`;
   
   const effectiveUserId = isViewingAsAdmin ? targetUserId : user?.id;
   

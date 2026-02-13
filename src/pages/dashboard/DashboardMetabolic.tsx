@@ -32,7 +32,7 @@ export default function DashboardMetabolic() {
   const isDemo = searchParams.get("demo") === "true";
   const { subscription, isLoading } = useUserRoles();
   const { isViewingAsAdmin } = useAdminMode();
-  const backPath = isViewingAsAdmin ? "/professional/history" : "/my-dashboard";
+  const backPath = isViewingAsAdmin ? "/professional/history" : `/my-dashboard${isDemo ? '?demo=true' : ''}`;
 
   // Check if user has access (Oro or higher)
   const hasAccess = isDemo || isFeatureAvailable(subscription, 'oro');

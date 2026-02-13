@@ -15,7 +15,7 @@ export default function DashboardAchievements() {
   const isDemo = searchParams.get("demo") === "true";
   const { user } = useAuth();
   const { isViewingAsAdmin } = useAdminMode();
-  const backPath = isViewingAsAdmin ? "/professional/history" : "/my-dashboard";
+  const backPath = isViewingAsAdmin ? "/professional/history" : `/my-dashboard${isDemo ? '?demo=true' : ''}`;
   
   const { 
     weeklyProgress, 
