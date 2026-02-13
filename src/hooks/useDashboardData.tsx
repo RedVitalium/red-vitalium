@@ -54,7 +54,8 @@ const demoLongevityData = {
   biologicalAge: { value: 42.5, change: -3, data: [{ value: 45.5 }, { value: 44.8 }, { value: 44 }, { value: 43.2 }, { value: 42.5 }] },
   waistHeightRatio: { value: 0.49, change: -2 },
   vo2Max: { value: 47, change: 5, data: [{ value: 42 }, { value: 43.5 }, { value: 45 }, { value: 46 }, { value: 47 }] },
-  gripStrength: { value: 42, change: 3, data: [{ value: 38 }, { value: 39 }, { value: 40 }, { value: 41 }, { value: 42 }] },
+  gripStrengthLeft: { value: 40, change: 3, data: [{ value: 36 }, { value: 37 }, { value: 38 }, { value: 39 }, { value: 40 }] },
+  gripStrengthRight: { value: 42, change: 3, data: [{ value: 38 }, { value: 39 }, { value: 40 }, { value: 41 }, { value: 42 }] },
   balanceLeft: { value: 38, change: 8, data: [{ value: 28 }, { value: 31 }, { value: 34 }, { value: 36 }, { value: 38 }] },
   balanceRight: { value: 42, change: 12, data: [{ value: 30 }, { value: 34 }, { value: 37 }, { value: 40 }, { value: 42 }] },
   nonHdlCholesterol: { value: 95, change: -5 },
@@ -140,7 +141,8 @@ const emptyLongevityData = {
   biologicalAge: { value: 0, change: 0, data: [] as { value: number }[] },
   waistHeightRatio: { value: 0, change: 0 },
   vo2Max: { value: 0, change: 0, data: [] as { value: number }[] },
-  gripStrength: { value: 0, change: 0, data: [] as { value: number }[] },
+  gripStrengthLeft: { value: 0, change: 0, data: [] as { value: number }[] },
+  gripStrengthRight: { value: 0, change: 0, data: [] as { value: number }[] },
   balanceLeft: { value: 0, change: 0, data: [] as { value: number }[] },
   balanceRight: { value: 0, change: 0, data: [] as { value: number }[] },
   nonHdlCholesterol: { value: 0, change: 0 },
@@ -731,7 +733,8 @@ export function useDashboardData(overrideUserId?: string) {
 
   // Build longevity data from biomarkers and health_data
   const vo2MaxData = getHealthDataHistory(healthData, "vo2_max");
-  const gripStrengthData = getHealthDataHistory(healthData, "grip_strength");
+  const gripStrengthLeftData = getHealthDataHistory(healthData, "grip_strength_left");
+  const gripStrengthRightData = getHealthDataHistory(healthData, "grip_strength_right");
   const balanceLeftData = getHealthDataHistory(healthData, "balance_left");
   const balanceRightData = getHealthDataHistory(healthData, "balance_right");
   const hrvData = getHealthDataHistory(healthData, "hrv");
@@ -752,10 +755,15 @@ export function useDashboardData(overrideUserId?: string) {
       change: calculateChange(vo2MaxData),
       data: vo2MaxData
     },
-    gripStrength: { 
-      value: getHealthDataValue(healthData, "grip_strength"), 
-      change: calculateChange(gripStrengthData),
-      data: gripStrengthData
+    gripStrengthLeft: { 
+      value: getHealthDataValue(healthData, "grip_strength_left"), 
+      change: calculateChange(gripStrengthLeftData),
+      data: gripStrengthLeftData
+    },
+    gripStrengthRight: { 
+      value: getHealthDataValue(healthData, "grip_strength_right"), 
+      change: calculateChange(gripStrengthRightData),
+      data: gripStrengthRightData
     },
     balanceLeft: { 
       value: getHealthDataValue(healthData, "balance_left"), 

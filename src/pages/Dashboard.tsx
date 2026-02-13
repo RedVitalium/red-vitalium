@@ -598,13 +598,25 @@ const [searchParams] = useSearchParams();
             </motion.div>
             <motion.div variants={itemVariants}>
               <MetricCard
-                title="Fuerza de Agarre"
+                title="Fuerza Agarre Izq."
                 subtitle="Potencia muscular (Kg)"
-                value={longevityData.gripStrength.value}
+                value={longevityData.gripStrengthLeft.value}
                 unit="Kg"
                 target="> 40 Kg"
-                change={longevityData.gripStrength.change}
-                status={getStatus(longevityData.gripStrength.value, 40)}
+                change={longevityData.gripStrengthLeft.change}
+                status={getStatus(longevityData.gripStrengthLeft.value, 40)}
+                icon={<Dumbbell className="h-5 w-5" />}
+              />
+            </motion.div>
+            <motion.div variants={itemVariants}>
+              <MetricCard
+                title="Fuerza Agarre Der."
+                subtitle="Potencia muscular (Kg)"
+                value={longevityData.gripStrengthRight.value}
+                unit="Kg"
+                target="> 40 Kg"
+                change={longevityData.gripStrengthRight.change}
+                status={getStatus(longevityData.gripStrengthRight.value, 40)}
                 icon={<Dumbbell className="h-5 w-5" />}
               />
             </motion.div>
