@@ -125,6 +125,75 @@ export type Database = {
         }
         Relationships: []
       }
+      body_composition: {
+        Row: {
+          bmi: number | null
+          bmr: number | null
+          body_age: number | null
+          body_fat_percent: number | null
+          body_type: string | null
+          body_water_percent: number | null
+          bone_mass: number | null
+          created_at: string
+          fat_free_mass: number | null
+          id: string
+          metabolic_age: number | null
+          muscle_mass: number | null
+          protein: number | null
+          recorded_at: string
+          recorded_by: string | null
+          source: string | null
+          subcutaneous_fat: number | null
+          user_id: string
+          visceral_fat: number | null
+          weight: number | null
+        }
+        Insert: {
+          bmi?: number | null
+          bmr?: number | null
+          body_age?: number | null
+          body_fat_percent?: number | null
+          body_type?: string | null
+          body_water_percent?: number | null
+          bone_mass?: number | null
+          created_at?: string
+          fat_free_mass?: number | null
+          id?: string
+          metabolic_age?: number | null
+          muscle_mass?: number | null
+          protein?: number | null
+          recorded_at?: string
+          recorded_by?: string | null
+          source?: string | null
+          subcutaneous_fat?: number | null
+          user_id: string
+          visceral_fat?: number | null
+          weight?: number | null
+        }
+        Update: {
+          bmi?: number | null
+          bmr?: number | null
+          body_age?: number | null
+          body_fat_percent?: number | null
+          body_type?: string | null
+          body_water_percent?: number | null
+          bone_mass?: number | null
+          created_at?: string
+          fat_free_mass?: number | null
+          id?: string
+          metabolic_age?: number | null
+          muscle_mass?: number | null
+          protein?: number | null
+          recorded_at?: string
+          recorded_by?: string | null
+          source?: string | null
+          subcutaneous_fat?: number | null
+          user_id?: string
+          visceral_fat?: number | null
+          weight?: number | null
+        }
+        Relationships: []
+      }
       daily_survey_questions: {
         Row: {
           created_at: string

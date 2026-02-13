@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Heart, Timer, Dumbbell, Activity, TrendingUp, Pencil } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useAdminMode } from "@/hooks/useAdminMode";
@@ -31,16 +32,18 @@ export default function DashboardLongevity() {
 
   const [editingMetric, setEditingMetric] = useState<MetricType | null>(null);
 
-  const EditButton = ({ metric }: { metric: MetricType }) => {
+  const EditButton = ({ metric, label }: { metric: MetricType; label: string }) => {
     if (!isViewingAsAdmin) return null;
     return (
-      <button
-        onClick={(e) => { e.stopPropagation(); setEditingMetric(metric); }}
-        className="absolute top-4 right-10 p-1.5 rounded-lg hover:bg-muted transition-colors z-10"
-        title="Editar"
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        className="w-full mt-2 text-xs gap-1 text-muted-foreground hover:text-primary"
+        onClick={() => setEditingMetric(metric)}
       >
-        <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-      </button>
+        <Pencil className="h-3 w-3" />
+        Editar {label}
+      </Button>
     );
   };
 
@@ -76,8 +79,7 @@ export default function DashboardLongevity() {
           animate={{ opacity: 1, y: 0 }}
           className="grid md:grid-cols-2 gap-4"
         >
-          <div className="relative">
-            <EditButton metric="biological_age" />
+          <div>
             <MetricCard
               title="Edad Biológica"
               subtitle={`vs Edad cronológica (${personalData.age} años)`}
@@ -88,9 +90,9 @@ export default function DashboardLongevity() {
               status={getStatus(longevityData.biologicalAge.value > 0 ? personalData.age - longevityData.biologicalAge.value : 0, 0)}
               icon={<TrendingUp className="h-5 w-5" />}
             />
+            <EditButton metric="biological_age" label="Edad Biológica" />
           </div>
-          <div className="relative">
-            <EditButton metric="waist_circumference" />
+          <div>
             <MetricCard
               title="RCHA"
               subtitle="Cintura/Altura - Riesgo metabólico"
@@ -100,9 +102,9 @@ export default function DashboardLongevity() {
               status={getStatus(longevityData.waistHeightRatio.value, 0.5, true)}
               icon={<Activity className="h-5 w-5" />}
             />
+            <EditButton metric="waist_circumference" label="RCHA" />
           </div>
-          <div className="relative">
-            <EditButton metric="vo2_max" />
+          <div>
             <MetricCard
               title="VO2 Máx"
               subtitle="Capacidad aeróbica (ml/kg/min)"
@@ -112,9 +114,9 @@ export default function DashboardLongevity() {
               status={getStatus(longevityData.vo2Max.value, 45)}
               icon={<Heart className="h-5 w-5" />}
             />
+            <EditButton metric="vo2_max" label="VO2 Máx" />
           </div>
-          <div className="relative">
-            <EditButton metric="grip_strength_left" />
+          <div>
             <MetricCard
               title="Fuerza Agarre Izq."
               subtitle="Potencia muscular (Kg)"
@@ -125,9 +127,9 @@ export default function DashboardLongevity() {
               status={getStatus(longevityData.gripStrengthLeft.value, 40)}
               icon={<Dumbbell className="h-5 w-5" />}
             />
+            <EditButton metric="grip_strength_left" label="Agarre Izq." />
           </div>
-          <div className="relative">
-            <EditButton metric="grip_strength_right" />
+          <div>
             <MetricCard
               title="Fuerza Agarre Der."
               subtitle="Potencia muscular (Kg)"
@@ -138,9 +140,9 @@ export default function DashboardLongevity() {
               status={getStatus(longevityData.gripStrengthRight.value, 40)}
               icon={<Dumbbell className="h-5 w-5" />}
             />
+            <EditButton metric="grip_strength_right" label="Agarre Der." />
           </div>
-          <div className="relative">
-            <EditButton metric="balance_left" />
+          <div>
             <MetricCard
               title="Equilibrio Pierna Izq."
               subtitle="Tiempo con ojos cerrados"
@@ -151,9 +153,9 @@ export default function DashboardLongevity() {
               status={getStatus(longevityData.balanceLeft.value, 30)}
               icon={<Timer className="h-5 w-5" />}
             />
+            <EditButton metric="balance_left" label="Equilibrio Izq." />
           </div>
-          <div className="relative">
-            <EditButton metric="balance_right" />
+          <div>
             <MetricCard
               title="Equilibrio Pierna Der."
               subtitle="Tiempo con ojos cerrados"
@@ -164,9 +166,9 @@ export default function DashboardLongevity() {
               status={getStatus(longevityData.balanceRight.value, 30)}
               icon={<Timer className="h-5 w-5" />}
             />
+            <EditButton metric="balance_right" label="Equilibrio Der." />
           </div>
-          <div className="relative">
-            <EditButton metric="non_hdl_cholesterol" />
+          <div>
             <MetricCard
               title="Colesterol No-HDL"
               subtitle="Predictor metabólico (mg/dL)"
@@ -177,9 +179,9 @@ export default function DashboardLongevity() {
               status={getStatus(longevityData.nonHdlCholesterol.value, 100, true)}
               icon={<Activity className="h-5 w-5" />}
             />
+            <EditButton metric="non_hdl_cholesterol" label="Colesterol No-HDL" />
           </div>
-          <div className="relative">
-            <EditButton metric="hrv" />
+          <div>
             <MetricCard
               title="VFC (HRV)"
               subtitle="Variabilidad cardíaca (ms)"
@@ -190,6 +192,7 @@ export default function DashboardLongevity() {
               status={getStatus(longevityData.hrv.value, 50)}
               icon={<TrendingUp className="h-5 w-5" />}
             />
+            <EditButton metric="hrv" label="VFC (HRV)" />
           </div>
         </motion.div>
       </main>
