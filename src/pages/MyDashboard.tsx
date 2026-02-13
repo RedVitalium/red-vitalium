@@ -97,7 +97,7 @@ export default function MyDashboard() {
       <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border/50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link to="/home" className="p-2 hover:bg-muted rounded-lg transition-colors">
+            <Link to={isDemo ? "/" : "/home"} className="p-2 hover:bg-muted rounded-lg transition-colors">
               <ArrowLeft className="h-5 w-5" />
             </Link>
             <img src={appLogo} alt="Red Vitalium" className="h-8 w-auto" />
