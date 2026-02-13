@@ -22,10 +22,11 @@ export function MuscleAndLeanSlide({ data }: Props) {
       <div className="flex items-center gap-6 w-full">
         <div className="w-1/3 flex flex-col items-center">
           <BodySilhouette
-            highlightColor="hsl(0, 70%, 55%)"
-            opacity={0.45}
-            fillPercentage={data.muscleMass * 2}
-            direction="bottom"
+            highlights={[
+              { zone: "core", color: "hsl(0, 70%, 55%)", opacity: 0.4 },
+              { zone: "limbs", color: "hsl(0, 65%, 50%)", opacity: 0.3 },
+              { zone: "bones", color: "hsl(0, 0%, 65%)", opacity: 0.5 },
+            ]}
           />
           <p className="mt-2 text-sm text-muted-foreground text-center">Músculo: <span className="font-bold text-foreground">{data.muscleMass}%</span></p>
         </div>

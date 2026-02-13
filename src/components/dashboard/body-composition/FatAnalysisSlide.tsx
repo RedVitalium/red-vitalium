@@ -31,10 +31,10 @@ export function FatAnalysisSlide({ data }: Props) {
       <div className="flex items-center gap-6 w-full">
         <div className="w-1/3 flex flex-col items-center">
           <BodySilhouette
-            highlightColor="hsl(45, 90%, 55%)"
-            opacity={0.5}
-            fillPercentage={data.bodyFatPercent * 2.5}
-            direction="bottom"
+            highlights={[
+              { zone: "skin", color: "hsl(45, 90%, 55%)", opacity: 0.5 },
+              { zone: "abdomen", color: "hsl(25, 90%, 50%)", opacity: 0.55 },
+            ]}
           />
           <div className="mt-2 flex items-center gap-1">
             <StatusIcon className={`h-4 w-4 ${fatStatus.color}`} />
@@ -42,7 +42,6 @@ export function FatAnalysisSlide({ data }: Props) {
           </div>
         </div>
         <div className="flex-1 space-y-4">
-          {/* Total body fat */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -74,34 +73,40 @@ export function FatAnalysisSlide({ data }: Props) {
             </div>
           </motion.div>
 
-          {/* Subcutaneous fat */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
             className="p-3 bg-muted/50 rounded-xl"
           >
-            <p className="text-xs text-muted-foreground mb-1">Grasa Subcutánea</p>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
+              <p className="text-xs text-muted-foreground">Grasa Subcutánea</p>
+            </div>
             <div className="flex items-end gap-2">
               <span className="text-2xl font-bold">{data.subcutaneousFat}</span>
               <span className="text-sm text-muted-foreground mb-0.5">%</span>
             </div>
+            <p className="text-[10px] text-muted-foreground mt-1">Visible en el borde de la silueta</p>
           </motion.div>
 
-          {/* Visceral fat */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
             className="p-3 bg-muted/50 rounded-xl"
           >
-            <p className="text-xs text-muted-foreground mb-1">Grasa Visceral</p>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="w-2.5 h-2.5 rounded-full bg-orange-500" />
+              <p className="text-xs text-muted-foreground">Grasa Visceral</p>
+            </div>
             <div className="flex items-end gap-2">
               <span className="text-2xl font-bold">{data.visceralFat}</span>
               <span className={`text-sm font-medium mb-0.5 ${visceralStatus.color}`}>
                 {visceralStatus.label}
               </span>
             </div>
+            <p className="text-[10px] text-muted-foreground mt-1">Zona abdominal en la silueta</p>
           </motion.div>
         </div>
       </div>
