@@ -20,7 +20,14 @@ export function CompositionOverviewSlide({ data }: Props) {
       <h3 className="font-display font-bold text-lg">Composición General</h3>
       <div className="flex items-center gap-6 w-full">
         <div className="w-1/3 flex flex-col items-center">
-          <BodySilhouette highlightColor="hsl(200, 80%, 55%)" opacity={0.35} fillPercentage={100} />
+          <BodySilhouette
+            highlights={[
+              { zone: "full", color: "hsl(200, 80%, 55%)", opacity: 0.15 },
+              { zone: "muscles", color: "hsl(0, 70%, 55%)", opacity: 0.25 },
+              { zone: "skin", color: "hsl(45, 90%, 55%)", opacity: 0.3 },
+              { zone: "bones", color: "hsl(0, 0%, 65%)", opacity: 0.4 },
+            ]}
+          />
           <div className="mt-2 text-center">
             <p className="text-2xl font-bold">{data.weight} <span className="text-sm font-normal text-muted-foreground">kg</span></p>
           </div>

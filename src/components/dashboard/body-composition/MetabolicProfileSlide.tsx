@@ -8,8 +8,11 @@ interface Props {
 }
 
 export function MetabolicProfileSlide({ data }: Props) {
-  const ageDiff = data.metabolicAge - 45; // assuming real age 45 for demo
+  const ageDiff = data.metabolicAge - 45;
   const ageStatus = ageDiff <= 0 ? "text-green-500" : ageDiff <= 3 ? "text-yellow-500" : "text-red-500";
+
+  // Water fill opacity based on hydration
+  const waterOpacity = Math.min(data.bodyWaterPercent / 100, 0.5);
 
   const metrics = [
     {
@@ -52,10 +55,10 @@ export function MetabolicProfileSlide({ data }: Props) {
       <div className="flex items-center gap-6 w-full">
         <div className="w-1/3 flex flex-col items-center">
           <BodySilhouette
-            highlightColor="hsl(25, 90%, 55%)"
-            opacity={0.35}
-            fillPercentage={75}
-            direction="bottom"
+            highlights={[
+              { zone: "full", color: "hsl(200, 80%, 55%)", opacity: waterOpacity },
+              { zone: "abdomen", color: "hsl(25, 90%, 55%)", opacity: 0.3 },
+            ]}
           />
           <p className="mt-2 text-sm text-muted-foreground text-center">
             <span className="font-bold text-foreground">{data.bmr}</span> kcal/día
