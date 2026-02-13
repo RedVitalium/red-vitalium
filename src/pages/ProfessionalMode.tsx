@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useUserRoles, specialtyLabels } from "@/hooks/useUserRoles";
 import { useAdminMode } from "@/hooks/useAdminMode";
 import appLogo from "@/assets/app-logo.png";
+import RegisterPatientDialog from "@/components/professional/RegisterPatientDialog";
 
 interface Patient {
   user_id: string;
@@ -215,12 +216,22 @@ export default function ProfessionalMode() {
           </Card>
         </motion.div>
 
-        {/* Info */}
+        {/* Register Patient */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="mt-8 p-5 bg-muted/30 border border-border rounded-xl"
+          className="mt-6"
+        >
+          <RegisterPatientDialog />
+        </motion.div>
+
+        {/* Info */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="mt-6 p-5 bg-muted/30 border border-border rounded-xl"
         >
           <p className="text-sm text-muted-foreground text-center">
             Como profesional de {professionalData ? specialtyLabels[professionalData.specialty] : ''}, 
