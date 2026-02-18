@@ -2,12 +2,13 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
-  ArrowLeft, Users, Heart, Scale, Brain, Activity, BarChart3,
-  FileText, ChevronRight, User, Pencil, TrendingUp, Dumbbell,
-  ClipboardList, Stethoscope, Timer, ChevronLeft, Smile, Frown,
-  Lock
+  ArrowLeft, Heart, Scale, Brain, Activity, BarChart3,
+  FileText, ChevronRight, User, Pencil, TrendingUp,
+  ClipboardList, Stethoscope, ChevronLeft, Smile, Frown,
+  Lock, Trophy
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MetricCard } from "@/components/dashboard/MetricCard";
@@ -87,22 +88,16 @@ const DEMO_CLINICAL = {
 const SLIDE_TITLES = ["General", "Grasa", "Músculo", "Metabólico"];
 const DAYS_SHORT = ["L", "M", "X", "J", "V", "S", "D"];
 
-type DemoView = "patients" | "patient-detail" | "longevity" | "body-composition" | "psychological" | "habits" | "clinical";
+type DemoView = "patient-detail" | "longevity" | "body-composition" | "psychological" | "habits" | "clinical";
 
 export default function ProfessionalDemoPage() {
   const navigate = useNavigate();
-  const [view, setView] = useState<DemoView>("patients");
-  const [selectedPatient, setSelectedPatient] = useState(DEMO_PATIENTS[0]);
+  const [view, setView] = useState<DemoView>("patient-detail");
+  const [selectedPatient] = useState(DEMO_PATIENTS[0]);
   const [bodySlide, setBodySlide] = useState(0);
 
-  const handleSelectPatient = (patient: typeof DEMO_PATIENTS[0]) => {
-    setSelectedPatient(patient);
-    setView("patient-detail");
-  };
-
   const goBack = () => {
-    if (view === "patients") navigate("/");
-    else if (view === "patient-detail") setView("patients");
+    if (view === "patient-detail") navigate("/");
     else setView("patient-detail");
   };
 
@@ -132,138 +127,77 @@ export default function ProfessionalDemoPage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 max-w-2xl">
+      {/* Patient Banner - same as ProfessionalHistory */}
+      <div className="bg-primary/5 border-b border-primary/20">
+        <div className="container mx-auto px-4 py-3 max-w-xl flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <User className="h-5 w-5 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-foreground truncate">{selectedPatient.name}</p>
+            <p className="text-xs text-muted-foreground">{selectedPatient.age} años · Plan {selectedPatient.plan}</p>
+          </div>
+          <Badge className="flex-shrink-0 bg-accent/15 text-accent border-accent/30 hover:bg-accent/20 text-xs">
+            {selectedPatient.specialty}
+          </Badge>
+        </div>
+      </div>
 
-        {/* ── VIEW: Patient list ──────────────────────────────── */}
-        {view === "patients" && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="mb-6 text-center">
-              <div className="inline-flex items-center gap-2 bg-accent/10 text-accent px-4 py-2 rounded-full mb-3">
-                <Stethoscope className="h-4 w-4" />
-                <span className="text-sm font-medium">Demo de Profesional de Salud</span>
-              </div>
-              <h1 className="text-2xl font-display font-bold text-foreground mb-1">Mis Pacientes</h1>
-              <p className="text-muted-foreground text-sm">Selecciona un paciente para ver su tablero completo</p>
-            </div>
+      <main className="container mx-auto px-4 py-6 max-w-xl">
 
-            <div className="grid grid-cols-3 gap-3 mb-6">
-              {[
-                { icon: BarChart3, label: "Métricas clínicas", desc: "Edita y registra" },
-                { icon: ClipboardList, label: "Historia clínica", desc: "Notas y evolución" },
-                { icon: TrendingUp, label: "Tendencias", desc: "Gráficas de progreso" },
-              ].map(({ icon: Icon, label, desc }) => (
-                <Card key={label} className="p-3 text-center border-accent/20">
-                  <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center mx-auto mb-2">
-                    <Icon className="h-4 w-4 text-accent" />
-                  </div>
-                  <p className="text-xs font-semibold text-foreground leading-tight">{label}</p>
-                  <p className="text-xs text-muted-foreground">{desc}</p>
-                </Card>
-              ))}
-            </div>
-
-            <Card className="overflow-hidden">
-              <div className="px-4 py-3 bg-muted/30 border-b border-border">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Pacientes asignados ({DEMO_PATIENTS.length})
-                </p>
-              </div>
-              <div className="divide-y divide-border">
-                {DEMO_PATIENTS.map((patient) => (
-                  <button
-                    key={patient.id}
-                    onClick={() => handleSelectPatient(patient)}
-                    className="w-full p-4 text-left hover:bg-muted/50 transition-colors flex items-center justify-between group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <User className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground">{patient.name}</p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <p className="text-xs text-muted-foreground">{patient.age} años</p>
-                          <span className="text-muted-foreground">·</span>
-                          <Badge variant="outline" className="text-xs py-0 h-4">Plan {patient.plan}</Badge>
-                        </div>
-                      </div>
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
-                  </button>
-                ))}
-              </div>
-            </Card>
-
-            <div className="mt-4 p-4 bg-accent/5 border border-accent/20 rounded-xl">
-              <p className="text-xs text-muted-foreground text-center">
-                Como profesional, solo verás los pacientes que te han sido asignados por el equipo Vitalium.
-              </p>
-            </div>
-          </motion.div>
-        )}
-
-        {/* ── VIEW: Patient detail ────────────────────────────── */}
+        {/* ── VIEW: Patient detail ─ mismo layout que ProfessionalHistory ── */}
         {view === "patient-detail" && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-5 flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
-                <User className="h-6 w-6 text-primary" />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+            <div>
+              <h2 className="text-lg font-display font-bold text-foreground mb-3">Resumen por Categoría</h2>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { icon: Trophy, label: "Logros", desc: "Metas y achievements", demoView: null as DemoView | null },
+                  { icon: Activity, label: "Hábitos", desc: "Semana en curso", demoView: "habits" as DemoView },
+                  { icon: Brain, label: "Bienestar Psicológico", desc: "Tests y evolución", demoView: "psychological" as DemoView },
+                  { icon: Heart, label: "Longevidad", desc: "Métricas editables", demoView: "longevity" as DemoView },
+                  { icon: Scale, label: "Composición Corporal", desc: "Báscula inteligente", demoView: "body-composition" as DemoView },
+                  { icon: BarChart3, label: "Marcadores Metabólicos", desc: "Biomarcadores", demoView: null as DemoView | null },
+                ].map((cat) => {
+                  const Icon = cat.icon;
+                  return (
+                    <Card
+                      key={cat.label}
+                      className={`p-4 flex items-center gap-3 transition-colors ${cat.demoView ? "cursor-pointer hover:bg-muted/50" : "opacity-60 cursor-default"}`}
+                      onClick={() => cat.demoView && setView(cat.demoView)}
+                    >
+                      <div className="p-2 rounded-lg bg-primary/10 flex-shrink-0">
+                        <Icon className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground leading-tight">{cat.label}</p>
+                        <p className="text-xs text-muted-foreground">{cat.demoView ? "Ver detalles →" : "Próximamente"}</p>
+                      </div>
+                    </Card>
+                  );
+                })}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-foreground truncate">{selectedPatient.name}</p>
-                <p className="text-sm text-muted-foreground">{selectedPatient.age} años · Plan {selectedPatient.plan}</p>
-              </div>
-              <Badge className="flex-shrink-0 bg-accent/15 text-accent border-accent/30 hover:bg-accent/20">
-                {selectedPatient.specialty}
-              </Badge>
-            </div>
-
-            <h2 className="text-base font-display font-bold text-foreground mb-3">Resumen por Categoría</h2>
-            <div className="grid grid-cols-2 gap-3 mb-5">
-              {[
-                { icon: Heart, label: "Longevidad", desc: "Métricas editables", view: "longevity" as DemoView },
-                { icon: Scale, label: "Composición Corporal", desc: "Báscula inteligente", view: "body-composition" as DemoView },
-                { icon: Brain, label: "Bienestar Psicológico", desc: "Tests y evolución", view: "psychological" as DemoView },
-                { icon: Activity, label: "Hábitos", desc: "Semana en curso", view: "habits" as DemoView },
-              ].map((cat) => {
-                const Icon = cat.icon;
-                return (
-                  <Card
-                    key={cat.label}
-                    className="p-4 flex items-center gap-3 cursor-pointer hover:bg-muted/50 transition-colors"
-                    onClick={() => setView(cat.view)}
-                  >
-                    <div className="p-2 rounded-lg bg-primary/10 flex-shrink-0">
-                      <Icon className="h-4 w-4 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground leading-tight">{cat.label}</p>
-                      <p className="text-xs text-muted-foreground">{cat.desc}</p>
-                    </div>
-                  </Card>
-                );
-              })}
             </div>
 
             <Card
-              className="p-4 flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors mb-5"
+              className="p-5 flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors"
               onClick={() => setView("clinical")}
             >
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-primary/10">
-                  <FileText className="h-5 w-5 text-primary" />
+              <div className="flex items-center gap-4">
+                <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
+                  <FileText className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="font-medium text-foreground">Historia Clínica</p>
-                  <p className="text-sm text-muted-foreground">Notas y evolución del paciente</p>
+                  <h3 className="font-medium text-foreground">Historia Clínica</h3>
+                  <p className="text-sm text-muted-foreground">Notas permanentes del paciente</p>
                 </div>
               </div>
               <ChevronRight className="h-5 w-5 text-muted-foreground" />
             </Card>
 
-            <div className="p-4 bg-muted/30 border border-border rounded-xl">
-              <p className="text-xs text-muted-foreground text-center">
-                Como profesional puedes <strong>editar métricas</strong>, registrar nuevas mediciones y añadir notas clínicas directamente desde el tablero.
+            <div className="p-5 bg-muted/30 border border-border rounded-xl">
+              <p className="text-sm text-muted-foreground text-center">
+                Estás viendo los datos de <strong>{selectedPatient.name}</strong>. Selecciona una categoría o accede a la historia clínica.
               </p>
             </div>
           </motion.div>
