@@ -5,13 +5,14 @@ import {
   ArrowLeft, Heart, Scale, Brain, Activity, BarChart3,
   FileText, ChevronRight, User, Pencil, TrendingUp,
   ClipboardList, Stethoscope, ChevronLeft, Smile, Frown,
-  Lock, Trophy
+  Lock, Trophy, Apple, Dumbbell, Plus, Edit2
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
-
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MetricCard } from "@/components/dashboard/MetricCard";
+
 import { CompositionOverviewSlide } from "@/components/dashboard/body-composition/CompositionOverviewSlide";
 import { FatAnalysisSlide } from "@/components/dashboard/body-composition/FatAnalysisSlide";
 import { MuscleAndLeanSlide } from "@/components/dashboard/body-composition/MuscleAndLeanSlide";
@@ -429,66 +430,88 @@ export default function ProfessionalDemoPage() {
         {/* ── VIEW: Clinical history ──────────────────────────── */}
         {view === "clinical" && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="flex items-center gap-2 mb-2">
-              <FileText className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-display font-bold text-foreground">Historia Clínica</h2>
-            </div>
-            <p className="text-sm text-muted-foreground mb-5">
-              Notas por especialidad. Como nutricionista puedes añadir notas en tu sección; las demás son solo lectura.
-            </p>
+            <Tabs defaultValue="nutrition" className="w-full">
+              <TabsList className="w-full grid grid-cols-4 mb-4">
+                {[
+                  { id: "psychology", label: "Psicológico", icon: Brain },
+                  { id: "nutrition", label: "Alimentación", icon: Apple },
+                  { id: "medicine", label: "Médico", icon: Stethoscope },
+                  { id: "physiotherapy", label: "Físico", icon: Dumbbell },
+                ].map(({ id, label, icon: Icon }) => (
+                  <TabsTrigger key={id} value={id} className="flex flex-col items-center gap-1 text-xs py-2">
+                    <Icon className="h-4 w-4" />
+                    <span className="hidden sm:inline">{label}</span>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
 
-            <div className="space-y-4 mb-5">
               {Object.entries(DEMO_CLINICAL).map(([key, specialty]) => (
-                <Card key={key} className={`overflow-hidden ${specialty.editable ? "border-primary/30" : ""}`}>
-                  {/* Specialty header */}
-                  <div className={`px-4 py-3 flex items-center justify-between border-b border-border ${
-                    specialty.editable ? "bg-primary/5" : "bg-muted/30"
-                  }`}>
-                    <div className="flex items-center gap-2">
-                      <Stethoscope className={`h-4 w-4 ${specialty.editable ? "text-primary" : "text-muted-foreground"}`} />
-                      <p className={`text-sm font-semibold ${specialty.editable ? "text-primary" : "text-muted-foreground"}`}>
-                        {specialty.label}
-                      </p>
+                <TabsContent key={key} value={key}>
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <div className="flex items-center gap-2 mb-4">
+                      {key === "psychology" && <Brain className="h-5 w-5 text-primary" />}
+                      {key === "nutrition" && <Apple className="h-5 w-5 text-primary" />}
+                      {key === "medicine" && <Stethoscope className="h-5 w-5 text-primary" />}
+                      {key === "physiotherapy" && <Dumbbell className="h-5 w-5 text-primary" />}
+                      <h2 className="text-lg font-display font-bold text-foreground">{specialty.label}</h2>
                       {specialty.editable && (
-                        <Badge className="bg-primary/10 text-primary border-primary/20 text-xs">Tu especialidad</Badge>
+                        <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full ml-auto">
+                          Tu especialidad
+                        </span>
                       )}
                     </div>
-                    {specialty.editable ? (
-                      <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-primary hover:bg-primary/10">
-                        <FileText className="h-3 w-3" />
-                        Añadir nota
-                      </Button>
+
+                    {/* Add note form for editable specialty */}
+                    {specialty.editable && (
+                      <Card className="p-4 mb-4 border-primary/20">
+                        <textarea
+                          placeholder="Escribir nueva nota clínica..."
+                          className="w-full text-sm bg-transparent border border-border rounded-md p-2 mb-3 resize-none focus:outline-none focus:ring-1 focus:ring-primary"
+                          rows={3}
+                          readOnly
+                          onClick={() => {}}
+                        />
+                        <Button size="sm" className="gap-2" disabled>
+                          <Plus className="h-4 w-4" />
+                          Agregar Nota
+                        </Button>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          * En la app real podrás escribir y guardar notas clínicas aquí.
+                        </p>
+                      </Card>
+                    )}
+
+                    {/* Notes list */}
+                    {specialty.notes.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-6">
+                        No hay notas en esta sección
+                      </p>
                     ) : (
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Lock className="h-3 w-3" />
-                        Solo lectura
+                      <div className="space-y-3">
+                        {specialty.notes.map((note, i) => (
+                          <Card key={i} className={`p-4 ${!specialty.editable ? "bg-muted/30" : ""}`}>
+                            <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{note.text}</p>
+                            <div className="flex items-center justify-between mt-2">
+                              <span className="text-xs text-muted-foreground">{note.date}</span>
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="text-xs">{note.type}</Badge>
+                                {specialty.editable && (
+                                  <Button size="sm" variant="ghost" className="h-7 text-xs gap-1" disabled>
+                                    <Edit2 className="h-3 w-3" /> Editar
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
                       </div>
                     )}
-                  </div>
-
-                  {/* Notes */}
-                  {specialty.notes.length > 0 ? (
-                    <div className="divide-y divide-border">
-                      {specialty.notes.map((note, i) => (
-                        <div key={i} className="px-4 py-3">
-                          <div className="flex items-center justify-between mb-1.5">
-                            <Badge variant="outline" className="text-xs">{note.type}</Badge>
-                            <span className="text-xs text-muted-foreground">{note.date}</span>
-                          </div>
-                          <p className="text-sm text-foreground leading-relaxed">{note.text}</p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="px-4 py-4 text-center">
-                      <p className="text-xs text-muted-foreground italic">Sin notas registradas aún</p>
-                    </div>
-                  )}
-                </Card>
+                  </motion.div>
+                </TabsContent>
               ))}
-            </div>
+            </Tabs>
 
-            <div className="p-4 bg-accent/5 border border-accent/20 rounded-xl">
+            <div className="mt-5 p-4 bg-accent/5 border border-accent/20 rounded-xl">
               <p className="text-xs font-semibold text-accent mb-1">✦ Notas compartidas</p>
               <p className="text-xs text-muted-foreground">
                 Las notas pueden marcarse como visibles para otros profesionales del equipo, permitiendo una atención coordinada y multidisciplinaria.
@@ -496,6 +519,7 @@ export default function ProfessionalDemoPage() {
             </div>
           </motion.div>
         )}
+
 
       </main>
     </div>
