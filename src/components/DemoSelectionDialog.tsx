@@ -40,68 +40,66 @@ export function DemoSelectionDialog({ open, onOpenChange }: DemoSelectionDialogP
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4">
+        <div className="grid gap-3 py-2">
           {/* Patient Demo */}
-          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-            <Button
-              variant="outline"
-              className="w-full h-auto p-5 flex gap-4 items-start border-2 hover:border-primary hover:bg-primary/5 text-left"
+          <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+            <button
+              className="w-full p-4 flex gap-3 items-center border-2 border-border hover:border-primary hover:bg-primary/5 text-left rounded-lg transition-all"
               onClick={handlePatientDemo}
             >
-              <div className="p-2.5 rounded-xl bg-primary/10 flex-shrink-0 mt-0.5">
-                <User className="h-6 w-6 text-primary" />
+              <div className="p-2 rounded-xl bg-primary/10 flex-shrink-0">
+                <User className="h-5 w-5 text-primary" />
               </div>
-              <div className="flex-1 min-w-0 overflow-hidden">
-                <p className="font-display font-semibold text-base text-foreground leading-tight">Soy Paciente</p>
-                <p className="text-xs text-muted-foreground mt-1 leading-relaxed line-clamp-2">
-                  Tu tablero de salud: hábitos, longevidad, composición corporal y bienestar.
+              <div className="flex-1 min-w-0">
+                <p className="font-display font-semibold text-sm text-foreground">Soy Paciente</p>
+                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                  Hábitos, longevidad, composición corporal y bienestar
                 </p>
-                <div className="flex flex-wrap gap-1.5 mt-2">
+                <div className="flex gap-1 mt-1.5 flex-wrap">
                   {[
                     { icon: Activity, label: "Hábitos" },
                     { icon: Heart, label: "Longevidad" },
                     { icon: Scale, label: "Composición" },
                     { icon: Brain, label: "Psicología" },
                   ].map(({ icon: Icon, label }) => (
-                    <span key={label} className="flex items-center gap-1 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full whitespace-nowrap">
-                      <Icon className="h-3 w-3 flex-shrink-0" />
+                    <span key={label} className="flex items-center gap-0.5 text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">
+                      <Icon className="h-2.5 w-2.5 flex-shrink-0" />
                       {label}
                     </span>
                   ))}
                 </div>
               </div>
-            </Button>
+            </button>
           </motion.div>
 
           {/* Professional Demo */}
-          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-            <Button
-              variant="outline"
-              className="w-full h-auto p-5 flex gap-4 items-start border-2 hover:border-accent hover:bg-accent/5 text-left"
+          <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+            <button
+              className="w-full p-4 flex gap-3 items-center border-2 border-border hover:border-accent hover:bg-accent/5 text-left rounded-lg transition-all"
               onClick={handleProfessionalDemo}
             >
-              <div className="p-2.5 rounded-xl bg-accent/10 flex-shrink-0 mt-0.5">
-                <Stethoscope className="h-6 w-6 text-accent" />
+              <div className="p-2 rounded-xl bg-accent/10 flex-shrink-0">
+                <Stethoscope className="h-5 w-5 text-accent" />
               </div>
-              <div className="flex-1 min-w-0 overflow-hidden">
-                <p className="font-display font-semibold text-base text-foreground leading-tight">Soy Profesional de la Salud</p>
-                <p className="text-xs text-muted-foreground mt-1 leading-relaxed line-clamp-2">
-                  Panel clínico: pacientes, edición de métricas, historial y notas de evolución.
+              <div className="flex-1 min-w-0">
+                <p className="font-display font-semibold text-sm text-foreground">Soy Profesional de la Salud</p>
+                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                  Panel clínico, edición de métricas y notas de evolución
                 </p>
-                <div className="flex flex-wrap gap-1.5 mt-2">
+                <div className="flex gap-1 mt-1.5 flex-wrap">
                   {[
                     { icon: Users, label: "Pacientes" },
                     { icon: BarChart3, label: "Métricas" },
-                    { icon: ClipboardList, label: "Historia clínica" },
+                    { icon: ClipboardList, label: "Historial" },
                   ].map(({ icon: Icon, label }) => (
-                    <span key={label} className="flex items-center gap-1 text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full whitespace-nowrap">
-                      <Icon className="h-3 w-3 flex-shrink-0" />
+                    <span key={label} className="flex items-center gap-0.5 text-xs bg-accent/10 text-accent px-1.5 py-0.5 rounded-full">
+                      <Icon className="h-2.5 w-2.5 flex-shrink-0" />
                       {label}
                     </span>
                   ))}
                 </div>
               </div>
-            </Button>
+            </button>
           </motion.div>
         </div>
 
