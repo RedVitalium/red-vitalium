@@ -26,6 +26,7 @@ import Tests from "./pages/Tests";
 import AppointmentsNew from "./pages/AppointmentsNew";
 import FindProfessionals from "./pages/FindProfessionals";
 import ProfessionalMode from "./pages/ProfessionalMode";
+import ProfessionalDemoPage from "./pages/ProfessionalDemoPage";
 import ProfessionalHistory from "./pages/ProfessionalHistory";
 import ProfessionalClinicalHistory from "./pages/ProfessionalClinicalHistory";
 import Reminders from "./pages/Reminders";
@@ -128,6 +129,8 @@ const App = () => (
                   <ProfessionalMode />
                 </ProtectedRoute>
               } />
+              {/* Professional demo (no auth required) */}
+              <Route path="/demo/professional" element={<ProfessionalDemoPage />} />
               <Route path="/professional/history" element={
                 <ProtectedRoute>
                   <ProfessionalHistory />

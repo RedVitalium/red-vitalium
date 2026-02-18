@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import appLogo from "@/assets/app-logo.png";
+import { DemoSelectionDialog } from "@/components/DemoSelectionDialog";
 import { 
   Activity, 
   Brain, 
@@ -92,8 +94,11 @@ const itemVariants = {
 };
 
 export default function Index() {
+  const [demoDialogOpen, setDemoDialogOpen] = useState(false);
+
   return (
     <div className="min-h-screen">
+      <DemoSelectionDialog open={demoDialogOpen} onOpenChange={setDemoDialogOpen} />
       {/* Header with white background for contrast */}
       <header className="bg-white shadow-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -150,14 +155,12 @@ export default function Index() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
-                asChild 
                 size="lg" 
                 className="bg-white text-primary hover:bg-gray-100 font-bold text-lg px-8 py-6 rounded-full shadow-lg hover:shadow-xl transition-all hover:-translate-y-1"
+                onClick={() => setDemoDialogOpen(true)}
               >
-                <Link to="/my-dashboard?demo=true">
-                  Ver Demo
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
+                Ver Demo
+                <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               <Button 
                 asChild 
