@@ -51,20 +51,20 @@ export function DemoSelectionDialog({ open, onOpenChange }: DemoSelectionDialogP
               <div className="p-2.5 rounded-xl bg-primary/10 flex-shrink-0 mt-0.5">
                 <User className="h-6 w-6 text-primary" />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-display font-semibold text-lg text-foreground">Soy Paciente</p>
-                <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                  Ve cómo se ve tu tablero de salud personal: hábitos, longevidad, composición corporal y bienestar psicológico.
+              <div className="flex-1 min-w-0 overflow-hidden">
+                <p className="font-display font-semibold text-base text-foreground leading-tight">Soy Paciente</p>
+                <p className="text-xs text-muted-foreground mt-1 leading-relaxed line-clamp-2">
+                  Tu tablero de salud: hábitos, longevidad, composición corporal y bienestar.
                 </p>
-                <div className="flex flex-wrap gap-2 mt-3">
+                <div className="flex flex-wrap gap-1.5 mt-2">
                   {[
                     { icon: Activity, label: "Hábitos" },
                     { icon: Heart, label: "Longevidad" },
                     { icon: Scale, label: "Composición" },
                     { icon: Brain, label: "Psicología" },
                   ].map(({ icon: Icon, label }) => (
-                    <span key={label} className="flex items-center gap-1 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                      <Icon className="h-3 w-3" />
+                    <span key={label} className="flex items-center gap-1 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full whitespace-nowrap">
+                      <Icon className="h-3 w-3 flex-shrink-0" />
                       {label}
                     </span>
                   ))}
@@ -83,19 +83,19 @@ export function DemoSelectionDialog({ open, onOpenChange }: DemoSelectionDialogP
               <div className="p-2.5 rounded-xl bg-accent/10 flex-shrink-0 mt-0.5">
                 <Stethoscope className="h-6 w-6 text-accent" />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-display font-semibold text-lg text-foreground">Soy Profesional de la Salud</p>
-                <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                  Explora las herramientas clínicas: panel de pacientes, edición de métricas, historial y notas de evolución.
+              <div className="flex-1 min-w-0 overflow-hidden">
+                <p className="font-display font-semibold text-base text-foreground leading-tight">Soy Profesional de la Salud</p>
+                <p className="text-xs text-muted-foreground mt-1 leading-relaxed line-clamp-2">
+                  Panel clínico: pacientes, edición de métricas, historial y notas de evolución.
                 </p>
-                <div className="flex flex-wrap gap-2 mt-3">
+                <div className="flex flex-wrap gap-1.5 mt-2">
                   {[
                     { icon: Users, label: "Pacientes" },
                     { icon: BarChart3, label: "Métricas" },
                     { icon: ClipboardList, label: "Historia clínica" },
                   ].map(({ icon: Icon, label }) => (
-                    <span key={label} className="flex items-center gap-1 text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full">
-                      <Icon className="h-3 w-3" />
+                    <span key={label} className="flex items-center gap-1 text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full whitespace-nowrap">
+                      <Icon className="h-3 w-3 flex-shrink-0" />
                       {label}
                     </span>
                   ))}
