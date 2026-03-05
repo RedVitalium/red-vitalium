@@ -39,7 +39,6 @@ export function AIInterpretButton({
       value,
       unit,
       target,
-      ...context,
     }, targetUserId);
 
     if (result) {
