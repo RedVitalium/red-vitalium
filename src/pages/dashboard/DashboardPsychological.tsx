@@ -97,6 +97,7 @@ export default function DashboardPsychological() {
               targetUserId={isViewingAsAdmin ? targetUserId || undefined : undefined}
               isDemo={isDemo}
               demoText="Tu puntuación de ansiedad DASS-21 de 6 pts está en rango normal (< 8). Esto indica un nivel bajo de síntomas ansiosos, lo cual es muy positivo."
+              allowZeroValue
             />
           </div>
           <div>
@@ -120,6 +121,7 @@ export default function DashboardPsychological() {
               targetUserId={isViewingAsAdmin ? targetUserId || undefined : undefined}
               isDemo={isDemo}
               demoText="Tu nivel de estrés DASS-21 de 10 pts está en rango normal (< 15). Buen manejo del estrés percibido."
+              allowZeroValue
             />
           </div>
           <div>
@@ -142,6 +144,7 @@ export default function DashboardPsychological() {
               targetUserId={isViewingAsAdmin ? targetUserId || undefined : undefined}
               isDemo={isDemo}
               demoText="Tu puntuación de síntomas depresivos DASS-21 de 4 pts está en rango normal (< 10). No se detectan síntomas depresivos significativos."
+              allowZeroValue
             />
           </div>
           <div>

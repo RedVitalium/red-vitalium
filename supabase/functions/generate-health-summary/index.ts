@@ -35,19 +35,40 @@ serve(async (req) => {
     const dataUserId = targetUserId || user.id;
 
     // === FETCH ALL DATA SERVER-SIDE ===
-    const [profileRes, healthRes, biomarkersRes, testResultsRes, bodyCompRes] = await Promise.all([
+    const isClinicalSection = section.startsWith("clinical-");
+    
+    const fetchPromises: Promise<any>[] = [
       supabase.from("profiles").select("*").eq("user_id", dataUserId).maybeSingle(),
       supabase.from("health_data").select("*").eq("user_id", dataUserId).order("recorded_at", { ascending: false }).limit(200),
       supabase.from("biomarkers").select("*").eq("user_id", dataUserId).order("recorded_at", { ascending: false }).limit(10),
       supabase.from("test_results").select("*").eq("user_id", dataUserId).order("completed_at", { ascending: false }).limit(20),
       supabase.from("body_composition").select("*").eq("user_id", dataUserId).order("recorded_at", { ascending: false }).limit(10),
-    ]);
+    ];
+    
+    // For clinical sections, also fetch professional notes
+    if (isClinicalSection) {
+      fetchPromises.push(
+        supabase.from("professional_notes").select("*").eq("patient_id", dataUserId).order("created_at", { ascending: false }).limit(50)
+      );
+      fetchPromises.push(
+        supabase.from("habit_goals").select("*").eq("user_id", dataUserId).order("created_at", { ascending: false }).limit(20)
+      );
+      fetchPromises.push(
+        supabase.from("unlocked_habits").select("*").eq("user_id", dataUserId)
+      );
+    }
+    
+    const results = await Promise.all(fetchPromises);
+    const [profileRes, healthRes, biomarkersRes, testResultsRes, bodyCompRes] = results;
 
     const profile = profileRes.data;
     const healthData = healthRes.data || [];
     const biomarkers = biomarkersRes.data || [];
     const testResults = testResultsRes.data || [];
     const bodyComp = bodyCompRes.data || [];
+    const professionalNotes = isClinicalSection ? (results[5]?.data || []) : [];
+    const habitGoals = isClinicalSection ? (results[6]?.data || []) : [];
+    const unlockedHabits = isClinicalSection ? (results[7]?.data || []) : [];
 
     const age = profile?.date_of_birth
       ? Math.floor((Date.now() - new Date(profile.date_of_birth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
@@ -205,6 +226,154 @@ serve(async (req) => {
         score: existing.score,
         sectionScores: existing.section_scores,
         cached: true,
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ======= HANDLE CLINICAL AI SUMMARIES =======
+    if (isClinicalSection) {
+      const clinicalSpecialty = section.replace("clinical-", "");
+      const specialtyNotes = professionalNotes.filter((n: any) => n.specialty === clinicalSpecialty);
+      
+      // Build clinical context
+      const clinicalContext: Record<string, any> = {};
+      if (age) clinicalContext.age = age;
+      if (sex) clinicalContext.sex = sex;
+      
+      // Add specialty-specific data
+      if (clinicalSpecialty === "psychology") {
+        const psychData = buildPsychologicalData();
+        if (psychData) clinicalContext.psychologicalMetrics = psychData;
+        // Add personality test (BFI-10)
+        const bfiResult = testResults.find((t: any) => t.test_id === "bfi-10");
+        if (bfiResult) clinicalContext.personalityProfile = bfiResult.scores;
+      } else if (clinicalSpecialty === "nutrition") {
+        const bodyData = buildBodyCompData();
+        if (bodyData) clinicalContext.bodyComposition = bodyData;
+        const metabData = buildMetabolicData();
+        if (metabData) clinicalContext.metabolicMarkers = metabData;
+        const habitsData = buildHabitsData();
+        if (habitsData) clinicalContext.habits = habitsData;
+      } else if (clinicalSpecialty === "medicine") {
+        const longevityData = buildLongevityData();
+        if (longevityData) clinicalContext.longevityMarkers = longevityData;
+        const metabData = buildMetabolicData();
+        if (metabData) clinicalContext.metabolicMarkers = metabData;
+        const bodyData = buildBodyCompData();
+        if (bodyData) clinicalContext.bodyComposition = bodyData;
+      } else if (clinicalSpecialty === "physiotherapy") {
+        const longevityData = buildLongevityData();
+        if (longevityData) clinicalContext.physicalMarkers = longevityData;
+        const habitsData = buildHabitsData();
+        if (habitsData) clinicalContext.habits = habitsData;
+      }
+      
+      if (specialtyNotes.length > 0) {
+        clinicalContext.professionalNotes = specialtyNotes.map((n: any) => ({
+          content: n.content,
+          date: n.created_at,
+          type: n.note_type,
+        }));
+      }
+      if (habitGoals.length > 0) {
+        clinicalContext.habitGoals = habitGoals.map((g: any) => ({ type: g.habit_type, target: g.target_value, month: g.month }));
+      }
+      if (unlockedHabits.length > 0) {
+        clinicalContext.unlockedHabits = unlockedHabits.map((h: any) => h.habit_id);
+      }
+
+      const specialtyLabelsMap: Record<string, string> = {
+        psychology: "Psicología Clínica",
+        nutrition: "Nutrición y Alimentación",
+        medicine: "Medicina General",
+        physiotherapy: "Fisioterapia y Rehabilitación",
+      };
+
+      const clinicalPromptMap: Record<string, string> = {
+        psychology: `Eres un psicólogo clínico. Resume el estado psicológico del paciente.
+INCLUYE:
+- Interpretación de pruebas psicométricas (DASS-21: ansiedad, estrés, depresión; SWLS: satisfacción vital). Recuerda: valores BAJOS en DASS-21 = MEJOR.
+- Si hay perfil de personalidad (BFI-10), interpreta los 5 rasgos y cómo influyen en el bienestar.
+- Resume las notas profesionales: técnicas usadas, su eficacia observada, comportamientos relevantes.
+- Recomendaciones basadas en la evidencia disponible.`,
+        nutrition: `Eres un nutricionista clínico. Resume el estado nutricional y de composición corporal del paciente.
+INCLUYE:
+- Análisis de composición corporal si hay datos (% grasa, masa muscular, IMC, grasa visceral).
+- Biomarcadores metabólicos relevantes (glucosa, albúmina, etc.).
+- Hábitos alimentarios y de actividad que impactan la nutrición.
+- Resume las notas profesionales: planes nutricionales, adherencia, cambios observados.
+- Metas de hábitos configuradas y su progreso.`,
+        medicine: `Eres un médico internista. Resume el estado médico general del paciente.
+INCLUYE:
+- Biomarcadores y valores de laboratorio disponibles con su clasificación.
+- Marcadores de longevidad (edad biológica, VO2 Max, etc.).
+- Condiciones o hallazgos relevantes de las notas profesionales.
+- Medicaciones o tratamientos mencionados en notas.
+- Recomendaciones de seguimiento.`,
+        physiotherapy: `Eres un fisioterapeuta. Resume el estado físico y funcional del paciente.
+INCLUYE:
+- Marcadores físicos: VO2 Max, fuerza de agarre, equilibrio, HRV.
+- Nivel de actividad física y hábitos de ejercicio.
+- Resume las notas profesionales: tratamientos, ejercicios prescritos, progreso funcional.
+- Hábitos desbloqueados (sauna, baño frío, meditación, yoga) y su uso.
+- Metas de actividad y su cumplimiento.`,
+      };
+
+      const clinicalSystemPrompt = `${clinicalPromptMap[clinicalSpecialty] || clinicalPromptMap.medicine}
+${antiHallucinationRule}
+${referenceTablesText}
+
+Solo usa datos que aparezcan en el JSON. Si no hay notas profesionales, menciona que no hay registros de notas aún.
+La puntuación (0-100) refleja el estado general en esta área clínica.
+
+RESPONDE en JSON: {"score": number(0-100) o null si no hay datos suficientes, "summary": "texto de resumen clínico completo 3-5 oraciones", "markers": [{"name": "string", "status": "green|yellow|red", "note": "breve"}], "recommendations": ["string"] (máx 3)}`;
+
+      const clinicalUserMsg = `Paciente: ${age ? `${age} años` : 'edad desconocida'}, ${sex || 'sexo desconocido'}.
+Área: ${specialtyLabelsMap[clinicalSpecialty]}
+
+DATOS REALES del paciente (todo lo que NO aparece aquí NO EXISTE):
+${JSON.stringify(clinicalContext, null, 2)}`;
+
+      const clinicalResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            { role: "system", content: clinicalSystemPrompt },
+            { role: "user", content: clinicalUserMsg },
+          ],
+        }),
+      });
+
+      if (!clinicalResponse.ok) throw new Error(`AI error: ${clinicalResponse.status}`);
+      const clinicalResult = await clinicalResponse.json();
+      const rawClinical = clinicalResult.choices?.[0]?.message?.content || "";
+      
+      let parsedClinical: any;
+      try {
+        const jsonMatch = rawClinical.match(/```json\s*([\s\S]*?)\s*```/) || rawClinical.match(/({[\s\S]*})/);
+        parsedClinical = JSON.parse(jsonMatch ? jsonMatch[1] : rawClinical);
+      } catch {
+        parsedClinical = { score: null, summary: rawClinical };
+      }
+
+      const clinicalSummaryText = JSON.stringify(parsedClinical);
+      
+      // Cache
+      if (existing) {
+        await supabase.from("ai_summaries").update({
+          summary_text: clinicalSummaryText, score: parsedClinical.score, section_scores: parsedClinical.markers || [],
+          data_hash: hashCode, updated_at: new Date().toISOString(),
+        }).eq("id", existing.id);
+      } else {
+        await supabase.from("ai_summaries").insert({
+          user_id: dataUserId, section, summary_text: clinicalSummaryText,
+          score: parsedClinical.score, section_scores: parsedClinical.markers || [], data_hash: hashCode,
+        });
+      }
+
+      return new Response(JSON.stringify({
+        summary: clinicalSummaryText, score: parsedClinical.score, cached: false,
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 

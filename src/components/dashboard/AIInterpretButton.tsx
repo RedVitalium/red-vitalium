@@ -15,17 +15,19 @@ interface AIInterpretButtonProps {
   targetUserId?: string;
   isDemo?: boolean;
   demoText?: string;
+  allowZeroValue?: boolean;
 }
 
 export function AIInterpretButton({ 
-  metricName, value, unit, target, section, context, targetUserId, isDemo, demoText 
+  metricName, value, unit, target, section, context, targetUserId, isDemo, demoText, allowZeroValue = false 
 }: AIInterpretButtonProps) {
   const [showResult, setShowResult] = useState(false);
   const [interpretation, setInterpretation] = useState<string | null>(null);
   const { generateSummary, loading } = useAISummary();
 
-  // Don't show if no real data
-  if (value === 0 || value === "" || value === null || value === undefined) return null;
+  // Don't show if no real data (but allow zero for scales like DASS-21 where 0 is valid)
+  if (value === "" || value === null || value === undefined) return null;
+  if (value === 0 && !allowZeroValue) return null;
 
   const handleInterpret = async () => {
     if (isDemo) {
