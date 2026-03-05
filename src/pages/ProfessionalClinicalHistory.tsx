@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, Brain, Apple, Stethoscope, Dumbbell,
-  Plus, Edit2, Save, X, User, FileText
+  Plus, Edit2, Save, X, User, FileText, Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -20,6 +20,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import appLogo from "@/assets/app-logo.png";
 import { useEffect } from "react";
+import ClinicalAISummaryTab from "@/components/professional/ClinicalAISummaryTab";
 
 const clinicalSections: { id: Specialty; label: string; icon: React.ElementType }[] = [
   { id: 'psychology', label: 'Psicológico', icon: Brain },
@@ -302,8 +303,12 @@ export default function ProfessionalClinicalHistory() {
       </div>
 
       <main className="container mx-auto px-4 py-6 max-w-xl">
-        <Tabs defaultValue={mySpecialty} className="w-full">
-          <TabsList className="w-full grid grid-cols-4 mb-4">
+        <Tabs defaultValue="ai-summary" className="w-full">
+          <TabsList className="w-full grid grid-cols-5 mb-4">
+            <TabsTrigger value="ai-summary" className="flex flex-col items-center gap-1 text-xs py-2">
+              <Sparkles className="h-4 w-4" />
+              <span className="hidden sm:inline">IA</span>
+            </TabsTrigger>
             {clinicalSections.map(section => {
               const Icon = section.icon;
               return (
@@ -314,6 +319,13 @@ export default function ProfessionalClinicalHistory() {
               );
             })}
           </TabsList>
+
+          <TabsContent value="ai-summary">
+            <ClinicalAISummaryTab 
+              patientUserId={selectedPatient.userId} 
+              patientName={selectedPatient.fullName || "el paciente"} 
+            />
+          </TabsContent>
 
           {clinicalSections.map(section => (
             <TabsContent key={section.id} value={section.id}>
