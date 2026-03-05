@@ -323,7 +323,7 @@ export default function ProfessionalClinicalHistory() {
           <TabsContent value="ai-summary">
             <ClinicalAISummaryTab 
               patientUserId={selectedPatient.userId} 
-              patientName={selectedPatient.fullName || "el paciente"} 
+              patientName={selectedPatient.fullName || "el paciente"}
             />
           </TabsContent>
 

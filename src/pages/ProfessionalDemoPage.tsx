@@ -5,13 +5,14 @@ import {
   ArrowLeft, Heart, Scale, Brain, Activity, BarChart3,
   FileText, ChevronRight, User, Pencil, TrendingUp,
   ClipboardList, Stethoscope, ChevronLeft, Smile, Frown,
-  Lock, Trophy, Apple, Dumbbell, Plus, Edit2
+  Lock, Trophy, Apple, Dumbbell, Plus, Edit2, Sparkles
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MetricCard } from "@/components/dashboard/MetricCard";
+import ClinicalAISummaryTab from "@/components/professional/ClinicalAISummaryTab";
 
 import { CompositionOverviewSlide } from "@/components/dashboard/body-composition/CompositionOverviewSlide";
 import { FatAnalysisSlide } from "@/components/dashboard/body-composition/FatAnalysisSlide";
@@ -84,6 +85,55 @@ const DEMO_CLINICAL = {
     editable: false,
     notes: [],
   },
+};
+
+// ─── Demo AI clinical summary result ─────────────────────────────────────────
+const DEMO_AI_CLINICAL_RESULT = {
+  score: 68,
+  plan: "Oro",
+  summary: "Carlos presenta un perfil de salud moderado con áreas de mejora en capacidad aeróbica y equilibrio. Su estado psicológico es estable con niveles normales de ansiedad y estrés. La composición corporal muestra un porcentaje de grasa corporal ligeramente elevado para su edad.",
+  specialtySections: [
+    {
+      specialty: "physiotherapy",
+      score: 62,
+      summary: "VO2 Max de 38 ml/kg/min se clasifica como Promedio para hombre de 45 años. Fuerza de agarre derecha (42 kg) es Buena, izquierda (38 kg) Promedio. Equilibrio por debajo del rango esperado. HRV de 45 ms en rango Bueno.",
+      markers: [
+        { name: "VO2 Max", status: "yellow", note: "Promedio (38 ml/kg/min)" },
+        { name: "Fuerza Agarre Der.", status: "green", note: "Bueno (42 kg)" },
+        { name: "Fuerza Agarre Izq.", status: "yellow", note: "Promedio (38 kg)" },
+        { name: "Equilibrio", status: "yellow", note: "Por debajo del promedio" },
+        { name: "HRV", status: "green", note: "Bueno (45 ms)" },
+      ],
+    },
+    {
+      specialty: "psychology",
+      score: 78,
+      summary: "Resultados DASS-21 dentro de rangos normales: ansiedad baja, estrés controlado y síntomas depresivos mínimos. Satisfacción con la vida ligeramente por debajo del promedio. Adherencia a técnicas de mindfulness reportada por el profesional.",
+      markers: [
+        { name: "Ansiedad (DASS-21)", status: "green", note: "Normal" },
+        { name: "Estrés (DASS-21)", status: "green", note: "Normal" },
+        { name: "Depresión (DASS-21)", status: "green", note: "Normal" },
+        { name: "Satisfacción Vital (SWLS)", status: "yellow", note: "Ligeramente baja" },
+      ],
+    },
+    {
+      specialty: "nutrition",
+      score: 64,
+      summary: "IMC de 27.5 indica sobrepeso. Porcentaje de grasa corporal (28%) elevado para hombre de 45 años. Masa muscular (32.1 kg) en rango aceptable. Grasa visceral (11) en rango alto. Buena adherencia al plan nutricional con descenso de 1.5 kg en el último mes.",
+      markers: [
+        { name: "IMC", status: "yellow", note: "Sobrepeso (27.5)" },
+        { name: "Grasa Corporal", status: "red", note: "Alto (28%)" },
+        { name: "Masa Muscular", status: "green", note: "Aceptable (32.1 kg)" },
+        { name: "Grasa Visceral", status: "red", note: "Alto (11)" },
+      ],
+    },
+  ],
+  recommendations: [
+    "Incrementar frecuencia de actividad aeróbica para mejorar VO2 Max hacia rango Bueno (>42 ml/kg/min)",
+    "Continuar plan nutricional enfocado en reducir grasa visceral y porcentaje de grasa corporal",
+    "Incorporar ejercicios de equilibrio unipodal al menos 3 veces por semana",
+    "Mantener prácticas de mindfulness que han mostrado beneficio en control de estrés",
+  ],
 };
 
 const SLIDE_TITLES = ["General", "Grasa", "Músculo", "Metabólico"];
@@ -430,8 +480,12 @@ export default function ProfessionalDemoPage() {
         {/* ── VIEW: Clinical history ──────────────────────────── */}
         {view === "clinical" && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <Tabs defaultValue="nutrition" className="w-full">
-              <TabsList className="w-full grid grid-cols-4 mb-4">
+            <Tabs defaultValue="ai-summary" className="w-full">
+              <TabsList className="w-full grid grid-cols-5 mb-4">
+                <TabsTrigger value="ai-summary" className="flex flex-col items-center gap-1 text-xs py-2">
+                  <Sparkles className="h-4 w-4" />
+                  <span className="hidden sm:inline">IA</span>
+                </TabsTrigger>
                 {[
                   { id: "psychology", label: "Psicológico", icon: Brain },
                   { id: "nutrition", label: "Alimentación", icon: Apple },
@@ -444,6 +498,15 @@ export default function ProfessionalDemoPage() {
                   </TabsTrigger>
                 ))}
               </TabsList>
+
+              <TabsContent value="ai-summary">
+                <ClinicalAISummaryTab
+                  patientUserId="demo"
+                  patientName="Carlos Mendoza López"
+                  isDemo={true}
+                  demoResult={DEMO_AI_CLINICAL_RESULT}
+                />
+              </TabsContent>
 
               {Object.entries(DEMO_CLINICAL).map(([key, specialty]) => (
                 <TabsContent key={key} value={key}>

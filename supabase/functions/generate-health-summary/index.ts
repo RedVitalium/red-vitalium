@@ -35,7 +35,9 @@ serve(async (req) => {
     const dataUserId = targetUserId || user.id;
 
     // === FETCH ALL DATA SERVER-SIDE ===
-    const isClinicalSection = section.startsWith("clinical-");
+    const isClinicalSection = section.startsWith("clinical-") && section !== "clinical-unified";
+    
+    const isClinicalUnified = section === "clinical-unified";
     
     const fetchPromises: Promise<any>[] = [
       supabase.from("profiles").select("*").eq("user_id", dataUserId).maybeSingle(),
@@ -45,8 +47,8 @@ serve(async (req) => {
       supabase.from("body_composition").select("*").eq("user_id", dataUserId).order("recorded_at", { ascending: false }).limit(10),
     ];
     
-    // For clinical sections, also fetch professional notes
-    if (isClinicalSection) {
+    // For clinical sections, also fetch professional notes and subscription
+    if (isClinicalSection || isClinicalUnified) {
       fetchPromises.push(
         supabase.from("professional_notes").select("*").eq("patient_id", dataUserId).order("created_at", { ascending: false }).limit(50)
       );
@@ -55,6 +57,9 @@ serve(async (req) => {
       );
       fetchPromises.push(
         supabase.from("unlocked_habits").select("*").eq("user_id", dataUserId)
+      );
+      fetchPromises.push(
+        supabase.from("user_subscriptions").select("*").eq("user_id", dataUserId).eq("is_active", true).maybeSingle()
       );
     }
     
@@ -66,9 +71,11 @@ serve(async (req) => {
     const biomarkers = biomarkersRes.data || [];
     const testResults = testResultsRes.data || [];
     const bodyComp = bodyCompRes.data || [];
-    const professionalNotes = isClinicalSection ? (results[5]?.data || []) : [];
-    const habitGoals = isClinicalSection ? (results[6]?.data || []) : [];
-    const unlockedHabits = isClinicalSection ? (results[7]?.data || []) : [];
+    const professionalNotes = (isClinicalSection || isClinicalUnified) ? (results[5]?.data || []) : [];
+    const habitGoals = (isClinicalSection || isClinicalUnified) ? (results[6]?.data || []) : [];
+    const unlockedHabits = (isClinicalSection || isClinicalUnified) ? (results[7]?.data || []) : [];
+    const subscription = (isClinicalSection || isClinicalUnified) ? (results[8]?.data || null) : null;
+    const patientPlan = subscription?.plan || "plata"; // default to plata
 
     const age = profile?.date_of_birth
       ? Math.floor((Date.now() - new Date(profile.date_of_birth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
@@ -229,7 +236,106 @@ serve(async (req) => {
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // ======= HANDLE CLINICAL AI SUMMARIES =======
+    // ======= REFERENCE TABLES FOR PERCENTILES =======
+    const referenceTablesText = `
+TABLAS DE REFERENCIA PARA PERCENTILES (usa SOLO si tienes edad y sexo del paciente):
+
+VO2 Máx (ml/kg/min) - Hombres:
+  20-29: Excelente >51, Bueno 43-51, Promedio 36-42, Bajo <36
+  30-39: Excelente >48, Bueno 40-48, Promedio 33-39, Bajo <33
+  40-49: Excelente >45, Bueno 37-45, Promedio 30-36, Bajo <30
+  50-59: Excelente >42, Bueno 34-42, Promedio 27-33, Bajo <27
+  60+: Excelente >39, Bueno 31-39, Promedio 24-30, Bajo <24
+VO2 Máx (ml/kg/min) - Mujeres:
+  20-29: Excelente >46, Bueno 38-46, Promedio 31-37, Bajo <31
+  30-39: Excelente >43, Bueno 35-43, Promedio 28-34, Bajo <28
+  40-49: Excelente >40, Bueno 32-40, Promedio 25-31, Bajo <25
+  50-59: Excelente >37, Bueno 29-37, Promedio 22-28, Bajo <22
+  60+: Excelente >34, Bueno 26-34, Promedio 19-25, Bajo <19
+
+Fuerza de Agarre (Kg) - Hombres:
+  20-29: Excelente >54, Bueno 46-54, Promedio 38-45, Bajo <38
+  30-39: Excelente >53, Bueno 45-53, Promedio 37-44, Bajo <37
+  40-49: Excelente >51, Bueno 43-51, Promedio 35-42, Bajo <35
+  50-59: Excelente >48, Bueno 40-48, Promedio 32-39, Bajo <32
+  60+: Excelente >44, Bueno 36-44, Promedio 28-35, Bajo <28
+Fuerza de Agarre (Kg) - Mujeres:
+  20-29: Excelente >36, Bueno 30-36, Promedio 24-29, Bajo <24
+  30-39: Excelente >35, Bueno 29-35, Promedio 23-28, Bajo <23
+  40-49: Excelente >33, Bueno 27-33, Promedio 21-26, Bajo <21
+  50-59: Excelente >31, Bueno 25-31, Promedio 19-24, Bajo <19
+  60+: Excelente >28, Bueno 22-28, Promedio 16-21, Bajo <16
+
+Equilibrio unipodal ojos cerrados (seg):
+  20-39: Excelente >45, Bueno 30-45, Promedio 15-29, Bajo <15
+  40-49: Excelente >40, Bueno 25-40, Promedio 10-24, Bajo <10
+  50-59: Excelente >35, Bueno 20-35, Promedio 8-19, Bajo <8
+  60+: Excelente >25, Bueno 12-25, Promedio 5-11, Bajo <5
+
+HRV (RMSSD, ms):
+  20-29: Excelente >80, Bueno 55-80, Promedio 35-54, Bajo <35
+  30-39: Excelente >70, Bueno 45-70, Promedio 30-44, Bajo <30
+  40-49: Excelente >60, Bueno 38-60, Promedio 25-37, Bajo <25
+  50-59: Excelente >55, Bueno 32-55, Promedio 20-31, Bajo <20
+  60+: Excelente >50, Bueno 28-50, Promedio 15-27, Bajo <15
+
+% Grasa Corporal - Hombres:
+  20-29: Atleta 6-13, Bueno 14-17, Promedio 18-24, Alto >24
+  30-39: Atleta 9-14, Bueno 15-19, Promedio 20-25, Alto >25
+  40-49: Atleta 11-16, Bueno 17-21, Promedio 22-27, Alto >27
+  50-59: Atleta 13-18, Bueno 19-23, Promedio 24-29, Alto >29
+  60+: Atleta 14-20, Bueno 21-25, Promedio 26-31, Alto >31
+% Grasa Corporal - Mujeres:
+  20-29: Atleta 14-20, Bueno 21-24, Promedio 25-31, Alto >31
+  30-39: Atleta 15-21, Bueno 22-25, Promedio 26-32, Alto >32
+  40-49: Atleta 16-23, Bueno 24-27, Promedio 28-33, Alto >33
+  50-59: Atleta 17-24, Bueno 25-28, Promedio 29-34, Alto >34
+  60+: Atleta 18-25, Bueno 26-29, Promedio 30-35, Alto >35
+
+Grasa Visceral:
+  Normal: 1-9, Alto: 10-14, Muy alto: ≥15
+
+IMC:
+  Bajo peso: <18.5, Normal: 18.5-24.9, Sobrepeso: 25-29.9, Obesidad: ≥30
+
+Ratio Cintura/Altura:
+  Bajo riesgo: <0.43, Saludable: 0.43-0.52, Riesgo elevado: 0.53-0.57, Alto riesgo: >0.58
+
+Colesterol No-HDL (mg/dL):
+  Óptimo: <100, Deseable: 100-129, Límite alto: 130-159, Alto: 160-189, Muy alto: ≥190
+
+Glucosa en ayunas (mg/dL):
+  Normal: 70-99, Prediabetes: 100-125, Diabetes: ≥126
+
+PCR (mg/L):
+  Bajo riesgo: <1, Riesgo moderado: 1-3, Alto riesgo: >3
+
+Albúmina (g/dL):
+  Normal: 3.5-5.0, Baja: <3.5
+
+Creatinina (mg/dL) - Hombres: Normal 0.7-1.3, Mujeres: Normal 0.6-1.1
+
+DASS-21 (puntuaciones BAJAS = MEJOR):
+  Depresión: Normal <10, Leve 10-13, Moderada 14-20, Severa 21-27, Extrema ≥28
+  Ansiedad: Normal <8, Leve 8-9, Moderada 10-14, Severa 15-19, Extrema ≥20
+  Estrés: Normal <15, Leve 15-18, Moderada 19-25, Severa 26-33, Extrema ≥34
+
+SWLS (Satisfacción con la vida, puntuación ALTA = MEJOR):
+  Muy alta: 31-35, Alta: 26-30, Ligeramente alta: 21-25, Neutral: 20, Ligeramente baja: 15-19, Baja: 10-14, Muy baja: 5-9
+`;
+
+    // CRITICAL anti-hallucination instruction
+    const antiHallucinationRule = `
+REGLA CRÍTICA - PROHIBIDO INVENTAR DATOS:
+- Los ÚNICOS datos que existen del paciente son los del JSON proporcionado.
+- NO inventes, supongas ni infieras valores que NO están en el JSON.
+- Si un marcador NO aparece en los datos, NO lo menciones.
+- La puntuación general solo promedia marcadores CON datos reales. NO penalices por datos faltantes.
+- Usa las TABLAS DE REFERENCIA proporcionadas para clasificar cada valor según edad y sexo.
+- Indica la clasificación (Excelente/Bueno/Promedio/Bajo) según la tabla correspondiente.
+- Solo indica percentil aproximado si puedes calcularlo con las tablas y tienes edad+sexo.`;
+
+
     if (isClinicalSection) {
       const clinicalSpecialty = section.replace("clinical-", "");
       const specialtyNotes = professionalNotes.filter((n: any) => n.specialty === clinicalSpecialty);
@@ -377,7 +483,169 @@ ${JSON.stringify(clinicalContext, null, 2)}`;
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // No data checks for specific sections
+    // ======= HANDLE CLINICAL UNIFIED AI SUMMARY =======
+    if (isClinicalUnified) {
+      const planLabels: Record<string, string> = { plata: "Plata", oro: "Oro", platino: "Platino", black: "Black" };
+      
+      // Build context per specialty based on plan
+      const unifiedContext: Record<string, any> = {};
+      if (age) unifiedContext.age = age;
+      if (sex) unifiedContext.sex = sex;
+      unifiedContext.plan = planLabels[patientPlan] || "Plata";
+      
+      // ALWAYS include: physiotherapy (initial physical assessment) + psychology
+      // Plata: physical initial + psychological
+      // Oro: + nutrition
+      // Platino/Black: + medicine
+      
+      const specialtiesToInclude: string[] = ["physiotherapy", "psychology"];
+      if (["oro", "platino", "black"].includes(patientPlan)) specialtiesToInclude.push("nutrition");
+      if (["platino", "black"].includes(patientPlan)) specialtiesToInclude.push("medicine");
+      
+      const specialtyData: Record<string, any> = {};
+      
+      // Physiotherapy/Physical
+      const longevityData = buildLongevityData();
+      const habitsData = buildHabitsData();
+      const physioNotes = professionalNotes.filter((n: any) => n.specialty === "physiotherapy");
+      const physioContext: Record<string, any> = {};
+      if (longevityData) physioContext.physicalMarkers = longevityData;
+      if (habitsData) physioContext.activityHabits = habitsData;
+      if (physioNotes.length > 0) physioContext.notes = physioNotes.map((n: any) => ({ content: n.content, date: n.created_at }));
+      if (Object.keys(physioContext).length > 0) specialtyData.physiotherapy = physioContext;
+      
+      // Psychology
+      const psychData = buildPsychologicalData();
+      const bfiResult = testResults.find((t: any) => t.test_id === "bfi-10");
+      const psychNotes = professionalNotes.filter((n: any) => n.specialty === "psychology");
+      const psychContext: Record<string, any> = {};
+      if (psychData) psychContext.psychometricResults = psychData;
+      if (bfiResult) psychContext.personalityProfile = bfiResult.scores;
+      if (psychNotes.length > 0) psychContext.notes = psychNotes.map((n: any) => ({ content: n.content, date: n.created_at }));
+      if (Object.keys(psychContext).length === 0) {
+        // If no clinical notes, at least note that tests are pending
+        psychContext.noData = "Sin notas clínicas ni tests completados aún";
+      }
+      specialtyData.psychology = psychContext;
+      
+      // Nutrition (oro+)
+      if (specialtiesToInclude.includes("nutrition")) {
+        const bodyData = buildBodyCompData();
+        const metabData = buildMetabolicData();
+        const nutritionNotes = professionalNotes.filter((n: any) => n.specialty === "nutrition");
+        const nutContext: Record<string, any> = {};
+        if (bodyData) nutContext.bodyComposition = bodyData;
+        if (metabData) nutContext.metabolicMarkers = metabData;
+        if (nutritionNotes.length > 0) nutContext.notes = nutritionNotes.map((n: any) => ({ content: n.content, date: n.created_at }));
+        if (Object.keys(nutContext).length > 0) specialtyData.nutrition = nutContext;
+      }
+      
+      // Medicine (platino+)
+      if (specialtiesToInclude.includes("medicine")) {
+        const metabData = buildMetabolicData();
+        const longevityD = buildLongevityData();
+        const medNotes = professionalNotes.filter((n: any) => n.specialty === "medicine");
+        const medContext: Record<string, any> = {};
+        if (metabData) medContext.metabolicMarkers = metabData;
+        if (longevityD) medContext.longevityMarkers = longevityD;
+        if (medNotes.length > 0) medContext.notes = medNotes.map((n: any) => ({ content: n.content, date: n.created_at }));
+        if (Object.keys(medContext).length > 0) specialtyData.medicine = medContext;
+      }
+      
+      // Habit goals
+      if (habitGoals.length > 0) {
+        unifiedContext.habitGoals = habitGoals.map((g: any) => ({ type: g.habit_type, target: g.target_value, month: g.month }));
+      }
+      if (unlockedHabits.length > 0) {
+        unifiedContext.unlockedHabits = unlockedHabits.map((h: any) => h.habit_id);
+      }
+      
+      unifiedContext.specialtyData = specialtyData;
+
+      const unifiedPrompt = `Eres un equipo médico multidisciplinario. Genera UN SOLO resumen clínico integral del paciente.
+${antiHallucinationRule}
+${referenceTablesText}
+
+El paciente tiene plan "${unifiedContext.plan}". Solo incluye las especialidades disponibles en su plan:
+- Plata: Valoración física inicial + Psicológico
+- Oro: + Alimentación/Nutrición  
+- Platino/Black: + Médico
+
+INSTRUCCIONES:
+- Para cada especialidad incluida, genera una subsección con título, puntuación y resumen.
+- En Psicológico: interpreta BFI-10 (personalidad), DASS-21, SWLS. Si hay notas clínicas, resume técnicas y eficacia. Si NO hay notas ni tests, indica que no hay evaluaciones aún.
+- En Físico: resume marcadores de longevidad (VO2 Max, fuerza, equilibrio, HRV) con clasificación por edad/sexo.
+- En Alimentación: resume composición corporal, marcadores metabólicos relevantes.
+- En Médico: resume biomarcadores, condiciones encontradas.
+- Si una especialidad no tiene datos, indícalo brevemente pero NO inventes valores.
+- La puntuación general (0-100) promedia SOLO las especialidades con datos reales.
+- Máximo 4 recomendaciones generales.
+
+RESPONDE en JSON exacto:
+{
+  "score": number(0-100) o null,
+  "plan": "nombre del plan",
+  "summary": "resumen general 2-3 oraciones",
+  "specialtySections": [
+    {
+      "specialty": "psychology|nutrition|medicine|physiotherapy",
+      "score": number(0-100) o null,
+      "summary": "resumen de esta área 2-3 oraciones",
+      "markers": [{"name": "string", "status": "green|yellow|red", "note": "breve"}]
+    }
+  ],
+  "recommendations": ["string"]
+}`;
+
+      const unifiedUserMsg = `Paciente: ${age ? `${age} años` : 'edad desconocida'}, ${sex || 'sexo desconocido'}.
+Plan: ${unifiedContext.plan}
+
+DATOS REALES del paciente (todo lo que NO aparece aquí NO EXISTE):
+${JSON.stringify(unifiedContext, null, 2)}`;
+
+      const unifiedResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            { role: "system", content: unifiedPrompt },
+            { role: "user", content: unifiedUserMsg },
+          ],
+        }),
+      });
+
+      if (!unifiedResponse.ok) throw new Error(`AI error: ${unifiedResponse.status}`);
+      const unifiedResult = await unifiedResponse.json();
+      const rawUnified = unifiedResult.choices?.[0]?.message?.content || "";
+      
+      let parsedUnified: any;
+      try {
+        const jsonMatch = rawUnified.match(/```json\s*([\s\S]*?)\s*```/) || rawUnified.match(/({[\s\S]*})/);
+        parsedUnified = JSON.parse(jsonMatch ? jsonMatch[1] : rawUnified);
+      } catch {
+        parsedUnified = { score: null, summary: rawUnified };
+      }
+
+      const unifiedSummaryText = JSON.stringify(parsedUnified);
+      
+      if (existing) {
+        await supabase.from("ai_summaries").update({
+          summary_text: unifiedSummaryText, score: parsedUnified.score, section_scores: parsedUnified.specialtySections || [],
+          data_hash: hashCode, updated_at: new Date().toISOString(),
+        }).eq("id", existing.id);
+      } else {
+        await supabase.from("ai_summaries").insert({
+          user_id: dataUserId, section, summary_text: unifiedSummaryText,
+          score: parsedUnified.score, section_scores: parsedUnified.specialtySections || [], data_hash: hashCode,
+        });
+      }
+
+      return new Response(JSON.stringify({
+        summary: unifiedSummaryText, score: parsedUnified.score, cached: false,
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     if (section !== "overall" && section !== "achievements" && !section.startsWith("interpret-")) {
       if (!allSectionData[section]) {
         return new Response(JSON.stringify({
@@ -396,104 +664,7 @@ ${JSON.stringify(clinicalContext, null, 2)}`;
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // ======= REFERENCE TABLES FOR PERCENTILES =======
-    const referenceTablesText = `
-TABLAS DE REFERENCIA PARA PERCENTILES (usa SOLO si tienes edad y sexo del paciente):
 
-VO2 Máx (ml/kg/min) - Hombres:
-  20-29: Excelente >51, Bueno 43-51, Promedio 36-42, Bajo <36
-  30-39: Excelente >48, Bueno 40-48, Promedio 33-39, Bajo <33
-  40-49: Excelente >45, Bueno 37-45, Promedio 30-36, Bajo <30
-  50-59: Excelente >42, Bueno 34-42, Promedio 27-33, Bajo <27
-  60+: Excelente >39, Bueno 31-39, Promedio 24-30, Bajo <24
-VO2 Máx (ml/kg/min) - Mujeres:
-  20-29: Excelente >46, Bueno 38-46, Promedio 31-37, Bajo <31
-  30-39: Excelente >43, Bueno 35-43, Promedio 28-34, Bajo <28
-  40-49: Excelente >40, Bueno 32-40, Promedio 25-31, Bajo <25
-  50-59: Excelente >37, Bueno 29-37, Promedio 22-28, Bajo <22
-  60+: Excelente >34, Bueno 26-34, Promedio 19-25, Bajo <19
-
-Fuerza de Agarre (Kg) - Hombres:
-  20-29: Excelente >54, Bueno 46-54, Promedio 38-45, Bajo <38
-  30-39: Excelente >53, Bueno 45-53, Promedio 37-44, Bajo <37
-  40-49: Excelente >51, Bueno 43-51, Promedio 35-42, Bajo <35
-  50-59: Excelente >48, Bueno 40-48, Promedio 32-39, Bajo <32
-  60+: Excelente >44, Bueno 36-44, Promedio 28-35, Bajo <28
-Fuerza de Agarre (Kg) - Mujeres:
-  20-29: Excelente >36, Bueno 30-36, Promedio 24-29, Bajo <24
-  30-39: Excelente >35, Bueno 29-35, Promedio 23-28, Bajo <23
-  40-49: Excelente >33, Bueno 27-33, Promedio 21-26, Bajo <21
-  50-59: Excelente >31, Bueno 25-31, Promedio 19-24, Bajo <19
-  60+: Excelente >28, Bueno 22-28, Promedio 16-21, Bajo <16
-
-Equilibrio unipodal ojos cerrados (seg):
-  20-39: Excelente >45, Bueno 30-45, Promedio 15-29, Bajo <15
-  40-49: Excelente >40, Bueno 25-40, Promedio 10-24, Bajo <10
-  50-59: Excelente >35, Bueno 20-35, Promedio 8-19, Bajo <8
-  60+: Excelente >25, Bueno 12-25, Promedio 5-11, Bajo <5
-
-HRV (RMSSD, ms):
-  20-29: Excelente >80, Bueno 55-80, Promedio 35-54, Bajo <35
-  30-39: Excelente >70, Bueno 45-70, Promedio 30-44, Bajo <30
-  40-49: Excelente >60, Bueno 38-60, Promedio 25-37, Bajo <25
-  50-59: Excelente >55, Bueno 32-55, Promedio 20-31, Bajo <20
-  60+: Excelente >50, Bueno 28-50, Promedio 15-27, Bajo <15
-
-% Grasa Corporal - Hombres:
-  20-29: Atleta 6-13, Bueno 14-17, Promedio 18-24, Alto >24
-  30-39: Atleta 9-14, Bueno 15-19, Promedio 20-25, Alto >25
-  40-49: Atleta 11-16, Bueno 17-21, Promedio 22-27, Alto >27
-  50-59: Atleta 13-18, Bueno 19-23, Promedio 24-29, Alto >29
-  60+: Atleta 14-20, Bueno 21-25, Promedio 26-31, Alto >31
-% Grasa Corporal - Mujeres:
-  20-29: Atleta 14-20, Bueno 21-24, Promedio 25-31, Alto >31
-  30-39: Atleta 15-21, Bueno 22-25, Promedio 26-32, Alto >32
-  40-49: Atleta 16-23, Bueno 24-27, Promedio 28-33, Alto >33
-  50-59: Atleta 17-24, Bueno 25-28, Promedio 29-34, Alto >34
-  60+: Atleta 18-25, Bueno 26-29, Promedio 30-35, Alto >35
-
-Grasa Visceral:
-  Normal: 1-9, Alto: 10-14, Muy alto: ≥15
-
-IMC:
-  Bajo peso: <18.5, Normal: 18.5-24.9, Sobrepeso: 25-29.9, Obesidad: ≥30
-
-Ratio Cintura/Altura:
-  Bajo riesgo: <0.43, Saludable: 0.43-0.52, Riesgo elevado: 0.53-0.57, Alto riesgo: >0.58
-
-Colesterol No-HDL (mg/dL):
-  Óptimo: <100, Deseable: 100-129, Límite alto: 130-159, Alto: 160-189, Muy alto: ≥190
-
-Glucosa en ayunas (mg/dL):
-  Normal: 70-99, Prediabetes: 100-125, Diabetes: ≥126
-
-PCR (mg/L):
-  Bajo riesgo: <1, Riesgo moderado: 1-3, Alto riesgo: >3
-
-Albúmina (g/dL):
-  Normal: 3.5-5.0, Baja: <3.5
-
-Creatinina (mg/dL) - Hombres: Normal 0.7-1.3, Mujeres: Normal 0.6-1.1
-
-DASS-21 (puntuaciones BAJAS = MEJOR):
-  Depresión: Normal <10, Leve 10-13, Moderada 14-20, Severa 21-27, Extrema ≥28
-  Ansiedad: Normal <8, Leve 8-9, Moderada 10-14, Severa 15-19, Extrema ≥20
-  Estrés: Normal <15, Leve 15-18, Moderada 19-25, Severa 26-33, Extrema ≥34
-
-SWLS (Satisfacción con la vida, puntuación ALTA = MEJOR):
-  Muy alta: 31-35, Alta: 26-30, Ligeramente alta: 21-25, Neutral: 20, Ligeramente baja: 15-19, Baja: 10-14, Muy baja: 5-9
-`;
-
-    // CRITICAL anti-hallucination instruction
-    const antiHallucinationRule = `
-REGLA CRÍTICA - PROHIBIDO INVENTAR DATOS:
-- Los ÚNICOS datos que existen del paciente son los del JSON proporcionado.
-- NO inventes, supongas ni infieras valores que NO están en el JSON.
-- Si un marcador NO aparece en los datos, NO lo menciones.
-- La puntuación general solo promedia marcadores CON datos reales. NO penalices por datos faltantes.
-- Usa las TABLAS DE REFERENCIA proporcionadas para clasificar cada valor según edad y sexo.
-- Indica la clasificación (Excelente/Bueno/Promedio/Bajo) según la tabla correspondiente.
-- Solo indica percentil aproximado si puedes calcularlo con las tablas y tienes edad+sexo.`;
 
     // ======= HANDLE INDIVIDUAL METRIC INTERPRETATION =======
     if (section.startsWith("interpret-")) {
