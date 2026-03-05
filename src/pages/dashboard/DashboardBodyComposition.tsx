@@ -9,6 +9,7 @@ import { useAdminMode } from "@/hooks/useAdminMode";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AISummaryCard } from "@/components/dashboard/AISummaryCard";
+import { AIInterpretButton } from "@/components/dashboard/AIInterpretButton";
 import appLogo from "@/assets/app-logo.png";
 import { DEMO_DATA_MALE_45, FullBodyCompositionData } from "@/components/dashboard/body-composition/types";
 import { CompositionOverviewSlide } from "@/components/dashboard/body-composition/CompositionOverviewSlide";
@@ -99,23 +100,27 @@ export default function DashboardBodyComposition() {
       <main className="container mx-auto px-4 py-6 max-w-3xl">
         {/* AI Summary */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-          <AISummaryCard
-            section="body-composition"
-            healthData={{
-              weight: bodyData.weight,
-              bodyFatPercent: bodyData.bodyFatPercent,
-              muscleMass: bodyData.muscleMass,
-              visceralFat: bodyData.visceralFat,
-              bodyWaterPercent: bodyData.bodyWaterPercent,
-              bmi: bodyData.bmi,
-              metabolicAge: bodyData.metabolicAge,
-              bmr: bodyData.bmr,
-              boneMass: bodyData.boneMass,
-            }}
-            targetUserId={isViewingAsAdmin ? targetUserId || undefined : undefined}
-            compact
-            isDemo={isDemo}
-          />
+          {(() => {
+            const aiData: Record<string, any> = {};
+            if (bodyData.weight > 0) aiData.weight = bodyData.weight;
+            if (bodyData.bodyFatPercent > 0) aiData.bodyFatPercent = bodyData.bodyFatPercent;
+            if (bodyData.muscleMass > 0) aiData.muscleMass = bodyData.muscleMass;
+            if (bodyData.visceralFat > 0) aiData.visceralFat = bodyData.visceralFat;
+            if (bodyData.bodyWaterPercent > 0) aiData.bodyWaterPercent = bodyData.bodyWaterPercent;
+            if (bodyData.bmi > 0) aiData.bmi = bodyData.bmi;
+            if (bodyData.metabolicAge > 0) aiData.metabolicAge = bodyData.metabolicAge;
+            if (bodyData.bmr > 0) aiData.bmr = bodyData.bmr;
+            if (bodyData.boneMass > 0) aiData.boneMass = bodyData.boneMass;
+            return (
+              <AISummaryCard
+                section="body-composition"
+                healthData={Object.keys(aiData).length > 0 ? aiData : undefined}
+                targetUserId={isViewingAsAdmin ? targetUserId || undefined : undefined}
+                compact
+                isDemo={isDemo}
+              />
+            );
+          })()}
         </motion.div>
 
         {!hasData ? (
