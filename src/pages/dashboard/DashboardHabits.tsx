@@ -129,6 +129,7 @@ export default function DashboardHabits() {
             }}
             targetUserId={isViewingAsAdmin ? effectiveUserId || undefined : undefined}
             compact
+            isDemo={isDemo}
           />
         </motion.div>
 

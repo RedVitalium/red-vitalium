@@ -97,6 +97,7 @@ export default function DashboardLongevity() {
             }}
             targetUserId={isViewingAsAdmin ? targetUserId || undefined : undefined}
             compact
+            isDemo={isDemo}
           />
         </motion.div>
 

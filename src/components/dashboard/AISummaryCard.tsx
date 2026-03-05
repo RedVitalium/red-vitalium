@@ -11,7 +11,119 @@ interface AISummaryCardProps {
   targetUserId?: string;
   compact?: boolean;
   autoLoad?: boolean;
+  isDemo?: boolean;
 }
+
+const DEMO_RESULTS: Record<string, AISummaryResult> = {
+  overall: {
+    score: 72,
+    summary: "Tu salud general muestra un buen estado con áreas de oportunidad. Los indicadores de actividad física y sueño están en rangos aceptables, mientras que el manejo del estrés y la composición corporal pueden mejorar.",
+    sections: [
+      { name: "Hábitos", score: 75, status: "green", summary: "Buena adherencia al ejercicio y sueño. Reducir tiempo en pantalla." },
+      { name: "Bienestar Psicológico", score: 68, status: "yellow", summary: "Ansiedad en rango moderado. Satisfacción con la vida puede mejorar." },
+      { name: "Longevidad", score: 70, status: "yellow", summary: "VO₂ Max y equilibrio por debajo de la meta. Fuerza de agarre óptima." },
+      { name: "Composición Corporal", score: 65, status: "yellow", summary: "Grasa visceral ligeramente elevada. Masa muscular en rango adecuado." },
+    ],
+    recommendations: [
+      "Incorporar sesiones de meditación o mindfulness para reducir ansiedad.",
+      "Aumentar el entrenamiento cardiovascular para mejorar VO₂ Max.",
+      "Reducir tiempo en pantalla antes de dormir para mejorar calidad de sueño.",
+    ],
+    highlights: [
+      "Fuerza de agarre bilateral en rango óptimo para tu edad.",
+      "Consistencia en ejercicio aeróbico durante las últimas semanas.",
+    ],
+    cached: false,
+  },
+  achievements: {
+    score: 78,
+    summary: "Has mantenido buena consistencia en tus hábitos. Tu racha semanal y el cumplimiento de metas muestran compromiso con tu salud.",
+    markers: [
+      { name: "Racha semanal", status: "green", trend: "improving", note: "3 semanas consecutivas" },
+      { name: "Metas cumplidas", status: "green", trend: "stable", note: "4 de 5 metas" },
+      { name: "Mejora general", status: "yellow", trend: "improving", note: "+12% vs mes anterior" },
+    ],
+    recommendations: ["Mantén la consistencia actual para alcanzar un ciclo completo exitoso."],
+    cached: false,
+  },
+  habits: {
+    score: 74,
+    summary: "Tus hábitos de sueño y actividad física están en buen camino. El tiempo en pantalla es el área con mayor oportunidad de mejora.",
+    markers: [
+      { name: "Sueño", status: "green", trend: "stable", note: "7.2 hrs promedio" },
+      { name: "Actividad física", status: "green", trend: "improving", note: "4 sesiones/semana" },
+      { name: "Tiempo en pantalla", status: "red", trend: "declining", note: "185 min/día" },
+      { name: "Desbloqueos", status: "yellow", trend: "stable", note: "78 veces/día" },
+    ],
+    recommendations: [
+      "Establece límites de uso de pantalla después de las 9 PM.",
+      "Considera activar el modo no molestar durante entrenamientos.",
+    ],
+    cached: false,
+  },
+  psychological: {
+    score: 66,
+    summary: "Tu bienestar psicológico muestra áreas de atención. La ansiedad está en rango moderado y la satisfacción con la vida puede mejorar con intervenciones dirigidas.",
+    markers: [
+      { name: "Ansiedad", status: "yellow", trend: "improving", note: "42 pts - Moderada" },
+      { name: "Estrés", status: "green", trend: "stable", note: "35 pts - Bajo" },
+      { name: "Síntomas Depresivos", status: "green", trend: "stable", note: "8 pts - Normal" },
+      { name: "Satisfacción con la Vida", status: "yellow", trend: "stable", note: "7.2/10" },
+    ],
+    recommendations: [
+      "Continuar con técnicas de mindfulness para reducir ansiedad.",
+      "Evaluar factores que limitan la satisfacción vital.",
+    ],
+    cached: false,
+  },
+  longevity: {
+    score: 70,
+    summary: "Tus marcadores de longevidad están en rango aceptable para tu edad y sexo. El VO₂ Max y el equilibrio son las áreas prioritarias a mejorar.",
+    markers: [
+      { name: "Edad Biológica", status: "yellow", trend: "stable", note: "2 años mayor que cronológica" },
+      { name: "VO₂ Max", status: "yellow", trend: "improving", note: "38 ml/kg/min" },
+      { name: "Fuerza de Agarre", status: "green", trend: "stable", note: "Bilateral óptimo" },
+      { name: "Equilibrio", status: "yellow", trend: "improving", note: "Por debajo de meta" },
+      { name: "VFC", status: "yellow", trend: "stable", note: "45 ms" },
+    ],
+    recommendations: [
+      "Incrementar entrenamiento de intervalos para mejorar VO₂ Max.",
+      "Practicar ejercicios de equilibrio unipodal diariamente.",
+    ],
+    cached: false,
+  },
+  "body-composition": {
+    score: 65,
+    summary: "Tu composición corporal muestra masa muscular adecuada pero grasa visceral ligeramente elevada. El índice metabólico basal es normal para tu perfil.",
+    markers: [
+      { name: "Peso", status: "yellow", trend: "improving", note: "Tendencia descendente" },
+      { name: "Grasa corporal", status: "yellow", trend: "stable", note: "22.5%" },
+      { name: "Masa muscular", status: "green", trend: "stable", note: "42.3 kg" },
+      { name: "Grasa visceral", status: "yellow", trend: "improving", note: "Nivel 9" },
+      { name: "Agua corporal", status: "green", trend: "stable", note: "55.2%" },
+    ],
+    recommendations: [
+      "Mantener entrenamiento de fuerza para preservar masa muscular.",
+      "Reducir carbohidratos refinados para disminuir grasa visceral.",
+    ],
+    cached: false,
+  },
+  metabolic: {
+    score: 73,
+    summary: "Tus biomarcadores metabólicos están mayormente en rangos normales. La glucosa y la proteína C reactiva merecen seguimiento.",
+    markers: [
+      { name: "Glucosa", status: "yellow", trend: "stable", note: "98 mg/dL" },
+      { name: "Albúmina", status: "green", trend: "stable", note: "4.2 g/dL" },
+      { name: "Creatinina", status: "green", trend: "stable", note: "0.9 mg/dL" },
+      { name: "PCR", status: "yellow", trend: "improving", note: "1.8 mg/L" },
+    ],
+    recommendations: [
+      "Reducir azúcares simples para mejorar nivel de glucosa.",
+      "Próximo control de biomarcadores en 3 meses.",
+    ],
+    cached: false,
+  },
+};
 
 function getStatusColor(status: string) {
   switch (status) {
@@ -51,15 +163,18 @@ const TrendIcon = ({ trend }: { trend?: string }) => {
   return <Minus className="h-3.5 w-3.5 text-muted-foreground" />;
 };
 
-export function AISummaryCard({ section, healthData, targetUserId, compact = false, autoLoad = false }: AISummaryCardProps) {
-  const { generateSummary, loading, result, error } = useAISummary();
+export function AISummaryCard({ section, healthData, targetUserId, compact = false, autoLoad = false, isDemo = false }: AISummaryCardProps) {
+  const { generateSummary, loading, result: apiResult, error } = useAISummary();
   const [expanded, setExpanded] = useState(!compact);
 
+  // Use demo data if in demo mode
+  const result = isDemo ? (DEMO_RESULTS[section] || DEMO_RESULTS.overall) : apiResult;
+
   useEffect(() => {
-    if (autoLoad && healthData) {
+    if (autoLoad && healthData && !isDemo) {
       generateSummary(section, healthData, targetUserId);
     }
-  }, [autoLoad, section]);
+  }, [autoLoad, section, isDemo]);
 
   const handleGenerate = () => {
     generateSummary(section, healthData, targetUserId);

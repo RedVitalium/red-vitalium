@@ -67,6 +67,7 @@ export default function DashboardAchievements() {
             }}
             targetUserId={isViewingAsAdmin ? undefined : undefined}
             compact
+            isDemo={isDemo}
           />
         </motion.div>
 
