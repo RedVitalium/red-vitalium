@@ -113,6 +113,7 @@ export default function DashboardMetabolic() {
                   markers: markers.map(m => ({ name: m.name, value: m.value, unit: m.unit, status: m.status })),
                 }}
                 compact
+                isDemo={isDemo}
               />
             </motion.div>
 

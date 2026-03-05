@@ -74,6 +74,7 @@ export default function DashboardAISummary() {
             healthData={overallHealthData}
             targetUserId={isViewingAsAdmin ? targetUserId || undefined : undefined}
             autoLoad={true}
+            isDemo={isDemo}
           />
         </motion.div>
 

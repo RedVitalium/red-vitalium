@@ -8,6 +8,7 @@ import {
   MapPin, 
   Brain, 
   Stethoscope,
+  Sparkles,
   ChevronRight,
   Lock
 } from "lucide-react";
@@ -34,6 +35,13 @@ const menuItems: MenuItem[] = [
     description: 'Datos personales y configuración',
     icon: User,
     href: '/profile',
+  },
+  {
+    id: 'ai-summary',
+    label: 'Resumen Integral con IA',
+    description: 'Puntuación general y análisis completo',
+    icon: Sparkles,
+    href: '/dashboard/ai-summary',
   },
   {
     id: 'dashboard',

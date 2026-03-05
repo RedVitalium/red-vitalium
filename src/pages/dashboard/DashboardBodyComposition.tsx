@@ -114,6 +114,7 @@ export default function DashboardBodyComposition() {
             }}
             targetUserId={isViewingAsAdmin ? targetUserId || undefined : undefined}
             compact
+            isDemo={isDemo}
           />
         </motion.div>
 

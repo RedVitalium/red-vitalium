@@ -69,6 +69,7 @@ export default function DashboardPsychological() {
               lifeSatisfaction: { value: psychologicalData.lifeSatisfaction.value, change: psychologicalData.lifeSatisfaction.change },
             }}
             compact
+            isDemo={isDemo}
           />
         </motion.div>
 

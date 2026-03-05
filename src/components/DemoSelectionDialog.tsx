@@ -8,7 +8,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { User, Stethoscope, Activity, Brain, Heart, Scale, BarChart3, ClipboardList, Users } from "lucide-react";
+import { User, Stethoscope, Activity, Brain, Heart, Scale, BarChart3, ClipboardList, Users, Sparkles } from "lucide-react";
 
 interface DemoSelectionDialogProps {
   open: boolean;
@@ -57,6 +57,7 @@ export function DemoSelectionDialog({ open, onOpenChange }: DemoSelectionDialogP
                 </p>
                 <div className="flex gap-1 mt-1.5 flex-wrap">
                   {[
+                    { icon: Sparkles, label: "Resumen IA" },
                     { icon: Activity, label: "Hábitos" },
                     { icon: Heart, label: "Longevidad" },
                     { icon: Scale, label: "Composición" },
