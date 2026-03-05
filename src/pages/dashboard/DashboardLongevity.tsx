@@ -4,6 +4,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Heart, Timer, Dumbbell, Activity, TrendingUp, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MetricCard } from "@/components/dashboard/MetricCard";
+import { AISummaryCard } from "@/components/dashboard/AISummaryCard";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useAdminMode } from "@/hooks/useAdminMode";
 import { LongevityMetricEditor, type MetricType } from "@/components/dashboard/LongevityMetricEditor";
@@ -74,9 +75,35 @@ export default function DashboardLongevity() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-3xl">
+        {/* AI Summary */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+        >
+          <AISummaryCard
+            section="longevity"
+            healthData={{
+              biologicalAge: { value: longevityData.biologicalAge.value, change: longevityData.biologicalAge.change },
+              chronologicalAge: personalData.age,
+              vo2Max: { value: longevityData.vo2Max.value, change: longevityData.vo2Max.change },
+              gripLeft: { value: longevityData.gripStrengthLeft.value, change: longevityData.gripStrengthLeft.change },
+              gripRight: { value: longevityData.gripStrengthRight.value, change: longevityData.gripStrengthRight.change },
+              balanceLeft: { value: longevityData.balanceLeft.value, change: longevityData.balanceLeft.change },
+              balanceRight: { value: longevityData.balanceRight.value, change: longevityData.balanceRight.change },
+              hrv: { value: longevityData.hrv.value, change: longevityData.hrv.change },
+              waistHeightRatio: { value: longevityData.waistHeightRatio.value, change: longevityData.waistHeightRatio.change },
+              nonHdlCholesterol: { value: longevityData.nonHdlCholesterol.value, change: longevityData.nonHdlCholesterol.change },
+            }}
+            targetUserId={isViewingAsAdmin ? targetUserId || undefined : undefined}
+            compact
+          />
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
           className="grid md:grid-cols-2 gap-4"
         >
           <div>
