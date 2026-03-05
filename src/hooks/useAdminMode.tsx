@@ -1,5 +1,8 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useAuth } from './useAuth';
+import { supabase } from '@/integrations/supabase/client';
+
+export type ActiveRole = 'patient' | 'admin' | 'professional';
 
 interface SelectedPatient {
   userId: string;
@@ -8,42 +11,72 @@ interface SelectedPatient {
 }
 
 interface AdminModeContextType {
-  // Current mode: null = not decided, 'patient' = viewing own dashboard, 'admin' = viewing patient as admin
-  currentMode: 'patient' | 'admin' | null;
-  setCurrentMode: (mode: 'patient' | 'admin' | null) => void;
+  currentMode: ActiveRole | null;
+  setCurrentMode: (mode: ActiveRole | null) => void;
   
-  // Selected patient when in admin mode
   selectedPatient: SelectedPatient | null;
   setSelectedPatient: (patient: SelectedPatient | null) => void;
   
-  // Helper to check if we're viewing as admin
   isViewingAsAdmin: boolean;
-  
-  // The user ID to use for data fetching (either current user or selected patient)
   targetUserId: string | null;
   
-  // Reset mode (e.g., on logout)
   resetMode: () => void;
   
-  // Whether to show the role selection dialog
   shouldShowRoleSelection: boolean;
   setShouldShowRoleSelection: (show: boolean) => void;
+  
+  // All roles the current user has
+  userRoles: ActiveRole[];
+  hasMultipleRoles: boolean;
 }
 
 const AdminModeContext = createContext<AdminModeContextType | undefined>(undefined);
 
 export function AdminModeProvider({ children }: { children: ReactNode }) {
   const { user, isAdmin } = useAuth();
-  const [currentMode, setCurrentMode] = useState<'patient' | 'admin' | null>(null);
+  const [currentMode, setCurrentMode] = useState<ActiveRole | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<SelectedPatient | null>(null);
   const [shouldShowRoleSelection, setShouldShowRoleSelection] = useState(false);
+  const [userRoles, setUserRoles] = useState<ActiveRole[]>([]);
 
-  // When user logs in and is admin, we need to show role selection
+  // Fetch all roles for current user
   useEffect(() => {
-    if (user && isAdmin && currentMode === null) {
-      setShouldShowRoleSelection(true);
+    if (!user) {
+      setUserRoles([]);
+      return;
     }
-  }, [user, isAdmin, currentMode]);
+
+    const fetchRoles = async () => {
+      const roles: ActiveRole[] = ['patient']; // Everyone is a patient
+
+      // Check admin
+      const { data: adminData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+      if (adminData) roles.push('admin');
+
+      // Check professional
+      const { data: profData } = await supabase
+        .from('professionals')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .maybeSingle();
+      if (profData) roles.push('professional');
+
+      setUserRoles(roles);
+
+      // If user has multiple roles and hasn't chosen yet, show selection
+      if (roles.length > 1 && currentMode === null) {
+        setShouldShowRoleSelection(true);
+      }
+    };
+
+    fetchRoles();
+  }, [user]);
 
   // Reset when user logs out
   useEffect(() => {
@@ -51,6 +84,7 @@ export function AdminModeProvider({ children }: { children: ReactNode }) {
       setCurrentMode(null);
       setSelectedPatient(null);
       setShouldShowRoleSelection(false);
+      setUserRoles([]);
     }
   }, [user]);
 
@@ -60,10 +94,9 @@ export function AdminModeProvider({ children }: { children: ReactNode }) {
     setShouldShowRoleSelection(false);
   };
 
-  const isViewingAsAdmin = currentMode === 'admin' && selectedPatient !== null;
-  
-  // The target user ID for data fetching
+  const isViewingAsAdmin = (currentMode === 'admin' || currentMode === 'professional') && selectedPatient !== null;
   const targetUserId = isViewingAsAdmin ? selectedPatient?.userId : user?.id || null;
+  const hasMultipleRoles = userRoles.length > 1;
 
   return (
     <AdminModeContext.Provider value={{
@@ -76,6 +109,8 @@ export function AdminModeProvider({ children }: { children: ReactNode }) {
       resetMode,
       shouldShowRoleSelection,
       setShouldShowRoleSelection,
+      userRoles,
+      hasMultipleRoles,
     }}>
       {children}
     </AdminModeContext.Provider>

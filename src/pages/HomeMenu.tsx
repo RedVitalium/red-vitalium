@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { 
@@ -12,6 +13,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRoles, isFeatureAvailable } from "@/hooks/useUserRoles";
+import { useAdminMode } from "@/hooks/useAdminMode";
+import { RoleSelectionDialog } from "@/components/admin/RoleSelectionDialog";
 import appLogo from "@/assets/app-logo.png";
 
 interface MenuItem {
@@ -79,6 +82,15 @@ export default function HomeMenu() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { subscription, isProfessional, isLoading } = useUserRoles();
+  const { hasMultipleRoles, shouldShowRoleSelection, setShouldShowRoleSelection } = useAdminMode();
+  const [showRoleDialog, setShowRoleDialog] = useState(false);
+
+  // Show role selection on mount if needed
+  useEffect(() => {
+    if (shouldShowRoleSelection && hasMultipleRoles) {
+      setShowRoleDialog(true);
+    }
+  }, [shouldShowRoleSelection, hasMultipleRoles]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -100,6 +112,14 @@ export default function HomeMenu() {
   }
 
   return (
+    <>
+      <RoleSelectionDialog 
+        open={showRoleDialog} 
+        onOpenChange={(open) => {
+          setShowRoleDialog(open);
+          if (!open) setShouldShowRoleSelection(false);
+        }} 
+      />
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border/50">
@@ -221,6 +241,7 @@ export default function HomeMenu() {
           </motion.div>
         )}
       </main>
-    </div>
+      </div>
+    </>
   );
 }
