@@ -10,7 +10,8 @@ import {
   Beaker,
   ChevronRight,
   ArrowLeft,
-  Lock
+  Lock,
+  Sparkles
 } from "lucide-react";
 import { useUserRoles, isFeatureAvailable, SubscriptionPlan } from "@/hooks/useUserRoles";
 import appLogo from "@/assets/app-logo.png";
@@ -25,6 +26,13 @@ interface DashboardSection {
 }
 
 const dashboardSections: DashboardSection[] = [
+  {
+    id: 'ai-summary',
+    label: 'Resumen Integral con IA',
+    description: 'Puntuación general y análisis completo',
+    icon: Sparkles,
+    href: '/dashboard/ai-summary',
+  },
   {
     id: 'achievements',
     label: 'Logros',

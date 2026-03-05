@@ -16,6 +16,7 @@ import HomeMenu from "./pages/HomeMenu";
 import Profile from "./pages/Profile";
 import MyDashboard from "./pages/MyDashboard";
 import Dashboard from "./pages/Dashboard";
+import DashboardAISummary from "./pages/dashboard/DashboardAISummary";
 import DashboardAchievements from "./pages/dashboard/DashboardAchievements";
 import DashboardHabits from "./pages/dashboard/DashboardHabits";
 import DashboardPsychological from "./pages/dashboard/DashboardPsychological";
@@ -75,6 +76,11 @@ const App = () => (
               } />
               
               {/* Dashboard sub-pages */}
+              <Route path="/dashboard/ai-summary" element={
+                <ProtectedRoute>
+                  <DashboardAISummary />
+                </ProtectedRoute>
+              } />
               <Route path="/dashboard/achievements" element={
                 <ProtectedRoute>
                   <DashboardAchievements />

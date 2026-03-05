@@ -7,6 +7,7 @@ import { MiniChart } from "@/components/dashboard/MiniChart";
 import { LockedHabitCard } from "@/components/dashboard/LockedHabitCard";
 import { HabitWeekIndicator } from "@/components/dashboard/HabitWeekIndicator";
 import { ProfessionalHabitEditor, InlineGoalEditor } from "@/components/dashboard/ProfessionalHabitEditor";
+import { AISummaryCard } from "@/components/dashboard/AISummaryCard";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useCycleData } from "@/hooks/useCycleData";
 import { useUnlockedHabits } from "@/hooks/useUnlockedHabits";
@@ -110,10 +111,32 @@ export default function DashboardHabits() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-3xl">
+        {/* AI Summary */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+        >
+          <AISummaryCard
+            section="habits"
+            healthData={{
+              sleep: { value: habitsData.sleep.value, change: habitsData.sleep.change },
+              sleepQuality: { value: habitsData.sleepQuality.value, change: habitsData.sleepQuality.change },
+              activity: { sessions: habitsData.activity.sessionCount, avgDuration: habitsData.activity.avgDuration, change: habitsData.activity.change },
+              screenTime: { value: habitsData.screenTime.value, change: habitsData.screenTime.change },
+              phoneUnlocks: { value: habitsData.phoneUnlocks.value, change: habitsData.phoneUnlocks.change },
+              yoga: habitsData.yoga ? { sessions: habitsData.yoga.sessionCount, change: habitsData.yoga.change } : null,
+            }}
+            targetUserId={isViewingAsAdmin ? effectiveUserId || undefined : undefined}
+            compact
+          />
+        </motion.div>
+
         {/* Week indicator */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
           className="mb-6"
         >
           <HabitWeekIndicator 

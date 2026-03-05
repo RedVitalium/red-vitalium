@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Beaker, Lock, TrendingUp, AlertCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { AISummaryCard } from "@/components/dashboard/AISummaryCard";
 import { useUserRoles, isFeatureAvailable } from "@/hooks/useUserRoles";
 import { useAdminMode } from "@/hooks/useAdminMode";
 import appLogo from "@/assets/app-logo.png";
@@ -100,10 +101,26 @@ export default function DashboardMetabolic() {
           </motion.div>
         ) : (
           <>
+            {/* AI Summary */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6"
+            >
+              <AISummaryCard
+                section="metabolic"
+                healthData={{
+                  markers: markers.map(m => ({ name: m.name, value: m.value, unit: m.unit, status: m.status })),
+                }}
+                compact
+              />
+            </motion.div>
+
             {/* Last update info */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
               className="mb-6 p-4 bg-muted/50 rounded-lg flex items-center gap-3"
             >
               <AlertCircle className="h-5 w-5 text-muted-foreground" />

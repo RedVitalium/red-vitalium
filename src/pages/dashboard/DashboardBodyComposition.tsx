@@ -8,6 +8,7 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 import { useAdminMode } from "@/hooks/useAdminMode";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { AISummaryCard } from "@/components/dashboard/AISummaryCard";
 import appLogo from "@/assets/app-logo.png";
 import { DEMO_DATA_MALE_45, FullBodyCompositionData } from "@/components/dashboard/body-composition/types";
 import { CompositionOverviewSlide } from "@/components/dashboard/body-composition/CompositionOverviewSlide";
@@ -96,6 +97,26 @@ export default function DashboardBodyComposition() {
       </header>
 
       <main className="container mx-auto px-4 py-6 max-w-3xl">
+        {/* AI Summary */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+          <AISummaryCard
+            section="body-composition"
+            healthData={{
+              weight: bodyData.weight,
+              bodyFatPercent: bodyData.bodyFatPercent,
+              muscleMass: bodyData.muscleMass,
+              visceralFat: bodyData.visceralFat,
+              bodyWaterPercent: bodyData.bodyWaterPercent,
+              bmi: bodyData.bmi,
+              metabolicAge: bodyData.metabolicAge,
+              bmr: bodyData.bmr,
+              boneMass: bodyData.boneMass,
+            }}
+            targetUserId={isViewingAsAdmin ? targetUserId || undefined : undefined}
+            compact
+          />
+        </motion.div>
+
         {!hasData ? (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <Card className="p-8 text-center">

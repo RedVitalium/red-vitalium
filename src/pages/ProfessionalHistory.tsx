@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, Brain, Heart, Scale, Beaker, Activity, Trophy,
-  User, FileText, ChevronRight
+  User, FileText, ChevronRight, Sparkles
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useAdminMode } from "@/hooks/useAdminMode";
@@ -67,8 +67,27 @@ export default function ProfessionalHistory() {
       </div>
 
       <main className="container mx-auto px-4 py-6 max-w-xl space-y-6">
+        {/* AI Summary Button */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <Card
+            className="p-5 flex items-center justify-between cursor-pointer hover:bg-primary/5 transition-colors border-primary/20 bg-gradient-to-r from-primary/5 to-transparent"
+            onClick={() => navigate('/dashboard/ai-summary')}
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-2.5 rounded-xl bg-primary/15 text-primary">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="font-medium text-foreground">Resumen con IA</h3>
+                <p className="text-sm text-muted-foreground">Análisis integral del paciente</p>
+              </div>
+            </div>
+            <ChevronRight className="h-5 w-5 text-primary" />
+          </Card>
+        </motion.div>
+
         {/* Category Summaries */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.05 }}>
           <h2 className="text-lg font-display font-bold text-foreground mb-3">Resumen por Categoría</h2>
           <div className="grid grid-cols-2 gap-3">
             {categorySummaries.map(cat => {

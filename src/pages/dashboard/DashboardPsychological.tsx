@@ -5,6 +5,7 @@ import { MetricCard } from "@/components/dashboard/MetricCard";
 import { MiniChart } from "@/components/dashboard/MiniChart";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { AISummaryCard } from "@/components/dashboard/AISummaryCard";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useAdminMode } from "@/hooks/useAdminMode";
 import appLogo from "@/assets/app-logo.png";
@@ -53,10 +54,29 @@ export default function DashboardPsychological() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-3xl">
+        {/* AI Summary */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+        >
+          <AISummaryCard
+            section="psychological"
+            healthData={{
+              anxiety: { value: psychologicalData.anxiety.value, change: psychologicalData.anxiety.change },
+              stress: { value: psychologicalData.stress.value, change: psychologicalData.stress.change },
+              depression: { value: psychologicalData.depression.value, change: psychologicalData.depression.change },
+              lifeSatisfaction: { value: psychologicalData.lifeSatisfaction.value, change: psychologicalData.lifeSatisfaction.change },
+            }}
+            compact
+          />
+        </motion.div>
+
         {/* Metrics Grid */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
           className="grid md:grid-cols-2 gap-4 mb-8"
         >
           <MetricCard

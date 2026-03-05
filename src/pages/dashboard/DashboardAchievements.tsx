@@ -4,6 +4,7 @@ import { ArrowLeft, Trophy, Medal, Star, Calendar } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { MonthlyAchievements } from "@/components/dashboard/MonthlyAchievements";
 import { WeeklyProgress } from "@/components/dashboard/WeeklyProgress";
+import { AISummaryCard } from "@/components/dashboard/AISummaryCard";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useCycleData } from "@/hooks/useCycleData";
 import { useAuth } from "@/hooks/useAuth";
@@ -48,10 +49,32 @@ export default function DashboardAchievements() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-3xl">
+        {/* AI Summary */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+        >
+          <AISummaryCard
+            section="achievements"
+            healthData={{
+              streak: weeklyProgress.streak,
+              weeklyGoals: weeklyProgress.weeklyGoals,
+              improvement: weeklyProgress.improvement,
+              achievements: achievements.map(a => ({ title: a.title, type: a.type, improvement: a.improvement })),
+              cycleProgress: cycleProgress.cycleProgress,
+              currentWeek: cycleProgress.currentWeekOfCycle,
+            }}
+            targetUserId={isViewingAsAdmin ? undefined : undefined}
+            compact
+          />
+        </motion.div>
+
         {/* Monthly Achievements */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
           className="mb-8"
         >
           <MonthlyAchievements 
