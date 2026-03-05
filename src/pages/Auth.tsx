@@ -38,6 +38,9 @@ export default function Auth() {
       toast.error('Error al iniciar sesión', { description: error.message });
     } else {
       toast.success('¡Bienvenido de vuelta!');
+      // Navigation is handled by role selection or ProtectedRoute
+      // For single-role users, they go straight to /home
+      // For multi-role users, the RoleSelectionDialog will redirect them
       navigate('/home');
     }
     

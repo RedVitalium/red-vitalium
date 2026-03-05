@@ -36,17 +36,18 @@ export function Header() {
     setCurrentMode,
     shouldShowRoleSelection,
     setShouldShowRoleSelection,
-    resetMode
+    resetMode,
+    hasMultipleRoles,
   } = useAdminMode();
 
-  // Show role selection dialog when admin logs in
+  // Show role selection dialog when multi-role user logs in
   const [showRoleDialog, setShowRoleDialog] = useState(false);
 
   useEffect(() => {
-    if (shouldShowRoleSelection && isAdmin && user) {
+    if (shouldShowRoleSelection && user) {
       setShowRoleDialog(true);
     }
-  }, [shouldShowRoleSelection, isAdmin, user]);
+  }, [shouldShowRoleSelection, user]);
 
   const handleSignOut = async () => {
     resetMode();
@@ -55,15 +56,10 @@ export function Header() {
   };
 
   const handleSwitchMode = () => {
-    if (currentMode === 'admin') {
-      setCurrentMode('patient');
-      setSelectedPatient(null);
-      navigate('/dashboard');
-    } else {
-      setCurrentMode(null);
-      setShouldShowRoleSelection(true);
-      setShowRoleDialog(true);
-    }
+    setCurrentMode(null);
+    setSelectedPatient(null);
+    setShouldShowRoleSelection(true);
+    setShowRoleDialog(true);
   };
 
   const handleChangePatient = () => {
@@ -181,12 +177,12 @@ export function Header() {
                     <DropdownMenuItem disabled>
                       <span className="text-sm text-muted-foreground">{user.email}</span>
                     </DropdownMenuItem>
-                    {isAdmin && (
+                    {hasMultipleRoles && (
                       <>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={handleSwitchMode}>
                           <ArrowLeftRight className="h-4 w-4 mr-2" />
-                          {currentMode === 'admin' ? 'Cambiar a mi dashboard' : 'Cambiar modo'}
+                          {currentMode !== 'patient' ? 'Cambiar modo' : 'Cambiar modo'}
                         </DropdownMenuItem>
                       </>
                     )}
@@ -242,7 +238,7 @@ export function Header() {
                   </Link>
                 ))}
                 
-                {isAdmin && (
+                {hasMultipleRoles && (
                   <Button 
                     variant="ghost" 
                     className="justify-start px-4 py-3 h-auto"
@@ -252,7 +248,7 @@ export function Header() {
                     }}
                   >
                     <ArrowLeftRight className="h-4 w-4 mr-2" />
-                    {currentMode === 'admin' ? 'Cambiar a mi dashboard' : 'Cambiar modo'}
+                    Cambiar modo
                   </Button>
                 )}
                 
