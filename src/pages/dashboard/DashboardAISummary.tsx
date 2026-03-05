@@ -1,8 +1,7 @@
 import { motion } from "framer-motion";
 import { Link, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { AISummaryCard } from "@/components/dashboard/AISummaryCard";
-import { useDashboardData } from "@/hooks/useDashboardData";
 import { useAdminMode } from "@/hooks/useAdminMode";
 import appLogo from "@/assets/app-logo.png";
 
@@ -11,41 +10,6 @@ export default function DashboardAISummary() {
   const isDemo = searchParams.get("demo") === "true";
   const { isViewingAsAdmin, targetUserId, selectedPatient } = useAdminMode();
   const backPath = isViewingAsAdmin ? "/professional/history" : `/my-dashboard${isDemo ? '?demo=true' : ''}`;
-
-  const { personalData, habitsData, psychologicalData, longevityData } = useDashboardData(
-    isViewingAsAdmin ? targetUserId || undefined : undefined
-  );
-
-  const overallHealthData = {
-    personal: { age: personalData.age, sex: personalData.sex, height: personalData.height, weight: personalData.weight },
-    habits: {
-      sleep: habitsData.sleep.value,
-      sleepChange: habitsData.sleep.change,
-      sleepQuality: habitsData.sleepQuality.value,
-      activitySessions: habitsData.activity.sessionCount,
-      activityDuration: habitsData.activity.avgDuration,
-      screenTime: habitsData.screenTime.value,
-      phoneUnlocks: habitsData.phoneUnlocks.value,
-    },
-    psychological: {
-      anxiety: psychologicalData.anxiety.value,
-      anxietyChange: psychologicalData.anxiety.change,
-      stress: psychologicalData.stress.value,
-      stressChange: psychologicalData.stress.change,
-      depression: psychologicalData.depression.value,
-      lifeSatisfaction: psychologicalData.lifeSatisfaction.value,
-    },
-    longevity: {
-      biologicalAge: longevityData.biologicalAge.value,
-      vo2Max: longevityData.vo2Max.value,
-      gripLeft: longevityData.gripStrengthLeft.value,
-      gripRight: longevityData.gripStrengthRight.value,
-      balanceLeft: longevityData.balanceLeft.value,
-      balanceRight: longevityData.balanceRight.value,
-      hrv: longevityData.hrv.value,
-      waistHeightRatio: longevityData.waistHeightRatio.value,
-    },
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -71,7 +35,6 @@ export default function DashboardAISummary() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <AISummaryCard
             section="overall"
-            healthData={overallHealthData}
             targetUserId={isViewingAsAdmin ? targetUserId || undefined : undefined}
             autoLoad={true}
             isDemo={isDemo}
