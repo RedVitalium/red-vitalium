@@ -1,6 +1,5 @@
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 
 export interface AISummaryMarker {
@@ -28,14 +27,13 @@ export interface AISummaryResult {
 }
 
 export function useAISummary() {
-  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AISummaryResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const generateSummary = useCallback(async (
     section: string,
-    healthData: any,
+    healthData?: any,
     targetUserId?: string
   ) => {
     setLoading(true);

@@ -7,7 +7,7 @@ import { useAISummary, AISummaryResult } from "@/hooks/useAISummary";
 
 interface AISummaryCardProps {
   section: string;
-  healthData: any;
+  healthData?: any;
   targetUserId?: string;
   compact?: boolean;
   autoLoad?: boolean;
@@ -21,17 +21,13 @@ const DEMO_RESULTS: Record<string, AISummaryResult> = {
     sections: [
       { name: "Hábitos", score: 75, status: "green", summary: "Buena adherencia al ejercicio y sueño. Reducir tiempo en pantalla." },
       { name: "Bienestar Psicológico", score: 68, status: "yellow", summary: "Ansiedad en rango moderado. Satisfacción con la vida puede mejorar." },
-      { name: "Longevidad", score: 70, status: "yellow", summary: "VO₂ Max y equilibrio por debajo de la meta. Fuerza de agarre óptima." },
+      { name: "Longevidad", score: 70, status: "yellow", summary: "VO₂ Max y equilibrio por debajo de la meta. Fuerza de agarre óptima. Percentil ~60 para hombres de 46 años." },
       { name: "Composición Corporal", score: 65, status: "yellow", summary: "Grasa visceral ligeramente elevada. Masa muscular en rango adecuado." },
     ],
     recommendations: [
       "Incorporar sesiones de meditación o mindfulness para reducir ansiedad.",
       "Aumentar el entrenamiento cardiovascular para mejorar VO₂ Max.",
       "Reducir tiempo en pantalla antes de dormir para mejorar calidad de sueño.",
-    ],
-    highlights: [
-      "Fuerza de agarre bilateral en rango óptimo para tu edad.",
-      "Consistencia en ejercicio aeróbico durante las últimas semanas.",
     ],
     cached: false,
   },
@@ -50,7 +46,7 @@ const DEMO_RESULTS: Record<string, AISummaryResult> = {
     score: 74,
     summary: "Tus hábitos de sueño y actividad física están en buen camino. El tiempo en pantalla es el área con mayor oportunidad de mejora.",
     markers: [
-      { name: "Sueño", status: "green", trend: "stable", note: "7.2 hrs promedio" },
+      { name: "Sueño", status: "green", trend: "stable", note: "7.2 hrs promedio - Percentil ~55 para hombres de 46 años" },
       { name: "Actividad física", status: "green", trend: "improving", note: "4 sesiones/semana" },
       { name: "Tiempo en pantalla", status: "red", trend: "declining", note: "185 min/día" },
       { name: "Desbloqueos", status: "yellow", trend: "stable", note: "78 veces/día" },
@@ -65,7 +61,7 @@ const DEMO_RESULTS: Record<string, AISummaryResult> = {
     score: 66,
     summary: "Tu bienestar psicológico muestra áreas de atención. La ansiedad está en rango moderado y la satisfacción con la vida puede mejorar con intervenciones dirigidas.",
     markers: [
-      { name: "Ansiedad", status: "yellow", trend: "improving", note: "42 pts - Moderada" },
+      { name: "Ansiedad", status: "yellow", trend: "improving", note: "42 pts - Moderada. Percentil ~35 para hombres de 46 años" },
       { name: "Estrés", status: "green", trend: "stable", note: "35 pts - Bajo" },
       { name: "Síntomas Depresivos", status: "green", trend: "stable", note: "8 pts - Normal" },
       { name: "Satisfacción con la Vida", status: "yellow", trend: "stable", note: "7.2/10" },
@@ -81,10 +77,10 @@ const DEMO_RESULTS: Record<string, AISummaryResult> = {
     summary: "Tus marcadores de longevidad están en rango aceptable para tu edad y sexo. El VO₂ Max y el equilibrio son las áreas prioritarias a mejorar.",
     markers: [
       { name: "Edad Biológica", status: "yellow", trend: "stable", note: "2 años mayor que cronológica" },
-      { name: "VO₂ Max", status: "yellow", trend: "improving", note: "38 ml/kg/min" },
-      { name: "Fuerza de Agarre", status: "green", trend: "stable", note: "Bilateral óptimo" },
-      { name: "Equilibrio", status: "yellow", trend: "improving", note: "Por debajo de meta" },
-      { name: "VFC", status: "yellow", trend: "stable", note: "45 ms" },
+      { name: "VO₂ Max", status: "yellow", trend: "improving", note: "38 ml/kg/min - Percentil ~45 para hombres de 46 años" },
+      { name: "Fuerza de Agarre", status: "green", trend: "stable", note: "Bilateral óptimo - Percentil ~70" },
+      { name: "Equilibrio", status: "yellow", trend: "improving", note: "Por debajo de meta - Percentil ~40" },
+      { name: "VFC", status: "yellow", trend: "stable", note: "45 ms - Percentil ~50" },
     ],
     recommendations: [
       "Incrementar entrenamiento de intervalos para mejorar VO₂ Max.",
@@ -97,8 +93,8 @@ const DEMO_RESULTS: Record<string, AISummaryResult> = {
     summary: "Tu composición corporal muestra masa muscular adecuada pero grasa visceral ligeramente elevada. El índice metabólico basal es normal para tu perfil.",
     markers: [
       { name: "Peso", status: "yellow", trend: "improving", note: "Tendencia descendente" },
-      { name: "Grasa corporal", status: "yellow", trend: "stable", note: "22.5%" },
-      { name: "Masa muscular", status: "green", trend: "stable", note: "42.3 kg" },
+      { name: "Grasa corporal", status: "yellow", trend: "stable", note: "22.5% - Percentil ~45 para hombres de 46 años" },
+      { name: "Masa muscular", status: "green", trend: "stable", note: "42.3 kg - Percentil ~60" },
       { name: "Grasa visceral", status: "yellow", trend: "improving", note: "Nivel 9" },
       { name: "Agua corporal", status: "green", trend: "stable", note: "55.2%" },
     ],
@@ -112,7 +108,7 @@ const DEMO_RESULTS: Record<string, AISummaryResult> = {
     score: 73,
     summary: "Tus biomarcadores metabólicos están mayormente en rangos normales. La glucosa y la proteína C reactiva merecen seguimiento.",
     markers: [
-      { name: "Glucosa", status: "yellow", trend: "stable", note: "98 mg/dL" },
+      { name: "Glucosa", status: "yellow", trend: "stable", note: "98 mg/dL - Percentil ~55 para hombres de 46 años" },
       { name: "Albúmina", status: "green", trend: "stable", note: "4.2 g/dL" },
       { name: "Creatinina", status: "green", trend: "stable", note: "0.9 mg/dL" },
       { name: "PCR", status: "yellow", trend: "improving", note: "1.8 mg/L" },
@@ -167,11 +163,11 @@ export function AISummaryCard({ section, healthData, targetUserId, compact = fal
   const { generateSummary, loading, result: apiResult, error } = useAISummary();
   const [expanded, setExpanded] = useState(!compact);
 
-  // Use demo data if in demo mode
   const result = isDemo ? (DEMO_RESULTS[section] || DEMO_RESULTS.overall) : apiResult;
 
   useEffect(() => {
-    if (autoLoad && healthData && !isDemo) {
+    if (autoLoad && !isDemo) {
+      // healthData is now optional - the edge function fetches data server-side
       generateSummary(section, healthData, targetUserId);
     }
   }, [autoLoad, section, isDemo]);
@@ -272,10 +268,8 @@ export function AISummaryCard({ section, healthData, targetUserId, compact = fal
             className="overflow-hidden"
           >
             <div className="px-4 pb-4 space-y-3">
-              {/* Summary text */}
               <p className="text-sm text-foreground/90 leading-relaxed">{result.summary}</p>
 
-              {/* Section scores (for overall) */}
               {result.sections && result.sections.length > 0 && (
                 <div className="space-y-2">
                   <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Por Sección</h5>
@@ -293,7 +287,6 @@ export function AISummaryCard({ section, healthData, targetUserId, compact = fal
                 </div>
               )}
 
-              {/* Markers (for specific sections) */}
               {result.markers && result.markers.length > 0 && (
                 <div className="space-y-2">
                   <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Marcadores</h5>
@@ -305,14 +298,13 @@ export function AISummaryCard({ section, healthData, targetUserId, compact = fal
                         }`} />
                         <span className="text-sm flex-1">{marker.name}</span>
                         <TrendIcon trend={marker.trend} />
-                        {marker.note && <span className="text-xs text-muted-foreground max-w-[120px] truncate">{marker.note}</span>}
+                        {marker.note && <span className="text-xs text-muted-foreground max-w-[160px] truncate">{marker.note}</span>}
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Highlights */}
               {result.highlights && result.highlights.length > 0 && (
                 <div className="space-y-1.5">
                   <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Destacados</h5>
@@ -324,7 +316,6 @@ export function AISummaryCard({ section, healthData, targetUserId, compact = fal
                 </div>
               )}
 
-              {/* Recommendations */}
               {result.recommendations && result.recommendations.length > 0 && (
                 <div className="pt-2 border-t border-border/50 space-y-1.5">
                   <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
