@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import appLogo from "@/assets/app-logo.png";
+import vitaliumNegativo from "@/assets/vitalium-negativo.png";
 import { DemoSelectionDialog } from "@/components/DemoSelectionDialog";
 import { 
   Activity, 
