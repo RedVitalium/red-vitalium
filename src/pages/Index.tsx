@@ -136,7 +136,7 @@ export default function Index() {
             className="text-center max-w-4xl mx-auto"
           >
             <motion.img
-              src={appLogo}
+              src={vitaliumNegativo}
               alt="Red Vitalium"
               className="h-32 w-auto mx-auto mb-8"
               initial={{ scale: 0.8, opacity: 0 }}
