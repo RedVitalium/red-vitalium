@@ -353,8 +353,7 @@ export default function Index() {
               Empieza tu Transformación
             </h2>
             <p className="text-gray-400 max-w-2xl mx-auto mb-10 text-lg">
-              Visita nuestras oficinas de captación en Villahermosa, Tabasco, 
-              para conocer el programa y comenzar tu viaje hacia la longevidad.
+              Tu primera sesión incluye medición de composición corporal, evaluación psicológica y setup de tu dispositivo. Sin compromiso.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
               <Button 
