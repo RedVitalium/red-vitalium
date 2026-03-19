@@ -30,7 +30,7 @@ const features = [
   {
     icon: Activity,
     title: "Optimización Metabólica",
-    description: "Nutrición basada en datos reales y progreso medible",
+    description: "Nutrición personalizada con base en tus datos reales, no en dietas genéricas.",
   },
   {
     icon: Heart,
