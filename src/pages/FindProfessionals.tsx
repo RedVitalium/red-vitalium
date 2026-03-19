@@ -35,80 +35,8 @@ interface Professional {
   };
 }
 
-// Dummy data for demo (will be replaced with real data)
-const dummyProfessionals: Professional[] = [
-  {
-    id: '1',
-    user_id: 'demo-1',
-    specialty: 'psychology',
-    license_number: 'PSY-12345',
-    bio: 'Especialista en terapia cognitivo-conductual con enfoque en ansiedad y estrés. Más de 10 años de experiencia ayudando a pacientes a alcanzar su bienestar mental.',
-    years_experience: 12,
-    consultation_price: 800,
-    is_verified: true,
-    location: 'Villahermosa, Tabasco',
-    office_address: 'Col. Centro, Calle Madero 123',
-    profile: {
-      full_name: 'Dra. María González Pérez',
-      email: 'dra.gonzalez@redvitalium.mx',
-      avatar_url: null,
-    }
-  },
-  {
-    id: '2',
-    user_id: 'demo-2',
-    specialty: 'nutrition',
-    license_number: 'NUT-67890',
-    bio: 'Nutrióloga certificada especializada en nutrición deportiva y control de peso. Enfoque personalizado basado en datos.',
-    years_experience: 8,
-    consultation_price: 700,
-    is_verified: true,
-    location: 'Villahermosa, Tabasco',
-    office_address: 'Col. Tabasco 2000, Av. Ruiz Cortines 456',
-    profile: {
-      full_name: 'Lic. Ana Martínez López',
-      email: 'ana.martinez@redvitalium.mx',
-      avatar_url: null,
-    }
-  },
-  {
-    id: '3',
-    user_id: 'demo-3',
-    specialty: 'medicine',
-    license_number: 'MED-11111',
-    bio: 'Médico internista con subespecialidad en medicina preventiva y longevidad. Enfoque integral basado en biomarcadores.',
-    years_experience: 15,
-    consultation_price: 1200,
-    is_verified: true,
-    location: 'Villahermosa, Tabasco',
-    office_address: 'Hospital Star Médica, Consultorio 305',
-    profile: {
-      full_name: 'Dr. Roberto Hernández Sánchez',
-      email: 'dr.hernandez@redvitalium.mx',
-      avatar_url: null,
-    }
-  },
-  {
-    id: '4',
-    user_id: 'demo-4',
-    specialty: 'physiotherapy',
-    license_number: 'FIS-22222',
-    bio: 'Fisioterapeuta especializado en rehabilitación deportiva y prevención de lesiones. Trabajo con atletas profesionales y recreativos.',
-    years_experience: 6,
-    consultation_price: 600,
-    is_verified: true,
-    location: 'Villahermosa, Tabasco',
-    office_address: 'Centro de Rehabilitación Vitalium, Av. Universidad 789',
-    profile: {
-      full_name: 'Lic. Carlos Ruiz Torres',
-      email: 'carlos.ruiz@redvitalium.mx',
-      avatar_url: null,
-    }
-  },
-];
-
 export default function FindProfessionals() {
-  const [professionals, setProfessionals] = useState<Professional[]>(dummyProfessionals);
+  const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(false);
@@ -137,29 +65,24 @@ export default function FindProfessionals() {
 
         if (error) throw error;
 
-        // If we have real data, use it; otherwise keep dummy data
-        if (data && data.length > 0) {
-          // Fetch profiles for each professional
-          const professionalsWithProfiles = await Promise.all(
-            data.map(async (prof) => {
-              const { data: profileData } = await supabase
-                .from('profiles')
-                .select('full_name, email, avatar_url')
-                .eq('user_id', prof.user_id)
-                .maybeSingle();
+        const professionalsWithProfiles = await Promise.all(
+          (data || []).map(async (prof) => {
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('full_name, email, avatar_url')
+              .eq('user_id', prof.user_id)
+              .maybeSingle();
 
-              return {
-                ...prof,
-                specialty: prof.specialty as Specialty,
-                profile: profileData || undefined,
-              };
-            })
-          );
-          setProfessionals(professionalsWithProfiles);
-        }
+            return {
+              ...prof,
+              specialty: prof.specialty as Specialty,
+              profile: profileData || undefined,
+            };
+          })
+        );
+        setProfessionals(professionalsWithProfiles);
       } catch (error) {
         console.error('Error fetching professionals:', error);
-        // Keep dummy data on error
       } finally {
         setIsLoading(false);
       }
