@@ -50,7 +50,7 @@ const features = [
   {
     icon: Smartphone,
     title: "Integración Digital",
-    description: "Conecta tus dispositivos y visualiza tu progreso en tiempo real",
+    description: "Compatible con cualquier reloj o anillo inteligente. Cambia de dispositivo sin perder tu historial.",
   },
 ];
 
