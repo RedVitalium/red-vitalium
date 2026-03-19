@@ -36,7 +36,7 @@ interface Professional {
 }
 
 export default function FindProfessionals() {
-  const [professionals, setProfessionals] = useState<Professional[]>(dummyProfessionals);
+  const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(false);
