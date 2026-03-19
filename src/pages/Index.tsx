@@ -57,7 +57,7 @@ const features = [
 const plans = [
   {
     name: "Plan Plata",
-    subtitle: "Fundamentos Conductuales",
+    subtitle: "Sueño, hábitos y bienestar mental — la base de todo lo demás.",
     features: ["Psicología", "Formación de hábitos", "Monitoreo de sueño y actividad"],
     color: "from-gray-400 to-gray-500",
   },
