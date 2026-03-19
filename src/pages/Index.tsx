@@ -63,7 +63,7 @@ const plans = [
   },
   {
     name: "Plan Oro",
-    subtitle: "Optimización Metabólica",
+    subtitle: "Suma nutrición personalizada a partir del mes 3.",
     features: ["Todo de Plata", "Nutrición personalizada", "Marcadores metabólicos"],
     color: "from-yellow-400 to-amber-500",
   },
