@@ -399,7 +399,7 @@ export default function Index() {
       {/* Footer */}
       <footer className="bg-secondary/95 text-secondary-foreground py-8 border-t border-gray-800">
         <div className="container mx-auto px-4 text-center">
-          <p className="text-sm opacity-70">© 2025 Red Vitalium. Todos los derechos reservados.</p>
+          <p className="text-sm opacity-70">© 2026 Red Vitalium. Todos los derechos reservados.</p>
           <p className="text-xs mt-2 opacity-50">Longevidad y Bienestar Basado en Datos</p>
         </div>
       </footer>
