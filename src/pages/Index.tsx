@@ -40,7 +40,7 @@ const features = [
   {
     icon: BarChart3,
     title: "Dashboard de Datos",
-    description: "Monitoreo continuo con wearables y báscula inteligente",
+    description: "Todo lo que mide tu cuerpo en un solo lugar — visible para ti y tu equipo de salud.",
   },
   {
     icon: Users,
