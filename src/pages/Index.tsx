@@ -25,7 +25,7 @@ const features = [
   {
     icon: Brain,
     title: "Bienestar Psicológico",
-    description: "Tests validados y seguimiento continuo con psicólogos certificados",
+    description: "Identifica los patrones mentales que frenan tus hábitos — antes de que se conviertan en un problema de salud.",
   },
   {
     icon: Activity,
