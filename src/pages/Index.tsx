@@ -150,8 +150,7 @@ export default function Index() {
             </h1>
             
             <p className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-10 leading-relaxed">
-              La <span className="font-semibold text-white">red de salud de alta fidelidad</span> que conecta 
-              profesionales certificados, tecnología de monitoreo y ciencia avanzada para optimizar tu vida.
+              El sistema que conecta tus datos reales con un equipo de especialistas para que vivas más tiempo y con más energía.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
