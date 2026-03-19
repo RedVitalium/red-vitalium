@@ -309,7 +309,7 @@ export default function Index() {
               Elige tu nivel de acompañamiento
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              Comienza con los fundamentos y escala según tu progreso y objetivos
+              Empieza con lo esencial y suma especialistas conforme avanzas.
             </p>
           </motion.div>
 
