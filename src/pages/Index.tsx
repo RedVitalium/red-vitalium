@@ -45,7 +45,7 @@ const features = [
   {
     icon: Users,
     title: "Red de Profesionales",
-    description: "Acceso a especialistas certificados en la metodología Vitalium",
+    description: "Psicólogos, nutriólogos y médicos que ven tus datos antes de cada consulta.",
   },
   {
     icon: Smartphone,
