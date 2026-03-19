@@ -65,29 +65,24 @@ export default function FindProfessionals() {
 
         if (error) throw error;
 
-        // If we have real data, use it; otherwise keep dummy data
-        if (data && data.length > 0) {
-          // Fetch profiles for each professional
-          const professionalsWithProfiles = await Promise.all(
-            data.map(async (prof) => {
-              const { data: profileData } = await supabase
-                .from('profiles')
-                .select('full_name, email, avatar_url')
-                .eq('user_id', prof.user_id)
-                .maybeSingle();
+        const professionalsWithProfiles = await Promise.all(
+          (data || []).map(async (prof) => {
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('full_name, email, avatar_url')
+              .eq('user_id', prof.user_id)
+              .maybeSingle();
 
-              return {
-                ...prof,
-                specialty: prof.specialty as Specialty,
-                profile: profileData || undefined,
-              };
-            })
-          );
-          setProfessionals(professionalsWithProfiles);
-        }
+            return {
+              ...prof,
+              specialty: prof.specialty as Specialty,
+              profile: profileData || undefined,
+            };
+          })
+        );
+        setProfessionals(professionalsWithProfiles);
       } catch (error) {
         console.error('Error fetching professionals:', error);
-        // Keep dummy data on error
       } finally {
         setIsLoading(false);
       }
