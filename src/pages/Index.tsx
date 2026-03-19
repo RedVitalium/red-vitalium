@@ -380,16 +380,16 @@ export default function Index() {
             </div>
             <div className="flex flex-col md:flex-row justify-center gap-6">
               <a 
-                href="mailto:info@redvitalium.mx" 
+                href="mailto:vitalium.mx@gmail.com" 
                 className="flex items-center justify-center gap-3 bg-gray-800 hover:bg-gray-700 py-4 px-8 rounded-xl transition border border-gray-700"
               >
-                <span>info@redvitalium.mx</span>
+                <span>vitalium.mx@gmail.com</span>
               </a>
               <a 
-                href="tel:+529931234567" 
+                href="tel:+529937005054" 
                 className="flex items-center justify-center gap-3 bg-gray-800 hover:bg-gray-700 py-4 px-8 rounded-xl transition border border-gray-700"
               >
-                <span>+52 (993) 123 4567</span>
+                <span>+52 993 700 5054</span>
               </a>
             </div>
           </motion.div>
