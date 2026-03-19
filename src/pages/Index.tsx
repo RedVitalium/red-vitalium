@@ -35,7 +35,7 @@ const features = [
   {
     icon: Heart,
     title: "Salud Sistémica",
-    description: "Chequeos médicos trimestrales y biomarcadores completos",
+    description: "Control médico preventivo para intervenir antes de que aparezcan los síntomas.",
   },
   {
     icon: BarChart3,
