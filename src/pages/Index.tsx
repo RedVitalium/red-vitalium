@@ -69,7 +69,7 @@ const plans = [
   },
   {
     name: "Plan Platino",
-    subtitle: "Salud Sistémica",
+    subtitle: "Añade control médico preventivo y biomarcadores completos.",
     features: ["Todo de Oro", "Medicina preventiva", "Biomarcadores completos"],
     color: "from-slate-300 to-slate-400",
   },
