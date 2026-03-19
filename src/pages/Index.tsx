@@ -200,7 +200,7 @@ export default function Index() {
               ¿Por qué Red Vitalium?
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Profesionales "vetados" de alta calidad + programa basado en datos reales + flexibilidad geográfica = progreso medible hacia la longevidad
+              Especialistas seleccionados por Vitalium · seguimiento con datos reales · atención presencial o remota = progreso medible en longevidad y bienestar
             </p>
           </motion.div>
 
