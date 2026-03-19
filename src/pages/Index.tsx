@@ -25,57 +25,57 @@ const features = [
   {
     icon: Brain,
     title: "Bienestar Psicológico",
-    description: "Tests validados y seguimiento continuo con psicólogos certificados",
+    description: "Identifica los patrones mentales que frenan tus hábitos — antes de que se conviertan en un problema de salud.",
   },
   {
     icon: Activity,
     title: "Optimización Metabólica",
-    description: "Nutrición basada en datos reales y progreso medible",
+    description: "Nutrición personalizada con base en tus datos reales, no en dietas genéricas.",
   },
   {
     icon: Heart,
     title: "Salud Sistémica",
-    description: "Chequeos médicos trimestrales y biomarcadores completos",
+    description: "Control médico preventivo para intervenir antes de que aparezcan los síntomas.",
   },
   {
     icon: BarChart3,
     title: "Dashboard de Datos",
-    description: "Monitoreo continuo con wearables y báscula inteligente",
+    description: "Todo lo que mide tu cuerpo en un solo lugar — visible para ti y tu equipo de salud.",
   },
   {
     icon: Users,
     title: "Red de Profesionales",
-    description: "Acceso a especialistas certificados en la metodología Vitalium",
+    description: "Psicólogos, nutriólogos y médicos que ven tus datos antes de cada consulta.",
   },
   {
     icon: Smartphone,
     title: "Integración Digital",
-    description: "Conecta tus dispositivos y visualiza tu progreso en tiempo real",
+    description: "Compatible con cualquier reloj o anillo inteligente. Cambia de dispositivo sin perder tu historial.",
   },
 ];
 
 const plans = [
   {
     name: "Plan Plata",
-    subtitle: "Fundamentos Conductuales",
+    subtitle: "Sueño, hábitos y bienestar mental — la base de todo lo demás.",
     features: ["Psicología", "Formación de hábitos", "Monitoreo de sueño y actividad"],
     color: "from-gray-400 to-gray-500",
   },
   {
     name: "Plan Oro",
-    subtitle: "Optimización Metabólica",
+    subtitle: "Suma nutrición personalizada a partir del mes 3.",
     features: ["Todo de Plata", "Nutrición personalizada", "Marcadores metabólicos"],
     color: "from-yellow-400 to-amber-500",
   },
   {
     name: "Plan Platino",
-    subtitle: "Salud Sistémica",
+    subtitle: "Añade control médico preventivo y biomarcadores completos.",
     features: ["Todo de Oro", "Medicina preventiva", "Biomarcadores completos"],
     color: "from-slate-300 to-slate-400",
   },
   {
     name: "Plan Black",
-    subtitle: "Integridad Estructural",
+    subtitle: "Equipo completo. Máximo rendimiento y longevidad.",
     features: ["Todo de Platino", "Fisioterapia", "Programa integral"],
     color: "from-gray-800 to-gray-900",
   },
@@ -150,8 +150,7 @@ export default function Index() {
             </h1>
             
             <p className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-10 leading-relaxed">
-              La <span className="font-semibold text-white">red de salud de alta fidelidad</span> que conecta 
-              profesionales certificados, tecnología de monitoreo y ciencia avanzada para optimizar tu vida.
+              El sistema que conecta tus datos reales con un equipo de especialistas para que vivas más tiempo y con más energía.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -307,10 +306,10 @@ export default function Index() {
             className="text-center mb-16"
           >
             <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
-              Escalera de Valor
+              Elige tu nivel de acompañamiento
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              Comienza con los fundamentos y escala según tu progreso y objetivos
+              Empieza con lo esencial y suma especialistas conforme avanzas.
             </p>
           </motion.div>
 
@@ -354,8 +353,7 @@ export default function Index() {
               Empieza tu Transformación
             </h2>
             <p className="text-gray-400 max-w-2xl mx-auto mb-10 text-lg">
-              Visita nuestras oficinas de captación en Villahermosa, Tabasco, 
-              para conocer el programa y comenzar tu viaje hacia la longevidad.
+              Tu primera sesión incluye medición de composición corporal, evaluación psicológica y setup de tu dispositivo. Sin compromiso.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
               <Button 
@@ -382,16 +380,16 @@ export default function Index() {
             </div>
             <div className="flex flex-col md:flex-row justify-center gap-6">
               <a 
-                href="mailto:info@redvitalium.mx" 
+                href="mailto:vitalium.mx@gmail.com" 
                 className="flex items-center justify-center gap-3 bg-gray-800 hover:bg-gray-700 py-4 px-8 rounded-xl transition border border-gray-700"
               >
-                <span>info@redvitalium.mx</span>
+                <span>vitalium.mx@gmail.com</span>
               </a>
               <a 
-                href="tel:+529931234567" 
+                href="tel:+529937005054" 
                 className="flex items-center justify-center gap-3 bg-gray-800 hover:bg-gray-700 py-4 px-8 rounded-xl transition border border-gray-700"
               >
-                <span>+52 (993) 123 4567</span>
+                <span>+52 993 700 5054</span>
               </a>
             </div>
           </motion.div>
@@ -401,7 +399,7 @@ export default function Index() {
       {/* Footer */}
       <footer className="bg-secondary/95 text-secondary-foreground py-8 border-t border-gray-800">
         <div className="container mx-auto px-4 text-center">
-          <p className="text-sm opacity-70">© 2025 Red Vitalium. Todos los derechos reservados.</p>
+          <p className="text-sm opacity-70">© 2026 Red Vitalium. Todos los derechos reservados.</p>
           <p className="text-xs mt-2 opacity-50">Longevidad y Bienestar Basado en Datos</p>
         </div>
       </footer>
