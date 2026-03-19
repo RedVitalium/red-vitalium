@@ -75,7 +75,7 @@ const plans = [
   },
   {
     name: "Plan Black",
-    subtitle: "Integridad Estructural",
+    subtitle: "Equipo completo. Máximo rendimiento y longevidad.",
     features: ["Todo de Platino", "Fisioterapia", "Programa integral"],
     color: "from-gray-800 to-gray-900",
   },
