@@ -11,7 +11,9 @@ import {
   Sparkles,
   ChevronRight,
   Lock,
-  Rocket
+  Rocket,
+  Shield,
+  Bell
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRoles, isFeatureAvailable } from "@/hooks/useUserRoles";
@@ -30,6 +32,7 @@ interface MenuItem {
   href: string;
   requiresPlan?: 'plata' | 'oro' | 'platino' | 'black';
   showForProfessional?: boolean;
+  showForAdmin?: boolean;
 }
 
 const menuItems: MenuItem[] = [
@@ -76,6 +79,14 @@ const menuItems: MenuItem[] = [
     href: '/tests',
   },
   {
+    id: 'admin',
+    label: 'Administración',
+    description: 'Gestionar pacientes, ciclos y biomarcadores',
+    icon: Shield,
+    href: '/admin',
+    showForAdmin: true,
+  },
+  {
     id: 'professional-mode',
     label: 'Entrar como Profesional',
     description: 'Accede al panel de profesionales',
@@ -92,7 +103,7 @@ const itemVariants = {
 
 export default function HomeMenu() {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAdmin } = useAuth();
   const { subscription, isProfessional, isLoading } = useUserRoles();
   const { hasMultipleRoles, shouldShowRoleSelection, setShouldShowRoleSelection } = useAdminMode();
   const [showRoleDialog, setShowRoleDialog] = useState(false);
@@ -116,6 +127,7 @@ export default function HomeMenu() {
   // Filter menu items based on user type
   const visibleItems = menuItems.filter(item => {
     if (item.showForProfessional && !isProfessional) return false;
+    if (item.showForAdmin && !isAdmin) return false;
     return true;
   });
 
@@ -207,6 +219,12 @@ export default function HomeMenu() {
                       <Link to="/tests">
                         <Brain className="h-4 w-4 mr-1" />
                         Tests Iniciales
+                      </Link>
+                    </Button>
+                    <Button size="sm" variant="outline" asChild>
+                      <Link to="/reminders">
+                        <Bell className="h-4 w-4 mr-1" />
+                        Configurar Sueño
                       </Link>
                     </Button>
                   </div>
