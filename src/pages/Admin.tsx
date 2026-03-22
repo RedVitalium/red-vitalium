@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -43,7 +43,6 @@ export default function Admin() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedPatient, setSelectedPatient] = useState<string>("");
-  const [unlockedHabits, setUnlockedHabits] = useState<Record<string, string[]>>({});
   
   // Fetch patients (profiles)
   const { data: patients = [] } = useQuery({
@@ -54,6 +53,65 @@ export default function Admin() {
         .select("user_id, full_name, date_of_birth, sex");
       if (error) throw error;
       return data || [];
+    },
+  });
+
+  // =============================================
+  // BUG 1 FIX: Fetch unlocked habits from Supabase
+  // Uses the same queryKey as useUnlockedHabits hook
+  // so both admin and patient views stay in sync
+  // =============================================
+  const { data: unlockedHabitIds = [], isLoading: habitsLoading } = useQuery({
+    queryKey: ["unlocked-habits", selectedPatient],
+    queryFn: async () => {
+      if (!selectedPatient) return [];
+      const { data, error } = await supabase
+        .from("unlocked_habits")
+        .select("habit_id")
+        .eq("user_id", selectedPatient);
+      if (error) throw error;
+      return data.map(h => h.habit_id);
+    },
+    enabled: !!selectedPatient,
+  });
+
+  // BUG 1 FIX: Mutation to unlock a habit (INSERT)
+  const unlockHabitMutation = useMutation({
+    mutationFn: async (habitId: string) => {
+      const { error } = await supabase
+        .from("unlocked_habits")
+        .insert({
+          user_id: selectedPatient,
+          habit_id: habitId,
+          unlocked_by: user?.id,
+        });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["unlocked-habits", selectedPatient] });
+      toast.success("Hábito desbloqueado");
+    },
+    onError: (error) => {
+      toast.error("Error al desbloquear hábito: " + error.message);
+    },
+  });
+
+  // BUG 1 FIX: Mutation to lock a habit (DELETE)
+  const lockHabitMutation = useMutation({
+    mutationFn: async (habitId: string) => {
+      const { error } = await supabase
+        .from("unlocked_habits")
+        .delete()
+        .eq("user_id", selectedPatient)
+        .eq("habit_id", habitId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["unlocked-habits", selectedPatient] });
+      toast.success("Hábito bloqueado");
+    },
+    onError: (error) => {
+      toast.error("Error al bloquear hábito: " + error.message);
     },
   });
 
@@ -242,30 +300,28 @@ export default function Admin() {
     saveBiomarkersMutation.mutate();
   };
 
+  // BUG 1 FIX: toggleHabitUnlock now calls Supabase mutations
   const toggleHabitUnlock = (habitId: string) => {
     if (!selectedPatient) {
       toast.error("Por favor seleccione un paciente");
       return;
     }
     
-    setUnlockedHabits(prev => {
-      const patientHabits = prev[selectedPatient] || [];
-      const isUnlocked = patientHabits.includes(habitId);
-      
-      return {
-        ...prev,
-        [selectedPatient]: isUnlocked 
-          ? patientHabits.filter(h => h !== habitId)
-          : [...patientHabits, habitId]
-      };
-    });
+    const isUnlocked = unlockedHabitIds.includes(habitId);
     
-    toast.success("Estado del hábito actualizado");
+    if (isUnlocked) {
+      lockHabitMutation.mutate(habitId);
+    } else {
+      unlockHabitMutation.mutate(habitId);
+    }
   };
 
+  // BUG 1 FIX: isHabitUnlocked now reads from Supabase query
   const isHabitUnlocked = (habitId: string) => {
-    return selectedPatient && (unlockedHabits[selectedPatient] || []).includes(habitId);
+    return unlockedHabitIds.includes(habitId);
   };
+
+  const isHabitMutating = unlockHabitMutation.isPending || lockHabitMutation.isPending;
 
   return (
     <div className="min-h-screen bg-background py-8">
@@ -605,6 +661,11 @@ export default function Admin() {
                   <User className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>Seleccione un paciente para gestionar sus hábitos</p>
                 </div>
+              ) : habitsLoading ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p>Cargando hábitos del paciente...</p>
+                </div>
               ) : (
                 <div className="grid md:grid-cols-2 gap-4">
                   {advancedHabits.map(habit => {
@@ -617,7 +678,7 @@ export default function Admin() {
                           unlocked 
                             ? 'bg-success/10 border-success/30' 
                             : 'bg-muted/30 border-muted'
-                        }`}
+                        } ${isHabitMutating ? 'opacity-50 pointer-events-none' : ''}`}
                         onClick={() => toggleHabitUnlock(habit.id)}
                       >
                         <div className="flex items-center justify-between">
@@ -629,6 +690,7 @@ export default function Admin() {
                             variant={unlocked ? "default" : "outline"}
                             size="icon"
                             className={unlocked ? "bg-success hover:bg-success/90" : ""}
+                            disabled={isHabitMutating}
                           >
                             {unlocked ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
                           </Button>
