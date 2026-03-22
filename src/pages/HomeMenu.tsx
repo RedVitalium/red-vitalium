@@ -127,6 +127,7 @@ export default function HomeMenu() {
   // Filter menu items based on user type
   const visibleItems = menuItems.filter(item => {
     if (item.showForProfessional && !isProfessional) return false;
+    if (item.showForAdmin && !isAdmin) return false;
     return true;
   });
 
