@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Calendar as CalendarIcon, Clock, MapPin, Video, User } from "lucide-react";
+import { ArrowLeft, Calendar as CalendarIcon, Clock, MapPin, Video, User, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
@@ -15,28 +15,21 @@ import {
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
 import { specialtyLabels, Specialty } from "@/hooks/useUserRoles";
 import appLogo from "@/assets/app-logo.png";
 
-// Dummy professionals data - will be replaced with real data
-const professionalsBySpecialty: Record<Specialty, { id: string; name: string; location: string }[]> = {
-  psychology: [
-    { id: 'psy-1', name: 'Dra. María González Pérez', location: 'Col. Centro' },
-    { id: 'psy-2', name: 'Lic. Juan Carlos Mendoza', location: 'Col. Tabasco 2000' },
-  ],
-  nutrition: [
-    { id: 'nut-1', name: 'Lic. Ana Martínez López', location: 'Col. Tabasco 2000' },
-    { id: 'nut-2', name: 'Lic. Patricia Sánchez Ruiz', location: 'Col. Centro' },
-  ],
-  medicine: [
-    { id: 'med-1', name: 'Dr. Roberto Hernández Sánchez', location: 'Hospital Star Médica' },
-    { id: 'med-2', name: 'Dra. Laura Díaz Morales', location: 'Centro Médico Vitalium' },
-  ],
-  physiotherapy: [
-    { id: 'fis-1', name: 'Lic. Carlos Ruiz Torres', location: 'Centro de Rehabilitación' },
-    { id: 'fis-2', name: 'Lic. Fernanda López García', location: 'Col. Tabasco 2000' },
-  ],
-};
+interface Professional {
+  id: string;
+  user_id: string;
+  specialty: Specialty;
+  location: string | null;
+  office_address: string | null;
+  consultation_price: number | null;
+  full_name: string | null;
+}
 
 const timeSlots = [
   "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
@@ -46,16 +39,48 @@ const timeSlots = [
 export default function AppointmentsNew() {
   const [searchParams] = useSearchParams();
   const preselectedProfessional = searchParams.get('professional');
+  const { user } = useAuth();
 
   const [selectedSpecialty, setSelectedSpecialty] = useState<Specialty | ''>('');
   const [selectedProfessional, setSelectedProfessional] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState('');
   const [modality, setModality] = useState<'presencial' | 'virtual'>('presencial');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Get available professionals for selected specialty
-  const availableProfessionals = selectedSpecialty 
-    ? professionalsBySpecialty[selectedSpecialty] 
+  // BUG 4 FIX: Fetch real professionals from Supabase
+  const { data: allProfessionals = [], isLoading: profLoading } = useQuery({
+    queryKey: ['active-professionals'],
+    queryFn: async () => {
+      // Get active professionals
+      const { data: profs, error: profError } = await supabase
+        .from('professionals')
+        .select('id, user_id, specialty, location, office_address, consultation_price')
+        .eq('is_active', true);
+
+      if (profError) throw profError;
+      if (!profs || profs.length === 0) return [];
+
+      // Get their names from profiles
+      const userIds = profs.map(p => p.user_id);
+      const { data: profiles, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_id, full_name')
+        .in('user_id', userIds);
+
+      if (profileError) throw profileError;
+
+      // Merge professional data with profile names
+      return profs.map(prof => ({
+        ...prof,
+        full_name: profiles?.find(p => p.user_id === prof.user_id)?.full_name || 'Profesional',
+      })) as Professional[];
+    },
+  });
+
+  // Filter professionals by selected specialty
+  const availableProfessionals = selectedSpecialty
+    ? allProfessionals.filter(p => p.specialty === selectedSpecialty)
     : [];
 
   // Reset professional when specialty changes
@@ -63,18 +88,77 @@ export default function AppointmentsNew() {
     setSelectedProfessional('');
   }, [selectedSpecialty]);
 
-  const handleConfirmAppointment = () => {
+  // BUG 4 FIX: Write appointment to Supabase + auto-create patient_professionals
+  const handleConfirmAppointment = async () => {
     if (!selectedSpecialty || !selectedProfessional || !selectedDate || !selectedTime) {
       toast.error('Por favor completa todos los campos');
       return;
     }
 
-    toast.success('Cita agendada exitosamente');
-    // Reset form
-    setSelectedSpecialty('');
-    setSelectedProfessional('');
-    setSelectedDate(undefined);
-    setSelectedTime('');
+    if (!user) {
+      toast.error('Debes iniciar sesión para agendar una cita');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const professionalData = availableProfessionals.find(p => p.id === selectedProfessional);
+      if (!professionalData) throw new Error('Profesional no encontrado');
+
+      // 1. Write the appointment
+      const { error: appointmentError } = await supabase
+        .from('appointments')
+        .insert({
+          user_id: user.id,
+          professional_id: professionalData.id,
+          appointment_date: format(selectedDate, 'yyyy-MM-dd'),
+          appointment_time: selectedTime,
+          modality: modality,
+          status: 'scheduled',
+          notes: `${specialtyLabels[selectedSpecialty]} - ${modality === 'virtual' ? 'Videollamada' : professionalData.location || 'Presencial'}`,
+        });
+
+      if (appointmentError) throw appointmentError;
+
+      // 2. Auto-create patient_professionals relationship if it doesn't exist
+      // This eliminates the need for manual admin assignment in the standard flow
+      const { error: assignError } = await supabase
+        .from('patient_professionals')
+        .upsert(
+          {
+            patient_id: user.id,
+            professional_id: professionalData.id,
+            specialty: professionalData.specialty,
+            assigned_by: user.id,
+            is_active: true,
+          },
+          { onConflict: 'patient_id,professional_id' }
+        );
+
+      // Don't throw on assign error — the appointment is already created
+      // The admin can fix the assignment manually if needed
+      if (assignError) {
+        console.warn('Could not auto-assign professional:', assignError.message);
+      }
+
+      toast.success('¡Cita agendada exitosamente!', {
+        description: `${professionalData.full_name} - ${format(selectedDate, "d 'de' MMMM", { locale: es })} a las ${selectedTime}`,
+      });
+
+      // Reset form
+      setSelectedSpecialty('');
+      setSelectedProfessional('');
+      setSelectedDate(undefined);
+      setSelectedTime('');
+      setModality('presencial');
+
+    } catch (error: any) {
+      console.error('Error scheduling appointment:', error);
+      toast.error('Error al agendar la cita', { description: error.message });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const selectedProfessionalData = availableProfessionals.find(p => p.id === selectedProfessional);
@@ -122,23 +206,30 @@ export default function AppointmentsNew() {
                 </Select>
               </div>
 
-              {/* Professional Selection */}
+              {/* Professional Selection — BUG 4 FIX: real data from Supabase */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Profesional</label>
                 <Select 
                   value={selectedProfessional} 
                   onValueChange={setSelectedProfessional}
-                  disabled={!selectedSpecialty}
+                  disabled={!selectedSpecialty || profLoading}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={selectedSpecialty ? "Selecciona un profesional" : "Primero selecciona especialidad"} />
+                    <SelectValue placeholder={
+                      profLoading ? "Cargando profesionales..." :
+                      !selectedSpecialty ? "Primero selecciona especialidad" :
+                      availableProfessionals.length === 0 ? "Sin profesionales disponibles" :
+                      "Selecciona un profesional"
+                    } />
                   </SelectTrigger>
                   <SelectContent>
                     {availableProfessionals.map((prof) => (
                       <SelectItem key={prof.id} value={prof.id}>
                         <div className="flex items-center gap-2">
-                          <span>{prof.name}</span>
-                          <span className="text-xs text-muted-foreground">({prof.location})</span>
+                          <span>{prof.full_name}</span>
+                          {prof.location && (
+                            <span className="text-xs text-muted-foreground">({prof.location})</span>
+                          )}
                         </div>
                       </SelectItem>
                     ))}
@@ -158,11 +249,16 @@ export default function AppointmentsNew() {
                       <User className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <p className="font-medium">{selectedProfessionalData.name}</p>
+                      <p className="font-medium">{selectedProfessionalData.full_name}</p>
                       <p className="text-sm text-muted-foreground flex items-center gap-1">
                         <MapPin className="h-3 w-3" />
-                        {selectedProfessionalData.location}
+                        {selectedProfessionalData.location || 'Ubicación no especificada'}
                       </p>
+                      {selectedProfessionalData.consultation_price && (
+                        <p className="text-sm text-primary font-medium">
+                          ${selectedProfessionalData.consultation_price} MXN
+                        </p>
+                      )}
                     </div>
                   </div>
                 </motion.div>
@@ -234,7 +330,7 @@ export default function AppointmentsNew() {
                   <div className="text-sm text-muted-foreground space-y-1">
                     <p className="flex items-center gap-2">
                       <User className="h-4 w-4" />
-                      {selectedProfessionalData.name}
+                      {selectedProfessionalData.full_name}
                     </p>
                     <p className="flex items-center gap-2">
                       <CalendarIcon className="h-4 w-4" />
@@ -246,7 +342,7 @@ export default function AppointmentsNew() {
                     </p>
                     <p className="flex items-center gap-2">
                       {modality === 'virtual' ? <Video className="h-4 w-4" /> : <MapPin className="h-4 w-4" />}
-                      {modality === 'virtual' ? 'Videollamada' : selectedProfessionalData.location}
+                      {modality === 'virtual' ? 'Videollamada' : selectedProfessionalData.location || 'Presencial'}
                     </p>
                   </div>
                 </motion.div>
@@ -257,10 +353,25 @@ export default function AppointmentsNew() {
                 className="w-full" 
                 size="lg"
                 onClick={handleConfirmAppointment}
-                disabled={!selectedSpecialty || !selectedProfessional || !selectedDate || !selectedTime}
+                disabled={!selectedSpecialty || !selectedProfessional || !selectedDate || !selectedTime || isSubmitting}
               >
-                Confirmar Cita
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Agendando...
+                  </>
+                ) : (
+                  'Confirmar Cita'
+                )}
               </Button>
+
+              {/* Note for unauthenticated users */}
+              {!user && (
+                <p className="text-xs text-muted-foreground text-center">
+                  <Link to="/auth" className="text-primary hover:underline">Inicia sesión</Link> para agendar tu cita. 
+                  Si aún no tienes cuenta, tu profesional puede registrarte.
+                </p>
+              )}
             </div>
           </Card>
         </motion.div>
