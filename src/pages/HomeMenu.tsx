@@ -32,6 +32,7 @@ interface MenuItem {
   href: string;
   requiresPlan?: 'plata' | 'oro' | 'platino' | 'black';
   showForProfessional?: boolean;
+  showForAdmin?: boolean;
 }
 
 const menuItems: MenuItem[] = [
