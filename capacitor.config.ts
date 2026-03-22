@@ -3,16 +3,12 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.4f0dcdedef7541a2917bb2433032ca64',
-  appName: 'Vitalium',
+  appId: 'mx.redvitalium.app',
+  appName: 'Red Vitalium',
   webDir: 'dist',
-  server: {
-    url: 'https://4f0dcded-ef75-41a2-917b-b2433032ca64.lovableproject.com?forceHideBadge=true',
-    cleartext: true
-  },
   plugins: {
     BackgroundRunner: {
-      label: 'app.lovable.vitalium.background',
+      label: 'mx.redvitalium.background',
       src: 'runners/background.js',
       event: 'syncHealthData',
       repeat: true,
