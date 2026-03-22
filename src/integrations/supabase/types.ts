@@ -390,6 +390,51 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_medications: {
+        Row: {
+          created_at: string | null
+          dosage: string | null
+          end_date: string | null
+          frequency: string | null
+          id: string
+          is_active: boolean | null
+          medication_name: string
+          notes: string | null
+          prescribed_by: string | null
+          start_date: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          dosage?: string | null
+          end_date?: string | null
+          frequency?: string | null
+          id?: string
+          is_active?: boolean | null
+          medication_name: string
+          notes?: string | null
+          prescribed_by?: string | null
+          start_date?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          dosage?: string | null
+          end_date?: string | null
+          frequency?: string | null
+          id?: string
+          is_active?: boolean | null
+          medication_name?: string
+          notes?: string | null
+          prescribed_by?: string | null
+          start_date?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       patient_professionals: {
         Row: {
           assigned_at: string
@@ -532,10 +577,15 @@ export type Database = {
           full_name: string | null
           height: number | null
           id: string
+          partner_user_id: string | null
+          research_consent: boolean | null
+          research_consent_at: string | null
           sex: string | null
+          shift_type: string | null
           updated_at: string
           user_id: string
           waist_circumference: number | null
+          wearable_model: string | null
           weight: number | null
         }
         Insert: {
@@ -546,10 +596,15 @@ export type Database = {
           full_name?: string | null
           height?: number | null
           id?: string
+          partner_user_id?: string | null
+          research_consent?: boolean | null
+          research_consent_at?: string | null
           sex?: string | null
+          shift_type?: string | null
           updated_at?: string
           user_id: string
           waist_circumference?: number | null
+          wearable_model?: string | null
           weight?: number | null
         }
         Update: {
@@ -560,10 +615,15 @@ export type Database = {
           full_name?: string | null
           height?: number | null
           id?: string
+          partner_user_id?: string | null
+          research_consent?: boolean | null
+          research_consent_at?: string | null
           sex?: string | null
+          shift_type?: string | null
           updated_at?: string
           user_id?: string
           waist_circumference?: number | null
+          wearable_model?: string | null
           weight?: number | null
         }
         Relationships: []
