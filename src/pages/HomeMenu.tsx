@@ -79,6 +79,14 @@ const menuItems: MenuItem[] = [
     href: '/tests',
   },
   {
+    id: 'admin',
+    label: 'Administración',
+    description: 'Gestionar pacientes, ciclos y biomarcadores',
+    icon: Shield,
+    href: '/admin',
+    showForAdmin: true,
+  },
+  {
     id: 'professional-mode',
     label: 'Entrar como Profesional',
     description: 'Accede al panel de profesionales',
