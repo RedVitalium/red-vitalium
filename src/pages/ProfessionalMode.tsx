@@ -10,6 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRoles, specialtyLabels } from "@/hooks/useUserRoles";
 import { useAdminMode } from "@/hooks/useAdminMode";
+import { format, differenceInHours } from "date-fns";
+import { es } from "date-fns/locale";
 import appLogo from "@/assets/app-logo.png";
 import RegisterPatientDialog from "@/components/professional/RegisterPatientDialog";
 
@@ -62,6 +64,26 @@ export default function ProfessionalMode() {
       return profiles || [];
     },
     enabled: !!user && isProfessional,
+  });
+
+  // Fetch last survey date per patient
+  const patientIds = patients.map((p: Patient) => p.user_id);
+  const { data: lastSurveyMap = {} } = useQuery({
+    queryKey: ['last-surveys', patientIds],
+    queryFn: async () => {
+      if (patientIds.length === 0) return {};
+      const { data } = await supabase
+        .from('daily_survey_responses')
+        .select('user_id, response_date')
+        .in('user_id', patientIds)
+        .order('response_date', { ascending: false });
+      const map: Record<string, string> = {};
+      (data || []).forEach(r => {
+        if (!map[r.user_id]) map[r.user_id] = r.response_date;
+      });
+      return map;
+    },
+    enabled: patientIds.length > 0,
   });
 
   // Filter patients based on search
@@ -118,9 +140,14 @@ export default function ProfessionalMode() {
             </span>
           </div>
           {professionalData && (
-            <span className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full">
-              {specialtyLabels[professionalData.specialty]}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full">
+                {specialtyLabels[professionalData.specialty]}
+              </span>
+              <span className="text-xs bg-muted text-muted-foreground px-3 py-1 rounded-full">
+                {patients.length} pacientes
+              </span>
+            </div>
           )}
         </div>
       </header>
@@ -206,6 +233,13 @@ export default function ProfessionalMode() {
                         <p className="text-sm text-muted-foreground">
                           {patient.email}
                         </p>
+                        {(() => {
+                          const lastDate = (lastSurveyMap as Record<string, string>)[patient.user_id];
+                          if (!lastDate) return <p className="text-xs text-muted-foreground">Sin encuestas registradas</p>;
+                          const hours = differenceInHours(new Date(), new Date(lastDate));
+                          if (hours < 24) return <p className="text-xs text-green-600">Encuesta al día</p>;
+                          return <p className="text-xs text-yellow-600">Última encuesta: {format(new Date(lastDate), "d MMM yyyy", { locale: es })}</p>;
+                        })()}
                       </div>
                     </div>
                     <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
