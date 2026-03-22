@@ -221,6 +221,12 @@ export default function HomeMenu() {
                         Tests Iniciales
                       </Link>
                     </Button>
+                    <Button size="sm" variant="outline" asChild>
+                      <Link to="/reminders">
+                        <Bell className="h-4 w-4 mr-1" />
+                        Configurar Sueño
+                      </Link>
+                    </Button>
                   </div>
                 </div>
               </div>
