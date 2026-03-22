@@ -34,6 +34,65 @@ export default function ProfessionalHistory() {
 
   if (!selectedPatient || !professionalData) return null;
 
+  const patientId = selectedPatient.userId;
+
+  const { data: healthPreview } = useQuery({
+    queryKey: ['health-preview', patientId],
+    queryFn: async () => {
+      const types = ['sleep_hours', 'activity_duration', 'screen_time'];
+      const results: Record<string, number | null> = {};
+      for (const dt of types) {
+        const { data } = await supabase
+          .from('health_data')
+          .select('value')
+          .eq('user_id', patientId)
+          .eq('data_type', dt)
+          .order('recorded_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        results[dt] = data?.value ?? null;
+      }
+      return results;
+    },
+    enabled: !!patientId,
+  });
+
+  const { data: lastDass } = useQuery({
+    queryKey: ['last-dass', patientId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('test_results')
+        .select('scores')
+        .eq('user_id', patientId)
+        .eq('test_id', 'dass-21')
+        .order('completed_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data?.scores as { anxiety?: number; stress?: number; depression?: number } | null;
+    },
+    enabled: !!patientId,
+  });
+
+  const getPreview = (catId: string): string | null => {
+    if (catId === 'habits') {
+      const sleep = healthPreview?.sleep_hours;
+      const activity = healthPreview?.activity_duration;
+      if (sleep != null || activity != null) {
+        const parts: string[] = [];
+        if (sleep != null) parts.push(`Sueño: ${sleep}h`);
+        if (activity != null) parts.push(`Actividad: ${activity}min`);
+        return parts.join(' · ');
+      }
+    }
+    if (catId === 'psychological' && lastDass) {
+      const parts: string[] = [];
+      if (lastDass.anxiety != null) parts.push(`Ansiedad ${lastDass.anxiety}`);
+      if (lastDass.stress != null) parts.push(`Estrés ${lastDass.stress}`);
+      if (parts.length) return `DASS-21: ${parts.join(', ')}`;
+    }
+    return null;
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
