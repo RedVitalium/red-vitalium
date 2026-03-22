@@ -5,18 +5,24 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Shield, FlaskConical, Lock, UserCheck } from "lucide-react";
 
+interface ConsentResult {
+  generalConsent: boolean;
+  researchConsent: boolean;
+}
+
 interface InformedConsentDialogProps {
   open: boolean;
-  onAccept: () => void;
+  onAccept: (consent: ConsentResult) => void;
   onCancel: () => void;
 }
 
 export function InformedConsentDialog({ open, onAccept, onCancel }: InformedConsentDialogProps) {
   const [accepted, setAccepted] = useState(false);
+  const [researchAccepted, setResearchAccepted] = useState(false);
 
   const handleAccept = () => {
     if (accepted) {
-      onAccept();
+      onAccept({ generalConsent: true, researchConsent: researchAccepted });
     }
   };
 
@@ -150,8 +156,19 @@ export function InformedConsentDialog({ open, onAccept, onCancel }: InformedCons
               className="mt-0.5 shrink-0"
             />
             <span className="text-sm text-foreground leading-relaxed select-none">
-              He leído y comprendido los términos anteriores. Autorizo a Red Vitalium a recopilar mis datos de salud para el funcionamiento de la plataforma y, de forma{" "}
-              <strong>anonimizada y agregada</strong>, para investigación científica sobre longevidad y bienestar.
+              He leído y comprendido los términos anteriores. Autorizo a Red Vitalium a recopilar mis datos de salud para el funcionamiento de la plataforma.
+            </span>
+          </label>
+
+          <label className="flex items-start gap-3 cursor-pointer group">
+            <Checkbox
+              id="research-consent-check"
+              checked={researchAccepted}
+              onCheckedChange={(v) => setResearchAccepted(!!v)}
+              className="mt-0.5 shrink-0"
+            />
+            <span className="text-sm text-foreground/80 leading-relaxed select-none">
+              Autorizo el uso de mis datos anonimizados para fines de investigación científica, incluyendo estudios actuales y futuros que Red Vitalium pueda realizar. Entiendo que: (a) mis datos serán desidentificados antes de cualquier análisis, (b) puedo retirar mi consentimiento de investigación en cualquier momento sin afectar mi participación en el programa clínico, (c) los resultados podrán ser publicados en revistas científicas sin incluir información que me identifique.
             </span>
           </label>
 
