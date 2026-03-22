@@ -10,6 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRoles, specialtyLabels } from "@/hooks/useUserRoles";
 import { useAdminMode } from "@/hooks/useAdminMode";
+import { format, differenceInHours } from "date-fns";
+import { es } from "date-fns/locale";
 import appLogo from "@/assets/app-logo.png";
 import RegisterPatientDialog from "@/components/professional/RegisterPatientDialog";
 
