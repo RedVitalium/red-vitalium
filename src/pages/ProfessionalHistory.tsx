@@ -152,6 +152,7 @@ export default function ProfessionalHistory() {
           <div className="grid grid-cols-2 gap-3">
             {categorySummaries.map(cat => {
               const Icon = cat.icon;
+              const preview = getPreview(cat.id);
               return (
                 <Card
                   key={cat.id}
@@ -164,6 +165,9 @@ export default function ProfessionalHistory() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground">{cat.label}</p>
                     <p className="text-xs text-muted-foreground">Ver detalles →</p>
+                    <p className="text-[11px] text-muted-foreground/70 truncate mt-0.5">
+                      {preview || 'Sin datos aún'}
+                    </p>
                   </div>
                 </Card>
               );
