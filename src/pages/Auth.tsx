@@ -75,6 +75,15 @@ export default function Auth() {
     const { data: { session } } = await supabase.auth.getSession();
 
     if (session) {
+      // Save research consent if accepted
+      if (researchConsent) {
+        await supabase.from('profiles')
+          .update({ 
+            research_consent: true, 
+            research_consent_at: new Date().toISOString() 
+          })
+          .eq('user_id', session.user.id);
+      }
       // Email confirmation is disabled — session is active, go to home
       toast.success('¡Cuenta creada exitosamente!');
       navigate('/home');
