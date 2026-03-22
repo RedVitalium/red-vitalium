@@ -56,7 +56,7 @@ export default function Profile() {
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('full_name, email, date_of_birth, sex, height, weight, waist_circumference')
+        .select('full_name, email, date_of_birth, sex, height, weight, waist_circumference, wearable_model, research_consent, research_consent_at')
         .eq('user_id', user.id)
         .maybeSingle();
 
