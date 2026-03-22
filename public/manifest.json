@@ -1,0 +1,16 @@
+{
+  "name": "Red Vitalium",
+  "short_name": "Vitalium",
+  "description": "Longevidad y Bienestar Basado en Datos",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1A1A2E",
+  "theme_color": "#2D4597",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ]
+}
