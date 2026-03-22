@@ -66,6 +66,26 @@ export default function ProfessionalMode() {
     enabled: !!user && isProfessional,
   });
 
+  // Fetch last survey date per patient
+  const patientIds = patients.map((p: Patient) => p.user_id);
+  const { data: lastSurveyMap = {} } = useQuery({
+    queryKey: ['last-surveys', patientIds],
+    queryFn: async () => {
+      if (patientIds.length === 0) return {};
+      const { data } = await supabase
+        .from('daily_survey_responses')
+        .select('user_id, response_date')
+        .in('user_id', patientIds)
+        .order('response_date', { ascending: false });
+      const map: Record<string, string> = {};
+      (data || []).forEach(r => {
+        if (!map[r.user_id]) map[r.user_id] = r.response_date;
+      });
+      return map;
+    },
+    enabled: patientIds.length > 0,
+  });
+
   // Filter patients based on search
   const filteredPatients = searchTerm.trim().length >= 2
     ? patients.filter((patient: Patient) => {
