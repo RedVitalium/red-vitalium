@@ -18,6 +18,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useUserRoles, planLabels } from "@/hooks/useUserRoles";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 import appLogo from "@/assets/app-logo.png";
 
 interface ProfileData {
