@@ -4,6 +4,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Calendar as CalendarIcon, Clock, MapPin, Video, User, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Select,
@@ -374,8 +375,117 @@ export default function AppointmentsNew() {
               )}
             </div>
           </Card>
+
+          {/* My Appointments Section */}
+          {user && <MyAppointments userId={user.id} />}
         </motion.div>
       </main>
     </div>
+  );
+}
+
+const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
+  scheduled: { label: "Agendada", variant: "default" },
+  completed: { label: "Completada", variant: "secondary" },
+  cancelled: { label: "Cancelada", variant: "outline" },
+};
+
+function MyAppointments({ userId }: { userId: string }) {
+  const { data: appointments = [], isLoading } = useQuery({
+    queryKey: ['my-appointments', userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('appointments')
+        .select('id, appointment_date, appointment_time, status, modality, professional_id')
+        .eq('user_id', userId)
+        .order('appointment_date', { ascending: false })
+        .order('appointment_time', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      if (!data || data.length === 0) return [];
+
+      // Get professional names
+      const profIds = [...new Set(data.filter(a => a.professional_id).map(a => a.professional_id!))];
+      let profNames: Record<string, string> = {};
+
+      if (profIds.length > 0) {
+        const { data: profs } = await supabase
+          .from('professionals')
+          .select('id, user_id')
+          .in('id', profIds);
+
+        if (profs && profs.length > 0) {
+          const userIds = profs.map(p => p.user_id);
+          const { data: profiles } = await supabase
+            .from('profiles')
+            .select('user_id, full_name')
+            .in('user_id', userIds);
+
+          profs.forEach(prof => {
+            const profile = profiles?.find(p => p.user_id === prof.user_id);
+            profNames[prof.id] = profile?.full_name || 'Profesional';
+          });
+        }
+      }
+
+      return data.map(a => ({
+        ...a,
+        professional_name: a.professional_id ? profNames[a.professional_id] || null : null,
+      }));
+    },
+  });
+
+  if (isLoading) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.1 }}
+      className="mt-6"
+    >
+      <Card className="p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <CalendarIcon className="h-5 w-5 text-primary" />
+          <h3 className="text-lg font-display font-bold text-foreground">Mis Citas</h3>
+        </div>
+
+        {appointments.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-4">
+            Aún no tienes citas registradas
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {appointments.slice(0, 5).map(appt => {
+              const cfg = statusConfig[appt.status] || statusConfig.scheduled;
+              return (
+                <div key={appt.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-medium text-foreground">
+                      {format(new Date(appt.appointment_date + 'T00:00:00'), "d MMM yyyy", { locale: es })}
+                      <span className="text-muted-foreground ml-2">{appt.appointment_time?.slice(0, 5)}</span>
+                    </p>
+                    {appt.professional_name && (
+                      <p className="text-xs text-muted-foreground">{appt.professional_name}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      {appt.modality === 'virtual' ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
+                      {appt.modality === 'virtual' ? 'Virtual' : 'Presencial'}
+                    </p>
+                  </div>
+                  <Badge variant={cfg.variant}>{cfg.label}</Badge>
+                </div>
+              );
+            })}
+            {appointments.length > 0 && (
+              <p className="text-xs text-muted-foreground text-center pt-1">
+                Mostrando las últimas {Math.min(appointments.length, 5)} citas
+              </p>
+            )}
+          </div>
+        )}
+      </Card>
+    </motion.div>
   );
 }
