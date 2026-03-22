@@ -103,7 +103,7 @@ const itemVariants = {
 
 export default function HomeMenu() {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAdmin } = useAuth();
   const { subscription, isProfessional, isLoading } = useUserRoles();
   const { hasMultipleRoles, shouldShowRoleSelection, setShouldShowRoleSelection } = useAdminMode();
   const [showRoleDialog, setShowRoleDialog] = useState(false);
