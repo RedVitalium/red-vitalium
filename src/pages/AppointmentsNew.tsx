@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Link, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Calendar as CalendarIcon, Clock, MapPin, Video, User, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
@@ -210,32 +211,35 @@ export default function AppointmentsNew() {
               {/* Professional Selection — BUG 4 FIX: real data from Supabase */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Profesional</label>
-                <Select 
-                  value={selectedProfessional} 
-                  onValueChange={setSelectedProfessional}
-                  disabled={!selectedSpecialty || profLoading}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={
-                      profLoading ? "Cargando profesionales..." :
-                      !selectedSpecialty ? "Primero selecciona especialidad" :
-                      availableProfessionals.length === 0 ? "Sin profesionales disponibles" :
-                      "Selecciona un profesional"
-                    } />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableProfessionals.map((prof) => (
-                      <SelectItem key={prof.id} value={prof.id}>
-                        <div className="flex items-center gap-2">
-                          <span>{prof.full_name}</span>
-                          {prof.location && (
-                            <span className="text-xs text-muted-foreground">({prof.location})</span>
-                          )}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {profLoading && selectedSpecialty ? (
+                  <Skeleton className="h-10 w-full rounded-md" />
+                ) : (
+                  <Select 
+                    value={selectedProfessional} 
+                    onValueChange={setSelectedProfessional}
+                    disabled={!selectedSpecialty}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={
+                        !selectedSpecialty ? "Primero selecciona especialidad" :
+                        availableProfessionals.length === 0 ? "Sin profesionales disponibles" :
+                        "Selecciona un profesional"
+                      } />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableProfessionals.map((prof) => (
+                        <SelectItem key={prof.id} value={prof.id}>
+                          <div className="flex items-center gap-2">
+                            <span>{prof.full_name}</span>
+                            {prof.location && (
+                              <span className="text-xs text-muted-foreground">({prof.location})</span>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
 
               {/* Show selected professional info */}
