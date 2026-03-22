@@ -140,9 +140,14 @@ export default function ProfessionalMode() {
             </span>
           </div>
           {professionalData && (
-            <span className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full">
-              {specialtyLabels[professionalData.specialty]}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full">
+                {specialtyLabels[professionalData.specialty]}
+              </span>
+              <span className="text-xs bg-muted text-muted-foreground px-3 py-1 rounded-full">
+                {patients.length} pacientes
+              </span>
+            </div>
           )}
         </div>
       </header>
