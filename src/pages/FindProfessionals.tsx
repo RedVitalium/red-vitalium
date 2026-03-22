@@ -148,8 +148,23 @@ export default function FindProfessionals() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-2xl">
         {isLoading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+          <div className="space-y-4">
+            {[1, 2, 3].map(i => (
+              <Card key={i} className="p-6">
+                <div className="flex items-start gap-4">
+                  <Skeleton className="h-12 w-12 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-5 w-1/3" />
+                    <Skeleton className="h-4 w-1/4" />
+                    <Skeleton className="h-4 w-2/3" />
+                    <div className="flex gap-2 pt-1">
+                      <Skeleton className="h-8 w-24" />
+                      <Skeleton className="h-8 w-24" />
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
           </div>
         ) : filteredProfessionals.length === 0 ? (
           <div className="text-center py-12">
