@@ -30,6 +30,9 @@ interface ProfileData {
   height: number | null;
   weight: number | null;
   waist_circumference: number | null;
+  wearable_model: string | null;
+  research_consent: boolean | null;
+  research_consent_at: string | null;
 }
 
 // Fields that patients CAN edit themselves
