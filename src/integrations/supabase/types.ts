@@ -86,7 +86,9 @@ export type Database = {
           appointment_time: string
           created_at: string
           id: string
+          modality: string | null
           notes: string | null
+          professional_id: string | null
           status: string
           user_id: string
         }
@@ -95,7 +97,9 @@ export type Database = {
           appointment_time: string
           created_at?: string
           id?: string
+          modality?: string | null
           notes?: string | null
+          professional_id?: string | null
           status?: string
           user_id: string
         }
@@ -104,11 +108,21 @@ export type Database = {
           appointment_time?: string
           created_at?: string
           id?: string
+          modality?: string | null
           notes?: string | null
+          professional_id?: string | null
           status?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "appointments_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       biomarkers: {
         Row: {
