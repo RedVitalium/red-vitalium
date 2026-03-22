@@ -22,14 +22,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        
         if (session?.user) {
-          // Check if user is admin
           setTimeout(async () => {
             const { data } = await supabase
               .from('user_roles')
@@ -37,37 +34,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               .eq('user_id', session.user.id)
               .eq('role', 'admin')
               .maybeSingle();
-            
             setIsAdmin(!!data);
           }, 0);
         } else {
           setIsAdmin(false);
         }
-        
         setLoading(false);
       }
     );
-
-    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      
       if (session?.user) {
-        supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .eq('role', 'admin')
-          .maybeSingle()
-          .then(({ data }) => {
-            setIsAdmin(!!data);
-          });
+        supabase.from('user_roles').select('role').eq('user_id', session.user.id).eq('role', 'admin').maybeSingle().then(({ data }) => { setIsAdmin(!!data); });
       }
-      
       setLoading(false);
     });
-
     return () => subscription.unsubscribe();
   }, []);
 
@@ -76,20 +58,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
       options: {
-        emailRedirectTo: window.location.origin,
-        data: {
-          full_name: fullName,
-        },
+        // BUG 2 FIX: redirect to /home after email confirmation, not /
+        emailRedirectTo: `${window.location.origin}/home`,
+        data: { full_name: fullName },
       },
     });
     return { error };
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error };
   };
 
@@ -97,7 +75,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin,
+        // BUG 2 FIX: redirect to /home after Google OAuth, not /
+        redirectTo: `${window.location.origin}/home`,
       },
     });
     return { error };
@@ -111,16 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      session,
-      loading,
-      isAdmin,
-      signUp,
-      signIn,
-      signInWithGoogle,
-      signOut,
-    }}>
+    <AuthContext.Provider value={{ user, session, loading, isAdmin, signUp, signIn, signInWithGoogle, signOut }}>
       {children}
     </AuthContext.Provider>
   );
@@ -128,8 +98,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (context === undefined) { throw new Error('useAuth must be used within an AuthProvider'); }
   return context;
 }
