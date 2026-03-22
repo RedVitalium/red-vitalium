@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { 
@@ -8,8 +8,9 @@ import {
 import { Card } from "@/components/ui/card";
 import { useAdminMode } from "@/hooks/useAdminMode";
 import { useUserRoles, specialtyLabels } from "@/hooks/useUserRoles";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import appLogo from "@/assets/app-logo.png";
-import { useEffect } from "react";
 
 const categorySummaries = [
   { id: 'achievements', label: 'Logros', icon: Trophy, href: '/dashboard/achievements' },
