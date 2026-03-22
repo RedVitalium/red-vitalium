@@ -27,18 +27,10 @@ export function useUnlockedHabits(overrideUserId?: string) {
     enabled: !!effectiveUserId,
   });
 
-  const isHabitUnlocked = (habitId: string): boolean => {
-    return unlockedHabitIds.includes(habitId);
-  };
-
-  const getHabitStatus = (habitId: string): "locked" | "unlocked" => {
-    return isHabitUnlocked(habitId) ? "unlocked" : "locked";
-  };
-
   return {
     unlockedHabitIds,
-    isHabitUnlocked,
-    getHabitStatus,
+    isHabitUnlocked: (id: string) => unlockedHabitIds.includes(id),
+    getHabitStatus: (id: string) => unlockedHabitIds.includes(id) ? "unlocked" : "locked",
     isLoading,
     refetch,
     advancedHabits: ADVANCED_HABITS,
