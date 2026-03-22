@@ -5,18 +5,24 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Shield, FlaskConical, Lock, UserCheck } from "lucide-react";
 
+interface ConsentResult {
+  generalConsent: boolean;
+  researchConsent: boolean;
+}
+
 interface InformedConsentDialogProps {
   open: boolean;
-  onAccept: () => void;
+  onAccept: (consent: ConsentResult) => void;
   onCancel: () => void;
 }
 
 export function InformedConsentDialog({ open, onAccept, onCancel }: InformedConsentDialogProps) {
   const [accepted, setAccepted] = useState(false);
+  const [researchAccepted, setResearchAccepted] = useState(false);
 
   const handleAccept = () => {
     if (accepted) {
-      onAccept();
+      onAccept({ generalConsent: true, researchConsent: researchAccepted });
     }
   };
 
