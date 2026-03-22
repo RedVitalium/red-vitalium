@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Edit2, Save, X, User } from "lucide-react";
+import { ArrowLeft, Edit2, Save, X, User, FlaskConical, Watch } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { 
   Select,
   SelectContent,
@@ -17,6 +18,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useUserRoles, planLabels } from "@/hooks/useUserRoles";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 import appLogo from "@/assets/app-logo.png";
 
 interface ProfileData {
@@ -27,6 +30,9 @@ interface ProfileData {
   height: number | null;
   weight: number | null;
   waist_circumference: number | null;
+  wearable_model: string | null;
+  research_consent: boolean | null;
+  research_consent_at: string | null;
 }
 
 // Fields that patients CAN edit themselves
@@ -50,7 +56,7 @@ export default function Profile() {
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('full_name, email, date_of_birth, sex, height, weight, waist_circumference')
+        .select('full_name, email, date_of_birth, sex, height, weight, waist_circumference, wearable_model, research_consent, research_consent_at')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -252,6 +258,46 @@ export default function Profile() {
                 <p className="text-foreground py-2 bg-muted/30 px-3 rounded-md">
                   {profile?.waist_circumference ? `${profile.waist_circumference} cm` : 'Sin datos'}
                 </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Watch className="h-4 w-4 text-muted-foreground" />
+                  Dispositivo Wearable
+                </Label>
+                <p className="text-foreground py-2 bg-muted/30 px-3 rounded-md">
+                  {profile?.wearable_model || 'Sin dispositivo registrado'}
+                </p>
+              </div>
+
+              {/* Divider */}
+              <div className="h-px bg-border my-6" />
+
+              {/* Research Consent Section */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <FlaskConical className="h-4 w-4 text-muted-foreground" />
+                  Consentimiento de Investigación
+                </Label>
+                {profile?.research_consent ? (
+                  <div className="flex items-center gap-3 py-2 bg-muted/30 px-3 rounded-md">
+                    <Badge className="bg-green-500/15 text-green-700 border-green-500/30 hover:bg-green-500/20">
+                      Investigación autorizada
+                    </Badge>
+                    {profile.research_consent_at && (
+                      <span className="text-xs text-muted-foreground">
+                        Desde {format(new Date(profile.research_consent_at), "d MMM yyyy", { locale: es })}
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <div className="py-2 bg-muted/30 px-3 rounded-md">
+                    <Badge variant="secondary">No autorizado para investigación</Badge>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Puedes autorizar el uso de tus datos anonimizados para investigación científica contactando a tu equipo Vitalium
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </Card>
