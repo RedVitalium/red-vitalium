@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { 
@@ -8,8 +8,9 @@ import {
 import { Card } from "@/components/ui/card";
 import { useAdminMode } from "@/hooks/useAdminMode";
 import { useUserRoles, specialtyLabels } from "@/hooks/useUserRoles";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import appLogo from "@/assets/app-logo.png";
-import { useEffect } from "react";
 
 const categorySummaries = [
   { id: 'achievements', label: 'Logros', icon: Trophy, href: '/dashboard/achievements' },
@@ -32,6 +33,65 @@ export default function ProfessionalHistory() {
   }, [isViewingAsAdmin, selectedPatient, navigate]);
 
   if (!selectedPatient || !professionalData) return null;
+
+  const patientId = selectedPatient.userId;
+
+  const { data: healthPreview } = useQuery({
+    queryKey: ['health-preview', patientId],
+    queryFn: async () => {
+      const types = ['sleep_hours', 'activity_duration', 'screen_time'];
+      const results: Record<string, number | null> = {};
+      for (const dt of types) {
+        const { data } = await supabase
+          .from('health_data')
+          .select('value')
+          .eq('user_id', patientId)
+          .eq('data_type', dt)
+          .order('recorded_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        results[dt] = data?.value ?? null;
+      }
+      return results;
+    },
+    enabled: !!patientId,
+  });
+
+  const { data: lastDass } = useQuery({
+    queryKey: ['last-dass', patientId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('test_results')
+        .select('scores')
+        .eq('user_id', patientId)
+        .eq('test_id', 'dass-21')
+        .order('completed_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data?.scores as { anxiety?: number; stress?: number; depression?: number } | null;
+    },
+    enabled: !!patientId,
+  });
+
+  const getPreview = (catId: string): string | null => {
+    if (catId === 'habits') {
+      const sleep = healthPreview?.sleep_hours;
+      const activity = healthPreview?.activity_duration;
+      if (sleep != null || activity != null) {
+        const parts: string[] = [];
+        if (sleep != null) parts.push(`Sueño: ${sleep}h`);
+        if (activity != null) parts.push(`Actividad: ${activity}min`);
+        return parts.join(' · ');
+      }
+    }
+    if (catId === 'psychological' && lastDass) {
+      const parts: string[] = [];
+      if (lastDass.anxiety != null) parts.push(`Ansiedad ${lastDass.anxiety}`);
+      if (lastDass.stress != null) parts.push(`Estrés ${lastDass.stress}`);
+      if (parts.length) return `DASS-21: ${parts.join(', ')}`;
+    }
+    return null;
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -92,6 +152,7 @@ export default function ProfessionalHistory() {
           <div className="grid grid-cols-2 gap-3">
             {categorySummaries.map(cat => {
               const Icon = cat.icon;
+              const preview = getPreview(cat.id);
               return (
                 <Card
                   key={cat.id}
@@ -104,6 +165,9 @@ export default function ProfessionalHistory() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground">{cat.label}</p>
                     <p className="text-xs text-muted-foreground">Ver detalles →</p>
+                    <p className="text-[11px] text-muted-foreground/70 truncate mt-0.5">
+                      {preview || 'Sin datos aún'}
+                    </p>
                   </div>
                 </Card>
               );
