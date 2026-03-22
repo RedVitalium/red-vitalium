@@ -233,6 +233,13 @@ export default function ProfessionalMode() {
                         <p className="text-sm text-muted-foreground">
                           {patient.email}
                         </p>
+                        {(() => {
+                          const lastDate = (lastSurveyMap as Record<string, string>)[patient.user_id];
+                          if (!lastDate) return <p className="text-xs text-muted-foreground">Sin encuestas registradas</p>;
+                          const hours = differenceInHours(new Date(), new Date(lastDate));
+                          if (hours < 24) return <p className="text-xs text-green-600">Encuesta al día</p>;
+                          return <p className="text-xs text-yellow-600">Última encuesta: {format(new Date(lastDate), "d MMM yyyy", { locale: es })}</p>;
+                        })()}
                       </div>
                     </div>
                     <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
