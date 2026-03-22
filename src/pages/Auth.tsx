@@ -50,7 +50,7 @@ export default function Auth() {
     setShowConsent(true);
   };
 
-  const handleConsentAccepted = async () => {
+  const handleConsentAccepted = async ({ generalConsent, researchConsent }: { generalConsent: boolean; researchConsent: boolean }) => {
     setShowConsent(false);
     setLoading(true);
     
