@@ -3,13 +3,17 @@ import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, Brain, Apple, Stethoscope, Dumbbell,
-  Plus, Edit2, Save, X, User, FileText, Sparkles
+  Plus, Edit2, Save, X, User, FileText, Sparkles, Pill
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAdminMode } from "@/hooks/useAdminMode";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRoles, specialtyLabels, Specialty } from "@/hooks/useUserRoles";
@@ -49,6 +53,8 @@ export default function ProfessionalClinicalHistory() {
   const [newNote, setNewNote] = useState("");
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
+  const [showMedDialog, setShowMedDialog] = useState(false);
+  const [medForm, setMedForm] = useState({ medication_name: "", dosage: "", frequency: "", start_date: "", notes: "" });
 
   useEffect(() => {
     if (!isViewingAsAdmin || !selectedPatient) {
@@ -83,6 +89,21 @@ export default function ProfessionalClinicalHistory() {
     enabled: !!selectedPatient,
   });
 
+  const { data: medications = [] } = useQuery({
+    queryKey: ['patient-medications', selectedPatient?.userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('patient_medications')
+        .select('*')
+        .eq('user_id', selectedPatient!.userId)
+        .order('is_active', { ascending: false })
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!selectedPatient,
+  });
+
   // Fetch BFI-10 personality test results for the patient
   const { data: bfiResult } = useQuery({
     queryKey: ['bfi-result', selectedPatient?.userId],
@@ -98,6 +119,22 @@ export default function ProfessionalClinicalHistory() {
       return data;
     },
     enabled: !!selectedPatient,
+  });
+
+  // Check if the professional is assigned to this patient
+  const { data: isAssigned } = useQuery({
+    queryKey: ['is-assigned', professionalId, selectedPatient?.userId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('patient_professionals')
+        .select('id')
+        .eq('professional_id', professionalId!)
+        .eq('patient_id', selectedPatient!.userId)
+        .eq('is_active', true)
+        .maybeSingle();
+      return !!data;
+    },
+    enabled: !!professionalId && !!selectedPatient,
   });
 
   const addNoteMutation = useMutation({
@@ -132,6 +169,28 @@ export default function ProfessionalClinicalHistory() {
       queryClient.invalidateQueries({ queryKey: ['professional-notes'] });
       setEditingNoteId(null);
       toast.success("Nota actualizada");
+    },
+    onError: (e) => toast.error("Error: " + e.message),
+  });
+
+  const addMedMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedPatient) throw new Error("No patient selected");
+      const { error } = await supabase.from('patient_medications').insert({
+        user_id: selectedPatient.userId,
+        medication_name: medForm.medication_name,
+        dosage: medForm.dosage || null,
+        frequency: medForm.frequency || null,
+        start_date: medForm.start_date || null,
+        notes: medForm.notes || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patient-medications'] });
+      setShowMedDialog(false);
+      setMedForm({ medication_name: "", dosage: "", frequency: "", start_date: "", notes: "" });
+      toast.success("Medicación registrada");
     },
     onError: (e) => toast.error("Error: " + e.message),
   });
@@ -270,6 +329,49 @@ export default function ProfessionalClinicalHistory() {
     );
   };
 
+  const renderMedicationsTab = () => (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <div className="flex items-center gap-2 mb-4">
+        <Pill className="h-5 w-5 text-primary" />
+        <h2 className="text-lg font-display font-bold text-foreground">Medicación</h2>
+        {isAssigned && (
+          <Button size="sm" variant="outline" className="ml-auto gap-1" onClick={() => setShowMedDialog(true)}>
+            <Plus className="h-4 w-4" /> Agregar
+          </Button>
+        )}
+      </div>
+
+      {medications.length === 0 ? (
+        <p className="text-sm text-muted-foreground text-center py-6">
+          Sin medicación registrada para este paciente
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {medications.map(med => (
+            <Card key={med.id} className="p-4">
+              <div className="flex items-start justify-between gap-2">
+                <div className="space-y-1">
+                  <p className="font-semibold text-foreground">{med.medication_name}</p>
+                  {med.dosage && <p className="text-sm text-muted-foreground">Dosis: {med.dosage}</p>}
+                  {med.frequency && <p className="text-sm text-muted-foreground">Frecuencia: {med.frequency}</p>}
+                  {med.start_date && (
+                    <p className="text-xs text-muted-foreground">
+                      Desde: {format(new Date(med.start_date), "d MMM yyyy", { locale: es })}
+                    </p>
+                  )}
+                  {med.notes && <p className="text-xs text-muted-foreground italic mt-1">{med.notes}</p>}
+                </div>
+                <Badge variant={med.is_active ? "default" : "secondary"}>
+                  {med.is_active ? "Activa" : "Inactiva"}
+                </Badge>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+    </motion.div>
+  );
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border/50">
@@ -304,10 +406,14 @@ export default function ProfessionalClinicalHistory() {
 
       <main className="container mx-auto px-4 py-6 max-w-xl">
         <Tabs defaultValue="ai-summary" className="w-full">
-          <TabsList className="w-full grid grid-cols-5 mb-4">
+          <TabsList className="w-full grid grid-cols-6 mb-4">
             <TabsTrigger value="ai-summary" className="flex flex-col items-center gap-1 text-xs py-2">
               <Sparkles className="h-4 w-4" />
               <span className="hidden sm:inline">IA</span>
+            </TabsTrigger>
+            <TabsTrigger value="medications" className="flex flex-col items-center gap-1 text-xs py-2">
+              <Pill className="h-4 w-4" />
+              <span className="hidden sm:inline">Med</span>
             </TabsTrigger>
             {clinicalSections.map(section => {
               const Icon = section.icon;
@@ -325,6 +431,10 @@ export default function ProfessionalClinicalHistory() {
               patientUserId={selectedPatient.userId} 
               patientName={selectedPatient.fullName || "el paciente"}
             />
+          </TabsContent>
+
+          <TabsContent value="medications">
+            {renderMedicationsTab()}
           </TabsContent>
 
           {clinicalSections.map(section => (
@@ -349,6 +459,76 @@ export default function ProfessionalClinicalHistory() {
           ))}
         </Tabs>
       </main>
+
+      {/* Add Medication Dialog */}
+      <Dialog open={showMedDialog} onOpenChange={setShowMedDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pill className="h-5 w-5 text-primary" />
+              Agregar Medicación
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="med-name">Nombre del medicamento *</Label>
+              <Input
+                id="med-name"
+                placeholder="Ej: Metformina"
+                value={medForm.medication_name}
+                onChange={(e) => setMedForm(f => ({ ...f, medication_name: e.target.value }))}
+                required
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="med-dosage">Dosis</Label>
+                <Input
+                  id="med-dosage"
+                  placeholder="Ej: 500mg"
+                  value={medForm.dosage}
+                  onChange={(e) => setMedForm(f => ({ ...f, dosage: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="med-frequency">Frecuencia</Label>
+                <Input
+                  id="med-frequency"
+                  placeholder="Ej: 2 veces/día"
+                  value={medForm.frequency}
+                  onChange={(e) => setMedForm(f => ({ ...f, frequency: e.target.value }))}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="med-start">Fecha de inicio</Label>
+              <Input
+                id="med-start"
+                type="date"
+                value={medForm.start_date}
+                onChange={(e) => setMedForm(f => ({ ...f, start_date: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="med-notes">Notas</Label>
+              <Textarea
+                id="med-notes"
+                placeholder="Observaciones adicionales..."
+                value={medForm.notes}
+                onChange={(e) => setMedForm(f => ({ ...f, notes: e.target.value }))}
+                rows={2}
+              />
+            </div>
+            <Button
+              className="w-full"
+              disabled={!medForm.medication_name.trim() || addMedMutation.isPending}
+              onClick={() => addMedMutation.mutate()}
+            >
+              {addMedMutation.isPending ? "Guardando..." : "Guardar Medicación"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
