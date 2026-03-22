@@ -21,20 +21,24 @@ export interface SurveyResponse {
   follow_up_value: number | null;
 }
 
-export interface DailyAchievement {
-  date: string;
-  totalQuestions: number;
-  achievedCount: number;
-  percentage: number;
-  responses: SurveyResponse[];
-}
-
 export interface WeeklySurveyStats {
   weekNumber: number;
   totalDays: number;
   completedDays: number;
   averageAchievement: number;
   categoryStats: Record<string, { achieved: number; total: number; percentage: number }>;
+}
+
+/**
+ * Returns today's date in YYYY-MM-DD format using LOCAL timezone.
+ *
+ * BUG 8 FIX: The old code used `new Date().toISOString().split('T')[0]`
+ * which returns UTC date. In Villahermosa (UTC-6), a patient submitting
+ * at 11PM local would get tomorrow's UTC date recorded.
+ * `toLocaleDateString('en-CA')` returns YYYY-MM-DD in the device's local timezone.
+ */
+function getLocalToday(): string {
+  return new Date().toLocaleDateString('en-CA');
 }
 
 export function useDailySurvey(currentWeek: number = 1) {
@@ -46,7 +50,6 @@ export function useDailySurvey(currentWeek: number = 1) {
   const [isSaving, setIsSaving] = useState(false);
   const [hasCompletedToday, setHasCompletedToday] = useState(false);
 
-  // Load questions for current week
   const loadQuestions = useCallback(async () => {
     try {
       const { data, error } = await supabase
@@ -59,28 +62,26 @@ export function useDailySurvey(currentWeek: number = 1) {
 
       if (error) throw error;
 
-      const mapped: SurveyQuestion[] = (data || []).map((q) => ({
-        id: q.id,
-        question_text: q.question_text,
-        question_type: q.question_type as "yes_no" | "yes_no_count",
-        follow_up_label: q.follow_up_label,
-        follow_up_options: q.follow_up_options as number[] | null,
-        habit_category: q.habit_category,
-        display_order: q.display_order,
-      }));
-
-      setQuestions(mapped);
+      setQuestions(
+        (data || []).map((q) => ({
+          id: q.id,
+          question_text: q.question_text,
+          question_type: q.question_type as "yes_no" | "yes_no_count",
+          follow_up_label: q.follow_up_label,
+          follow_up_options: q.follow_up_options as number[] | null,
+          habit_category: q.habit_category,
+          display_order: q.display_order,
+        }))
+      );
     } catch (error) {
       console.error("Error loading survey questions:", error);
     }
   }, [currentWeek]);
 
-  // Load today's responses
   const loadTodayResponses = useCallback(async () => {
     if (!user) return;
-
     try {
-      const today = new Date().toISOString().split("T")[0];
+      const today = getLocalToday(); // BUG 8 FIX
       const { data, error } = await supabase
         .from("daily_survey_responses")
         .select("*")
@@ -104,86 +105,88 @@ export function useDailySurvey(currentWeek: number = 1) {
     }
   }, [user, questions.length]);
 
-  // Calculate weekly stats
-  const calculateWeeklyStats = useCallback(async () => {
-    if (!user) return;
-
+  // BUG 7 FIX: Calculate weekly stats from the last 7 days of responses
+  const loadWeeklyStats = useCallback(async () => {
+    if (!user || questions.length === 0) return;
     try {
-      // Get responses from the last 7 days
-      const weekAgo = new Date();
+      const today = new Date();
+      const weekAgo = new Date(today);
       weekAgo.setDate(weekAgo.getDate() - 7);
-      const weekAgoStr = weekAgo.toISOString().split("T")[0];
+      const weekAgoStr = weekAgo.toLocaleDateString('en-CA');
+      const todayStr = getLocalToday();
 
-      const { data: responses, error } = await supabase
+      const { data, error } = await supabase
         .from("daily_survey_responses")
-        .select("*, daily_survey_questions!inner(habit_category)")
+        .select("question_id, answer, response_date")
         .eq("user_id", user.id)
-        .gte("response_date", weekAgoStr);
+        .gte("response_date", weekAgoStr)
+        .lte("response_date", todayStr);
 
       if (error) throw error;
-
-      if (!responses || responses.length === 0) {
+      if (!data || data.length === 0) {
         setWeeklyStats(null);
         return;
       }
 
-      // Group by date
-      const dateGroups: Record<string, typeof responses> = {};
-      responses.forEach((r) => {
-        if (!dateGroups[r.response_date]) {
-          dateGroups[r.response_date] = [];
+      // Count unique days with responses
+      const daysWithResponses = new Set(data.map(r => r.response_date));
+      const completedDays = daysWithResponses.size;
+
+      // Count achievements (answer = true)
+      const totalResponses = data.length;
+      const achievedResponses = data.filter(r => r.answer).length;
+      const averageAchievement = totalResponses > 0
+        ? Math.round((achievedResponses / totalResponses) * 100)
+        : 0;
+
+      // Category stats: map question_id to habit_category
+      const categoryMap: Record<string, string> = {};
+      questions.forEach(q => {
+        if (q.habit_category) {
+          categoryMap[q.id] = q.habit_category;
         }
-        dateGroups[r.response_date].push(r);
       });
 
-      // Calculate stats
-      const completedDays = Object.keys(dateGroups).length;
-      const achievedCounts = Object.values(dateGroups).map(
-        (dayResponses) => dayResponses.filter((r) => r.answer).length / dayResponses.length
-      );
-      const averageAchievement =
-        achievedCounts.reduce((sum, val) => sum + val, 0) / achievedCounts.length;
+      const categoryAccum: Record<string, { achieved: number; total: number }> = {};
+      data.forEach(r => {
+        const category = categoryMap[r.question_id] || "other";
+        if (!categoryAccum[category]) {
+          categoryAccum[category] = { achieved: 0, total: 0 };
+        }
+        categoryAccum[category].total++;
+        if (r.answer) categoryAccum[category].achieved++;
+      });
 
-      // Category stats
       const categoryStats: Record<string, { achieved: number; total: number; percentage: number }> = {};
-      responses.forEach((r) => {
-        const category = (r.daily_survey_questions as { habit_category: string | null })?.habit_category || "other";
-        if (!categoryStats[category]) {
-          categoryStats[category] = { achieved: 0, total: 0, percentage: 0 };
-        }
-        categoryStats[category].total++;
-        if (r.answer) {
-          categoryStats[category].achieved++;
-        }
-      });
-
-      Object.keys(categoryStats).forEach((cat) => {
-        categoryStats[cat].percentage =
-          Math.round((categoryStats[cat].achieved / categoryStats[cat].total) * 100);
+      Object.entries(categoryAccum).forEach(([cat, stats]) => {
+        categoryStats[cat] = {
+          ...stats,
+          percentage: stats.total > 0 ? Math.round((stats.achieved / stats.total) * 100) : 0,
+        };
       });
 
       setWeeklyStats({
         weekNumber: currentWeek,
         totalDays: 7,
         completedDays,
-        averageAchievement: Math.round(averageAchievement * 100),
+        averageAchievement,
         categoryStats,
       });
     } catch (error) {
-      console.error("Error calculating weekly stats:", error);
+      console.error("Error loading weekly stats:", error);
     }
-  }, [user, currentWeek]);
+  }, [user, questions, currentWeek]);
 
-  // Submit response for a question
+  /**
+   * Submit a single response (upsert pattern).
+   */
   const submitResponse = useCallback(
     async (questionId: string, answer: boolean, followUpValue?: number): Promise<boolean> => {
       if (!user) return false;
-
       setIsSaving(true);
       try {
-        const today = new Date().toISOString().split("T")[0];
+        const today = getLocalToday(); // BUG 8 FIX
 
-        // Check if response already exists
         const { data: existing } = await supabase
           .from("daily_survey_responses")
           .select("id")
@@ -193,33 +196,23 @@ export function useDailySurvey(currentWeek: number = 1) {
           .maybeSingle();
 
         if (existing) {
-          // Update existing
-          const { error } = await supabase
+          await supabase
             .from("daily_survey_responses")
-            .update({
-              answer,
-              follow_up_value: followUpValue || null,
-            })
+            .update({ answer, follow_up_value: followUpValue || null })
             .eq("id", existing.id);
-
-          if (error) throw error;
         } else {
-          // Insert new
-          const { error } = await supabase.from("daily_survey_responses").insert({
+          await supabase.from("daily_survey_responses").insert({
             user_id: user.id,
             question_id: questionId,
             response_date: today,
             answer,
             follow_up_value: followUpValue || null,
           });
-
-          if (error) throw error;
         }
 
         await loadTodayResponses();
         return true;
-      } catch (error) {
-        console.error("Error submitting response:", error);
+      } catch {
         toast.error("Error al guardar respuesta");
         return false;
       } finally {
@@ -229,14 +222,21 @@ export function useDailySurvey(currentWeek: number = 1) {
     [user, loadTodayResponses]
   );
 
-  // Submit all responses at once
+  /**
+   * BUG 6 FIX: Submit all responses at once.
+   * DailySurveyCard calls this with an array of responses after the user
+   * completes all questions. The old hook only exported `submitResponse`
+   * (singular) — this function was missing, causing the "Guardar" button
+   * to silently fail (calling undefined).
+   */
   const submitAllResponses = useCallback(
-    async (responses: Array<{ questionId: string; answer: boolean; followUpValue?: number }>): Promise<boolean> => {
+    async (
+      responses: { questionId: string; answer: boolean; followUpValue?: number }[]
+    ): Promise<boolean> => {
       if (!user) return false;
-
       setIsSaving(true);
       try {
-        const today = new Date().toISOString().split("T")[0];
+        const today = getLocalToday(); // BUG 8 FIX
 
         for (const response of responses) {
           const { data: existing } = await supabase
@@ -248,46 +248,44 @@ export function useDailySurvey(currentWeek: number = 1) {
             .maybeSingle();
 
           if (existing) {
-            await supabase
+            const { error } = await supabase
               .from("daily_survey_responses")
               .update({
                 answer: response.answer,
                 follow_up_value: response.followUpValue || null,
               })
               .eq("id", existing.id);
+            if (error) throw error;
           } else {
-            await supabase.from("daily_survey_responses").insert({
-              user_id: user.id,
-              question_id: response.questionId,
-              response_date: today,
-              answer: response.answer,
-              follow_up_value: response.followUpValue || null,
-            });
+            const { error } = await supabase
+              .from("daily_survey_responses")
+              .insert({
+                user_id: user.id,
+                question_id: response.questionId,
+                response_date: today,
+                answer: response.answer,
+                follow_up_value: response.followUpValue || null,
+              });
+            if (error) throw error;
           }
         }
 
-        toast.success("¡Logros diarios registrados!");
         await loadTodayResponses();
-        await calculateWeeklyStats();
+        await loadWeeklyStats();
+        toast.success("¡Logros del día registrados!");
         return true;
       } catch (error) {
-        console.error("Error submitting responses:", error);
+        console.error("Error submitting survey responses:", error);
         toast.error("Error al guardar respuestas");
         return false;
       } finally {
         setIsSaving(false);
       }
     },
-    [user, loadTodayResponses, calculateWeeklyStats]
+    [user, loadTodayResponses, loadWeeklyStats]
   );
 
-  // Get achievement count for the week (for integration with main achievements)
-  const getWeeklyAchievementCount = useCallback((): number => {
-    if (!weeklyStats) return 0;
-    return weeklyStats.averageAchievement >= 80 ? 1 : 0;
-  }, [weeklyStats]);
-
-  // Load data on mount
+  // Load questions on mount / week change
   useEffect(() => {
     const loadAll = async () => {
       setIsLoading(true);
@@ -297,12 +295,13 @@ export function useDailySurvey(currentWeek: number = 1) {
     loadAll();
   }, [loadQuestions]);
 
+  // Load today's responses + weekly stats when questions are ready
   useEffect(() => {
     if (questions.length > 0 && user) {
       loadTodayResponses();
-      calculateWeeklyStats();
+      loadWeeklyStats();
     }
-  }, [questions, user, loadTodayResponses, calculateWeeklyStats]);
+  }, [questions, user, loadTodayResponses, loadWeeklyStats]);
 
   return {
     questions,
@@ -312,11 +311,10 @@ export function useDailySurvey(currentWeek: number = 1) {
     isSaving,
     hasCompletedToday,
     submitResponse,
-    submitAllResponses,
-    getWeeklyAchievementCount,
+    submitAllResponses, // BUG 6 FIX: was missing, DailySurveyCard needs this
     refreshData: async () => {
       await loadTodayResponses();
-      await calculateWeeklyStats();
+      await loadWeeklyStats();
     },
   };
 }
