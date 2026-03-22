@@ -11,7 +11,9 @@ import {
   Sparkles,
   ChevronRight,
   Lock,
-  Rocket
+  Rocket,
+  Shield,
+  Bell
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRoles, isFeatureAvailable } from "@/hooks/useUserRoles";
