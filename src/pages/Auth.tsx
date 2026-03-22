@@ -38,9 +38,6 @@ export default function Auth() {
       toast.error('Error al iniciar sesión', { description: error.message });
     } else {
       toast.success('¡Bienvenido de vuelta!');
-      // Navigation is handled by role selection or ProtectedRoute
-      // For single-role users, they go straight to /home
-      // For multi-role users, the RoleSelectionDialog will redirect them
       navigate('/home');
     }
     
@@ -61,11 +58,34 @@ export default function Auth() {
     
     if (error) {
       toast.error('Error al registrarse', { description: error.message });
-    } else {
-      toast.success('¡Cuenta creada exitosamente!', { 
-        description: 'Ya puedes iniciar sesión.' 
-      });
+      setLoading(false);
+      return;
+    }
+
+    // BUG 2 FIX: Check if we actually have a session after signup.
+    // If email confirmation is enabled in Supabase, signUp succeeds but
+    // there's no active session yet → navigating to /home would bounce
+    // the user back to /auth via ProtectedRoute (user = null).
+    //
+    // If email confirmation is DISABLED (recommended for Gen Zero),
+    // the session is immediately active and navigate('/home') works.
+    //
+    // We import supabase here just for the session check:
+    const { supabase } = await import('@/integrations/supabase/client');
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (session) {
+      // Email confirmation is disabled — session is active, go to home
+      toast.success('¡Cuenta creada exitosamente!');
       navigate('/home');
+    } else {
+      // Email confirmation is enabled — no session yet
+      // Show a friendly message instead of navigating to a protected route
+      toast.success('¡Cuenta creada exitosamente!', { 
+        description: '¡Revisa tu correo! Te enviamos un enlace de confirmación.',
+        duration: 8000,
+      });
+      // Stay on /auth so user can check email and come back to sign in
     }
     
     setLoading(false);
@@ -79,6 +99,8 @@ export default function Auth() {
       toast.error('Error con Google', { description: error.message });
       setLoading(false);
     }
+    // Note: Google OAuth redirects the browser, so no navigate() needed here.
+    // The redirectTo in useAuth.tsx handles where the user lands after OAuth.
   };
 
   const handleBiometricAuth = async () => {
