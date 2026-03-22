@@ -10,12 +10,16 @@ import {
   Stethoscope,
   Sparkles,
   ChevronRight,
-  Lock
+  Lock,
+  Rocket
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRoles, isFeatureAvailable } from "@/hooks/useUserRoles";
 import { useAdminMode } from "@/hooks/useAdminMode";
+import { useCycleData } from "@/hooks/useCycleData";
 import { RoleSelectionDialog } from "@/components/admin/RoleSelectionDialog";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import appLogo from "@/assets/app-logo.png";
 
 interface MenuItem {
@@ -93,6 +97,10 @@ export default function HomeMenu() {
   const { hasMultipleRoles, shouldShowRoleSelection, setShouldShowRoleSelection } = useAdminMode();
   const [showRoleDialog, setShowRoleDialog] = useState(false);
 
+  // BUG 3 FIX: Check if patient has an active cycle
+  const { getCycleProgress } = useCycleData(user?.id || null);
+  const cycleProgress = getCycleProgress();
+
   // Show role selection on mount if needed
   useEffect(() => {
     if (shouldShowRoleSelection && hasMultipleRoles) {
@@ -166,6 +174,47 @@ export default function HomeMenu() {
             </span>
           )}
         </motion.div>
+
+        {/* BUG 3 FIX: Welcome banner for new patients without active cycle */}
+        {!cycleProgress.hasActiveCycle && !isProfessional && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <Card className="p-6 bg-gradient-to-br from-primary/10 via-accent/5 to-primary/5 border-primary/20">
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-xl bg-primary/15">
+                  <Rocket className="h-6 w-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-lg font-display font-bold text-foreground mb-2">
+                    ¡Bienvenido a Red Vitalium!
+                  </h2>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Tu programa empieza cuando tu profesional inicie tu ciclo de seguimiento. 
+                    Mientras tanto, completa tu perfil y tus tests iniciales para que tu equipo 
+                    tenga la mejor información desde el primer día.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button size="sm" asChild>
+                      <Link to="/profile">
+                        <User className="h-4 w-4 mr-1" />
+                        Completar Perfil
+                      </Link>
+                    </Button>
+                    <Button size="sm" variant="outline" asChild>
+                      <Link to="/tests">
+                        <Brain className="h-4 w-4 mr-1" />
+                        Tests Iniciales
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+        )}
 
         {/* Menu Items */}
         <motion.nav
