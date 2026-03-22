@@ -169,7 +169,7 @@ export function calculateBFI10Scores(answers: Record<number, number>): {
 // Test frequency restrictions (in days)
 export const testFrequencyLimits = {
   "dass-21": 30, // Once per month
-  "bfi-10": 90, // Once per quarter (personality is stable)
+  "bfi-10": 170, // Only at program start (T0) and end (T3, month 6)
   "swls": 90, // Every 3 months
 };
 

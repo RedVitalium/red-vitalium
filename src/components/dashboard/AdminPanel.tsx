@@ -624,7 +624,7 @@ export function AdminPanel({ preselectedPatientId }: AdminPanelProps = {}) {
 
   // Fetch unlocked habits for selected patient
   const { data: patientUnlockedHabits = [] } = useQuery({
-    queryKey: ["patient-unlocked-habits", selectedPatient?.user_id],
+    queryKey: ["unlocked-habits", selectedPatient?.user_id],
     queryFn: async () => {
       if (!selectedPatient) return [];
       const { data, error } = await supabase
@@ -834,7 +834,7 @@ export function AdminPanel({ preselectedPatientId }: AdminPanelProps = {}) {
           ? [...prev, habitId]
           : prev.filter(h => h !== habitId)
       );
-      queryClient.invalidateQueries({ queryKey: ["patient-unlocked-habits", selectedPatient?.user_id] });
+      queryClient.invalidateQueries({ queryKey: ["unlocked-habits", selectedPatient?.user_id] });
       toast.success("Hábito actualizado");
     },
     onError: (error) => {

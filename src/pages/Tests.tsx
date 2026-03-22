@@ -54,7 +54,7 @@ const tests = {
     questions: 10,
     color: "accent",
     frequencyDays: testFrequencyLimits["bfi-10"],
-    frequencyLabel: "1 vez cada 3 meses",
+    frequencyLabel: "Inicio y final del programa",
   },
   "swls": {
     name: "SWLS",
