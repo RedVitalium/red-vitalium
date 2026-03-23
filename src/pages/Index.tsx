@@ -57,24 +57,32 @@ const features = [
 const plans = [
   {
     name: "Plan Plata",
+    price: "$1,200",
+    duration: "6 meses · Psicología incluida",
     subtitle: "Sueño, hábitos y bienestar mental — la base de todo lo demás.",
     features: ["Psicología", "Formación de hábitos", "Monitoreo de sueño y actividad"],
     color: "from-gray-400 to-gray-500",
   },
   {
     name: "Plan Oro",
+    price: "$2,244",
+    duration: "6 meses · Psicología + Nutrición",
     subtitle: "Suma nutrición personalizada a partir del mes 3.",
     features: ["Todo de Plata", "Nutrición personalizada", "Marcadores metabólicos"],
     color: "from-yellow-400 to-amber-500",
   },
   {
     name: "Plan Platino",
+    price: "$3,274",
+    duration: "6 meses · Psicología + Nutrición + Medicina",
     subtitle: "Añade control médico preventivo y biomarcadores completos.",
     features: ["Todo de Oro", "Medicina preventiva", "Biomarcadores completos"],
     color: "from-slate-300 to-slate-400",
   },
   {
     name: "Plan Black",
+    price: "$4,074",
+    duration: "6 meses · Programa integral completo",
     subtitle: "Equipo completo. Máximo rendimiento y longevidad.",
     features: ["Todo de Platino", "Fisioterapia", "Programa integral"],
     color: "from-gray-800 to-gray-900",
@@ -325,6 +333,11 @@ export default function Index() {
                 <Card className="p-6 h-full relative overflow-hidden">
                   <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${plan.color}`} />
                   <h3 className="font-display font-bold text-lg mb-1">{plan.name}</h3>
+                  <div className="mb-1">
+                    <span className="text-2xl font-display font-extrabold text-foreground">{plan.price}</span>
+                    <span className="text-sm text-muted-foreground ml-1">MXN/mes</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3">{plan.duration}</p>
                   <p className="text-sm text-muted-foreground mb-4">{plan.subtitle}</p>
                   <ul className="space-y-2">
                     {plan.features.map((feature, i) => (
