@@ -33,6 +33,13 @@ interface Professional {
   full_name: string | null;
 }
 
+const planSpecialties: Record<SubscriptionPlan, Specialty[]> = {
+  plata: ['psychology'],
+  oro: ['psychology', 'nutrition'],
+  platino: ['psychology', 'nutrition', 'medicine'],
+  black: ['psychology', 'nutrition', 'medicine', 'physiotherapy'],
+};
+
 const timeSlots = [
   "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
   "12:00", "15:00", "15:30", "16:00", "16:30", "17:00",
