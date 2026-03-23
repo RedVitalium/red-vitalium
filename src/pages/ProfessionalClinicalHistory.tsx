@@ -52,6 +52,7 @@ export default function ProfessionalClinicalHistory() {
   const { professionalData } = useUserRoles();
   const queryClient = useQueryClient();
   const [newNote, setNewNote] = useState("");
+  const [isVisibleToOthers, setIsVisibleToOthers] = useState(true);
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
   const [showMedDialog, setShowMedDialog] = useState(false);
