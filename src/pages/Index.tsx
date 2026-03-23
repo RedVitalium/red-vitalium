@@ -333,6 +333,11 @@ export default function Index() {
                 <Card className="p-6 h-full relative overflow-hidden">
                   <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${plan.color}`} />
                   <h3 className="font-display font-bold text-lg mb-1">{plan.name}</h3>
+                  <div className="mb-1">
+                    <span className="text-2xl font-display font-extrabold text-foreground">{plan.price}</span>
+                    <span className="text-sm text-muted-foreground ml-1">MXN/mes</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3">{plan.duration}</p>
                   <p className="text-sm text-muted-foreground mb-4">{plan.subtitle}</p>
                   <ul className="space-y-2">
                     {plan.features.map((feature, i) => (
