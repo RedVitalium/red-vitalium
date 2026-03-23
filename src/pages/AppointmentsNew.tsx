@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
-import { specialtyLabels, Specialty } from "@/hooks/useUserRoles";
+import { specialtyLabels, Specialty, useUserRoles, SubscriptionPlan } from "@/hooks/useUserRoles";
 import appLogo from "@/assets/app-logo.png";
 
 interface Professional {
