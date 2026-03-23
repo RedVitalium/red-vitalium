@@ -201,6 +201,20 @@ export default function ProfessionalClinicalHistory() {
 
   const mySpecialty = professionalData.specialty;
 
+  const specialtyColors: Record<Specialty, string> = {
+    psychology: 'border-l-blue-500',
+    nutrition: 'border-l-green-500',
+    medicine: 'border-l-red-500',
+    physiotherapy: 'border-l-orange-500',
+  };
+
+  const specialtyBadgeColors: Record<Specialty, string> = {
+    psychology: 'bg-blue-100 text-blue-700',
+    nutrition: 'bg-green-100 text-green-700',
+    medicine: 'bg-red-100 text-red-700',
+    physiotherapy: 'bg-orange-100 text-orange-700',
+  };
+
   const traitLabels: Record<string, string> = {
     extraversion: "Extraversión",
     agreeableness: "Amabilidad",
