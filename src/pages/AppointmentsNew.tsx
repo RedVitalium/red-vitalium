@@ -193,7 +193,21 @@ export default function AppointmentsNew() {
           animate={{ opacity: 1, y: 0 }}
         >
           <Card className="p-6">
-            <h2 className="text-xl font-display font-bold mb-6">Nueva Cita</h2>
+            <h2 className="text-xl font-display font-bold mb-4">Nueva Cita</h2>
+
+            {/* Plan info banner */}
+            {user && subscription && !rolesLoading && (
+              <div className="mb-6 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                <p className="text-xs text-muted-foreground mb-1.5">Tu plan incluye:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {planSpecialties[subscription].map((spec) => (
+                    <Badge key={spec} variant="secondary" className="text-xs">
+                      {specialtyLabels[spec]}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="space-y-6">
               {/* Specialty Selection */}
