@@ -267,12 +267,13 @@ export default function ProfessionalClinicalHistory() {
   };
 
   const renderNotesForSpecialty = (specialty: Specialty) => {
-    const sectionNotes = notes.filter(n => n.specialty === specialty);
+    const sectionNotes = notes.filter(n => 
+      n.specialty === specialty || (n.specialty !== specialty && n.is_visible_to_others)
+    );
     const isMySpecialty = specialty === mySpecialty;
 
     return (
       <div className="space-y-4">
-        {/* Add note form - only for own specialty */}
         {isMySpecialty && (
           <Card className="p-4">
             <Textarea
@@ -282,15 +283,27 @@ export default function ProfessionalClinicalHistory() {
               className="mb-3"
               rows={3}
             />
-            <Button
-              size="sm"
-              onClick={() => addNoteMutation.mutate(newNote)}
-              disabled={!newNote.trim() || addNoteMutation.isPending}
-              className="gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Agregar Nota
-            </Button>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="visible-toggle"
+                  checked={isVisibleToOthers}
+                  onCheckedChange={setIsVisibleToOthers}
+                />
+                <Label htmlFor="visible-toggle" className="text-xs text-muted-foreground cursor-pointer">
+                  Visible para otros profesionales
+                </Label>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => addNoteMutation.mutate(newNote)}
+                disabled={!newNote.trim() || addNoteMutation.isPending}
+                className="gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Agregar
+              </Button>
+            </div>
           </Card>
         )}
 
@@ -302,8 +315,12 @@ export default function ProfessionalClinicalHistory() {
           <div className="space-y-3">
             {sectionNotes.map(note => {
               const isOwn = note.professional_id === professionalId;
+              const isFromOtherSpecialty = note.specialty !== specialty;
               return (
-                <Card key={note.id} className={`p-4 ${!isOwn ? 'bg-muted/30' : ''}`}>
+                <Card 
+                  key={note.id} 
+                  className={`p-4 ${!isOwn ? 'bg-muted/30' : ''} ${isFromOtherSpecialty ? `border-l-4 ${specialtyColors[note.specialty]}` : ''}`}
+                >
                   {editingNoteId === note.id ? (
                     <div>
                       <Textarea
@@ -323,6 +340,11 @@ export default function ProfessionalClinicalHistory() {
                     </div>
                   ) : (
                     <div>
+                      {isFromOtherSpecialty && (
+                        <span className={`inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded-full mb-2 ${specialtyBadgeColors[note.specialty]}`}>
+                          {specialtyLabels[note.specialty]}
+                        </span>
+                      )}
                       <p className="text-sm text-foreground whitespace-pre-wrap">{note.content}</p>
                       <div className="flex items-center justify-between mt-2">
                         <p className="text-xs text-muted-foreground">
