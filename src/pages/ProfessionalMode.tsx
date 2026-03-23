@@ -167,6 +167,24 @@ export default function ProfessionalMode() {
           </p>
         </motion.div>
 
+        {/* Empty state for no patients */}
+        {!isLoading && patients.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="mb-6"
+          >
+            <Card className="p-8 text-center bg-muted/30 border border-border">
+              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="font-display font-bold text-foreground mb-2">Sin pacientes asignados</h3>
+              <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                Aún no tienes pacientes vinculados a tu consulta. Puedes registrar un nuevo paciente con el botón de abajo, o pide al administrador que te asigne pacientes existentes.
+              </p>
+            </Card>
+          </motion.div>
+        )}
+
         {/* Search */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
