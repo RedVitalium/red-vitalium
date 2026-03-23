@@ -148,7 +148,7 @@ export default function ProfessionalClinicalHistory() {
         specialty: professionalData.specialty,
         content,
         note_type: 'clinical',
-        is_visible_to_others: true,
+        is_visible_to_others: isVisibleToOthers,
       });
       if (error) throw error;
     },
