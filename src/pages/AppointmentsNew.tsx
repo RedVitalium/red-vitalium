@@ -238,6 +238,9 @@ export default function AppointmentsNew() {
                   </div>
                 )}
               </div>
+
+              {/* Professional Selection — BUG 4 FIX: real data from Supabase */}
+              <div className="space-y-2">
                 <label className="text-sm font-medium">Profesional</label>
                 {profLoading && selectedSpecialty ? (
                   <Skeleton className="h-10 w-full rounded-md" />
