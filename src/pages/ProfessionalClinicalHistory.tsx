@@ -5,6 +5,7 @@ import {
   ArrowLeft, Brain, Apple, Stethoscope, Dumbbell,
   Plus, Edit2, Save, X, User, FileText, Sparkles, Pill
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
