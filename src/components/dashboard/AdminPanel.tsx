@@ -743,7 +743,10 @@ export function AdminPanel({ preselectedPatientId }: AdminPanelProps = {}) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["patient-cycle", selectedPatient?.user_id] });
-      toast.success("Ciclo detenido correctamente");
+      toast.success("Ciclo detenido", {
+        description: "El paciente ya no recibirá recordatorios. Puedes iniciar un nuevo ciclo cuando estés listo.",
+        duration: 6000,
+      });
     },
     onError: (error) => {
       toast.error("Error al detener el ciclo: " + error.message);
