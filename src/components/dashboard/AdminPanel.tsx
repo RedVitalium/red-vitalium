@@ -721,7 +721,10 @@ export function AdminPanel({ preselectedPatientId }: AdminPanelProps = {}) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["patient-cycle", selectedPatient?.user_id] });
-      toast.success("Ciclo iniciado correctamente");
+      toast.success("Ciclo iniciado correctamente", {
+        description: "Semana 1: observación pura (sin intervenciones). Los recordatorios se activarán en semana 2.",
+        duration: 8000,
+      });
     },
     onError: (error) => {
       toast.error("Error al iniciar el ciclo: " + error.message);
