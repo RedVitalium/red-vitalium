@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Calendar as CalendarIcon, Clock, MapPin, Video, User, Loader2 } from "lucide-react";
+import { ArrowLeft, Calendar as CalendarIcon, Clock, MapPin, Video, User, Loader2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
-import { specialtyLabels, Specialty } from "@/hooks/useUserRoles";
+import { specialtyLabels, Specialty, useUserRoles, SubscriptionPlan } from "@/hooks/useUserRoles";
 import appLogo from "@/assets/app-logo.png";
 
 interface Professional {
@@ -33,6 +33,13 @@ interface Professional {
   full_name: string | null;
 }
 
+const planSpecialties: Record<SubscriptionPlan, Specialty[]> = {
+  plata: ['psychology'],
+  oro: ['psychology', 'nutrition'],
+  platino: ['psychology', 'nutrition', 'medicine'],
+  black: ['psychology', 'nutrition', 'medicine', 'physiotherapy'],
+};
+
 const timeSlots = [
   "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
   "12:00", "15:00", "15:30", "16:00", "16:30", "17:00",
@@ -42,6 +49,7 @@ export default function AppointmentsNew() {
   const [searchParams] = useSearchParams();
   const preselectedProfessional = searchParams.get('professional');
   const { user } = useAuth();
+  const { subscription, isLoading: rolesLoading } = useUserRoles();
 
   const [selectedSpecialty, setSelectedSpecialty] = useState<Specialty | ''>('');
   const [selectedProfessional, setSelectedProfessional] = useState('');
@@ -185,7 +193,21 @@ export default function AppointmentsNew() {
           animate={{ opacity: 1, y: 0 }}
         >
           <Card className="p-6">
-            <h2 className="text-xl font-display font-bold mb-6">Nueva Cita</h2>
+            <h2 className="text-xl font-display font-bold mb-4">Nueva Cita</h2>
+
+            {/* Plan info banner */}
+            {user && subscription && !rolesLoading && (
+              <div className="mb-6 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                <p className="text-xs text-muted-foreground mb-1.5">Tu plan incluye:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {planSpecialties[subscription].map((spec) => (
+                    <Badge key={spec} variant="secondary" className="text-xs">
+                      {specialtyLabels[spec]}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="space-y-6">
               {/* Specialty Selection */}
@@ -206,6 +228,15 @@ export default function AppointmentsNew() {
                     ))}
                   </SelectContent>
                 </Select>
+                {/* Warning if specialty not in plan */}
+                {user && subscription && selectedSpecialty && !planSpecialties[subscription].includes(selectedSpecialty as Specialty) && (
+                  <div className="flex items-start gap-2 p-2.5 bg-yellow-500/10 border border-yellow-500/30 rounded-md">
+                    <AlertTriangle className="h-4 w-4 text-yellow-600 shrink-0 mt-0.5" />
+                    <p className="text-xs text-yellow-700 dark:text-yellow-400">
+                      Esta especialidad no está incluida en tu plan actual. Se aplicará el costo de consulta individual.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Professional Selection — BUG 4 FIX: real data from Supabase */}
