@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Calendar as CalendarIcon, Clock, MapPin, Video, User, Loader2 } from "lucide-react";
+import { ArrowLeft, Calendar as CalendarIcon, Clock, MapPin, Video, User, Loader2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
