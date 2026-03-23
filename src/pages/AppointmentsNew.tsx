@@ -49,6 +49,7 @@ export default function AppointmentsNew() {
   const [searchParams] = useSearchParams();
   const preselectedProfessional = searchParams.get('professional');
   const { user } = useAuth();
+  const { subscription, isLoading: rolesLoading } = useUserRoles();
 
   const [selectedSpecialty, setSelectedSpecialty] = useState<Specialty | ''>('');
   const [selectedProfessional, setSelectedProfessional] = useState('');
