@@ -228,10 +228,16 @@ export default function AppointmentsNew() {
                     ))}
                   </SelectContent>
                 </Select>
+                {/* Warning if specialty not in plan */}
+                {user && subscription && selectedSpecialty && !planSpecialties[subscription].includes(selectedSpecialty as Specialty) && (
+                  <div className="flex items-start gap-2 p-2.5 bg-yellow-500/10 border border-yellow-500/30 rounded-md">
+                    <AlertTriangle className="h-4 w-4 text-yellow-600 shrink-0 mt-0.5" />
+                    <p className="text-xs text-yellow-700 dark:text-yellow-400">
+                      Esta especialidad no está incluida en tu plan actual. Se aplicará el costo de consulta individual.
+                    </p>
+                  </div>
+                )}
               </div>
-
-              {/* Professional Selection — BUG 4 FIX: real data from Supabase */}
-              <div className="space-y-2">
                 <label className="text-sm font-medium">Profesional</label>
                 {profLoading && selectedSpecialty ? (
                   <Skeleton className="h-10 w-full rounded-md" />
