@@ -419,7 +419,7 @@ export default function Index() {
 
       {/* WhatsApp Floating Button */}
       <a
-        href="https://wa.me/529931234567"
+        href="https://wa.me/529937005054"
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-6 right-6 z-50 group"
