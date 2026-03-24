@@ -113,12 +113,17 @@ export default function HomeMenu() {
   const { getCycleProgress } = useCycleData(user?.id || null);
   const cycleProgress = getCycleProgress();
 
-  // Show role selection on mount if needed
+  const { currentMode } = useAdminMode();
+
+  // Show role selection when user has multiple roles and hasn't chosen yet
   useEffect(() => {
-    if (shouldShowRoleSelection && hasMultipleRoles) {
+    if (hasMultipleRoles && currentMode === null) {
+      setShowRoleDialog(true);
+      setShouldShowRoleSelection(true);
+    } else if (shouldShowRoleSelection && hasMultipleRoles) {
       setShowRoleDialog(true);
     }
-  }, [shouldShowRoleSelection, hasMultipleRoles]);
+  }, [shouldShowRoleSelection, hasMultipleRoles, currentMode]);
 
   const handleSignOut = async () => {
     await signOut();
