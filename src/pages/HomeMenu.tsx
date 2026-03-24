@@ -10,6 +10,7 @@ import {
   Stethoscope,
   Sparkles,
   CalendarClock,
+  ChevronRight,
   Lock,
   Rocket,
   Shield,
