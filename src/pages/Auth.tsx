@@ -112,6 +112,10 @@ export default function Auth() {
     // The redirectTo in useAuth.tsx handles where the user lands after OAuth.
   };
 
+  const handleAppleSignIn = () => {
+    toast.info('Apple Sign-In', { description: 'Apple Sign-In disponible próximamente' });
+  };
+
   const handleBiometricAuth = async () => {
     if (!window.PublicKeyCredential) {
       toast.error('Biometría no soportada', { 
