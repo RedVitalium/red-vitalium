@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import appLogo from "@/assets/app-logo.png";
 import vitaliumNegativo from "@/assets/vitalium-negativo.png";
 import { DemoSelectionDialog } from "@/components/DemoSelectionDialog";
+import { VideoPreview } from "@/components/VideoPreview";
 import { 
   Activity, 
   Brain, 
