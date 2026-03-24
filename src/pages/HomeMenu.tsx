@@ -9,7 +9,7 @@ import {
   Brain, 
   Stethoscope,
   Sparkles,
-  ChevronRight,
+  CalendarClock,
   Lock,
   Rocket,
   Shield,
