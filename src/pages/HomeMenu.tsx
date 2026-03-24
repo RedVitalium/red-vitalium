@@ -106,7 +106,7 @@ export default function HomeMenu() {
   const navigate = useNavigate();
   const { user, signOut, isAdmin } = useAuth();
   const { subscription, isProfessional, isLoading } = useUserRoles();
-  const { hasMultipleRoles, shouldShowRoleSelection, setShouldShowRoleSelection } = useAdminMode();
+  const { hasMultipleRoles, shouldShowRoleSelection, setShouldShowRoleSelection, currentMode: adminCurrentMode } = useAdminMode();
   const [showRoleDialog, setShowRoleDialog] = useState(false);
 
   // BUG 3 FIX: Check if patient has an active cycle
