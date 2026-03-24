@@ -106,19 +106,22 @@ export default function HomeMenu() {
   const navigate = useNavigate();
   const { user, signOut, isAdmin } = useAuth();
   const { subscription, isProfessional, isLoading } = useUserRoles();
-  const { hasMultipleRoles, shouldShowRoleSelection, setShouldShowRoleSelection } = useAdminMode();
+  const { hasMultipleRoles, shouldShowRoleSelection, setShouldShowRoleSelection, currentMode: adminCurrentMode } = useAdminMode();
   const [showRoleDialog, setShowRoleDialog] = useState(false);
 
   // BUG 3 FIX: Check if patient has an active cycle
   const { getCycleProgress } = useCycleData(user?.id || null);
   const cycleProgress = getCycleProgress();
 
-  // Show role selection on mount if needed
+  // Show role selection when user has multiple roles and hasn't chosen yet
   useEffect(() => {
-    if (shouldShowRoleSelection && hasMultipleRoles) {
+    if (hasMultipleRoles && adminCurrentMode === null) {
+      setShowRoleDialog(true);
+      setShouldShowRoleSelection(true);
+    } else if (shouldShowRoleSelection && hasMultipleRoles) {
       setShowRoleDialog(true);
     }
-  }, [shouldShowRoleSelection, hasMultipleRoles]);
+  }, [shouldShowRoleSelection, hasMultipleRoles, adminCurrentMode]);
 
   const handleSignOut = async () => {
     await signOut();
