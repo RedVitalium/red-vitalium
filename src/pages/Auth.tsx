@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { Mail, Lock, User, Fingerprint, Apple } from 'lucide-react';
+import { Mail, Lock, User } from 'lucide-react';
 import appLogo from '@/assets/app-logo.png';
 import { InformedConsentDialog } from '@/components/InformedConsentDialog';
 
