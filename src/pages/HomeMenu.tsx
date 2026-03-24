@@ -195,16 +195,16 @@ export default function HomeMenu() {
             className="mb-8"
           >
             <Card className="p-6 bg-gradient-to-br from-primary/10 via-accent/5 to-primary/5 border-primary/20">
-              <div className="flex items-start gap-4">
+        <div className="flex items-start gap-4">
                 <div className="p-3 rounded-xl bg-primary/15">
-                  <Rocket className="h-6 w-6 text-primary" />
+                  <CalendarClock className="h-6 w-6 text-primary" />
                 </div>
                 <div className="flex-1">
                   <h2 className="text-lg font-display font-bold text-foreground mb-2">
-                    ¡Bienvenido a Red Vitalium!
+                    Tu programa aún no ha iniciado
                   </h2>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Tu programa empieza cuando tu profesional inicie tu ciclo de seguimiento. 
+                    Tu psicólogo activará tu primer ciclo pronto. 
                     Mientras tanto, completa tu perfil y tus tests iniciales para que tu equipo 
                     tenga la mejor información desde el primer día.
                   </p>
