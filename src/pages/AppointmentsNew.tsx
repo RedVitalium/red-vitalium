@@ -310,9 +310,9 @@ export default function AppointmentsNew() {
                   </Button>
                   <Button
                     type="button"
-                    variant={modality === 'virtual' ? 'default' : 'outline'}
+                    variant={modality === 'videollamada' ? 'default' : 'outline'}
                     className="flex-1"
-                    onClick={() => setModality('virtual')}
+                    onClick={() => setModality('videollamada')}
                   >
                     <Video className="h-4 w-4 mr-2" />
                     Virtual
