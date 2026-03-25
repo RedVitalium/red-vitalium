@@ -71,12 +71,12 @@ export default function AdminSelectPatient() {
       email: patient.email || undefined,
     });
     setCurrentMode('admin'); // Ensure we're in admin mode
-    navigate('/dashboard');
+    navigate('/admin');
   };
 
   const handleBack = () => {
     setCurrentMode(null);
-    navigate('/dashboard');
+    navigate('/home');
   };
 
   const getInitials = (name: string | null) => {
