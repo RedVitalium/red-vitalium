@@ -28,6 +28,7 @@ interface AdminModeContextType {
   // All roles the current user has
   userRoles: ActiveRole[];
   hasMultipleRoles: boolean;
+  rolesLoaded: boolean;
 }
 
 const AdminModeContext = createContext<AdminModeContextType | undefined>(undefined);
