@@ -55,8 +55,9 @@ export default function AppointmentsNew() {
   const [selectedProfessional, setSelectedProfessional] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState('');
-  const [modality, setModality] = useState<'presencial' | 'virtual'>('presencial');
+  const [modality, setModality] = useState<'presencial' | 'videollamada'>('presencial');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const queryClient = useQueryClient();
 
   // BUG 4 FIX: Fetch real professionals from Supabase
   const { data: allProfessionals = [], isLoading: profLoading } = useQuery({
