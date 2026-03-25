@@ -117,8 +117,8 @@ export default function AppointmentsNew() {
           professional_id: professionalData.id,
           appointment_date: format(selectedDate, 'yyyy-MM-dd'),
           appointment_time: selectedTime,
-          modality: modality,
-          status: 'pending',
+          modality: modality === 'videollamada' ? 'virtual' : 'presencial',
+          status: 'scheduled',
           notes: `${specialtyLabels[selectedSpecialty]} - ${modality === 'videollamada' ? 'Videollamada' : professionalData.location || 'Presencial'}`,
         });
 
