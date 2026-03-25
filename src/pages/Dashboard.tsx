@@ -74,6 +74,7 @@ const itemVariants = {
 };
 
 export default function Dashboard() {
+const navigate = useNavigate();
 const [searchParams] = useSearchParams();
   const isDemo = searchParams.get("demo") === "true";
   const { user, isAdmin } = useAuth();
