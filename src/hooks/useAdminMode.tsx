@@ -45,6 +45,7 @@ export function AdminModeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!user) {
       setUserRoles([]);
+      setRolesLoaded(false);
       return;
     }
 
