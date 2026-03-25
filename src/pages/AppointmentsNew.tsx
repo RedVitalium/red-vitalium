@@ -384,9 +384,9 @@ export default function AppointmentsNew() {
                 className="w-full" 
                 size="lg"
                 onClick={handleConfirmAppointment}
-                disabled={!selectedSpecialty || !selectedProfessional || !selectedDate || !selectedTime || isSubmitting}
+                disabled={!selectedSpecialty || !selectedProfessional || !selectedDate || !selectedTime || bookingMutation.isPending}
               >
-                {isSubmitting ? (
+                {bookingMutation.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Agendando...
@@ -500,8 +500,8 @@ function MyAppointments({ userId }: { userId: string }) {
                       <p className="text-xs text-muted-foreground">{appt.professional_name}</p>
                     )}
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      {appt.modality === 'virtual' ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
-                      {appt.modality === 'virtual' ? 'Virtual' : 'Presencial'}
+                      {appt.modality === 'videollamada' ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
+                      {appt.modality === 'videollamada' ? 'Videollamada' : 'Presencial'}
                     </p>
                   </div>
                   <Badge variant={cfg.variant}>{cfg.label}</Badge>
