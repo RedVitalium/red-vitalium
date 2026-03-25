@@ -1,12 +1,12 @@
 import { motion } from "framer-motion";
 import { Link, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Beaker, Lock, TrendingUp, AlertCircle } from "lucide-react";
+import { Beaker, Lock, TrendingUp, AlertCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AISummaryCard } from "@/components/dashboard/AISummaryCard";
 import { useUserRoles, isFeatureAvailable } from "@/hooks/useUserRoles";
 import { useAdminMode } from "@/hooks/useAdminMode";
-import appLogo from "@/assets/app-logo.png";
+import { PageHeader } from "@/components/PageHeader";
 
 // Metabolic markers would come from blood tests
 interface MetabolicMarker {
@@ -49,21 +49,12 @@ export default function DashboardMetabolic() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border/50">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-3">
-          <Link to={backPath} className="p-2 hover:bg-muted rounded-lg transition-colors">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-          <img src={appLogo} alt="Red Vitalium" className="h-8 w-auto" />
-          <span className="text-lg font-display font-bold text-primary">Marcadores Metabólicos</span>
-          {isDemo && (
-            <span className="ml-auto text-xs bg-accent/20 text-accent px-2 py-1 rounded-full">
-              Demo
-            </span>
-          )}
-        </div>
-      </header>
+      <PageHeader title="Marcadores Metabólicos" backTo={backPath}>
+        {isDemo && (
+          <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded-full">Demo</span>
+        )}
+      </PageHeader>
+      
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-3xl">

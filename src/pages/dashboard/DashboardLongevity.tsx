@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Link, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Heart, Timer, Dumbbell, Activity, TrendingUp, Pencil } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
+import { Heart, Timer, Dumbbell, Activity, TrendingUp, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { AISummaryCard } from "@/components/dashboard/AISummaryCard";
@@ -9,7 +9,7 @@ import { AIInterpretButton } from "@/components/dashboard/AIInterpretButton";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useAdminMode } from "@/hooks/useAdminMode";
 import { LongevityMetricEditor, type MetricType } from "@/components/dashboard/LongevityMetricEditor";
-import appLogo from "@/assets/app-logo.png";
+import { PageHeader } from "@/components/PageHeader";
 
 function getStatus(value: number, target: number, isLowerBetter: boolean = false): "optimal" | "warning" | "danger" {
   if (value === 0) return "warning";
@@ -81,18 +81,11 @@ export default function DashboardLongevity() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border/50">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-3">
-          <Link to={backPath} className="p-2 hover:bg-muted rounded-lg transition-colors">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-          <img src={appLogo} alt="Red Vitalium" className="h-8 w-auto" />
-          <span className="text-lg font-display font-bold text-primary">Longevidad</span>
-          {isDemo && (
-            <span className="ml-auto text-xs bg-accent/20 text-accent px-2 py-1 rounded-full">Demo</span>
-          )}
-        </div>
-      </header>
+      <PageHeader title="Longevidad" backTo={backPath}>
+        {isDemo && (
+          <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded-full">Demo</span>
+        )}
+      </PageHeader>
 
       <main className="container mx-auto px-4 py-8 max-w-3xl">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">

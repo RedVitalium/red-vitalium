@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { 
-  ArrowLeft, Brain, Heart, Scale, Beaker, Activity, Trophy,
+  Brain, Heart, Scale, Beaker, Activity, Trophy,
   User, FileText, ChevronRight, Sparkles
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { useAdminMode } from "@/hooks/useAdminMode";
 import { useUserRoles, specialtyLabels } from "@/hooks/useUserRoles";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import appLogo from "@/assets/app-logo.png";
+import { PageHeader } from "@/components/PageHeader";
 
 const categorySummaries = [
   { id: 'achievements', label: 'Logros', icon: Trophy, href: '/dashboard/achievements' },
@@ -95,21 +95,11 @@ export default function ProfessionalHistory() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border/50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/professional" className="p-2 hover:bg-muted rounded-lg transition-colors">
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-            <img src={appLogo} alt="Red Vitalium" className="h-8 w-auto" />
-            <span className="text-lg font-display font-bold text-primary">Resumen</span>
-          </div>
-          <span className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full">
-            {specialtyLabels[professionalData.specialty]}
-          </span>
-        </div>
-      </header>
+      <PageHeader title="Resumen" backTo="/professional">
+        <span className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full">
+          {specialtyLabels[professionalData.specialty]}
+        </span>
+      </PageHeader>
 
       {/* Patient Banner */}
       <div className="bg-primary/5 border-b border-primary/20">

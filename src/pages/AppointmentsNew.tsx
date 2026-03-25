@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Calendar as CalendarIcon, Clock, MapPin, Video, User, Loader2, AlertTriangle } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, MapPin, Video, User, Loader2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
@@ -21,7 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { specialtyLabels, Specialty, useUserRoles, SubscriptionPlan } from "@/hooks/useUserRoles";
-import appLogo from "@/assets/app-logo.png";
+import { PageHeader } from "@/components/PageHeader";
 
 interface Professional {
   id: string;
@@ -169,16 +169,7 @@ export default function AppointmentsNew() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border/50">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-3">
-          <Link to="/home" className="p-2 hover:bg-muted rounded-lg transition-colors">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-          <img src={appLogo} alt="Red Vitalium" className="h-8 w-auto" />
-          <span className="text-lg font-display font-bold text-primary">Agendar Cita</span>
-        </div>
-      </header>
+      <PageHeader title="Agendar Cita" backTo="/home" />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-xl">

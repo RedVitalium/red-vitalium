@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Search, MapPin, Star, Phone, Mail, Calendar } from "lucide-react";
+import { Search, MapPin, Star, Phone, Mail, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { specialtyLabels, Specialty } from "@/hooks/useUserRoles";
-import appLogo from "@/assets/app-logo.png";
+import { PageHeader } from "@/components/PageHeader";
 
 interface Professional {
   id: string;
@@ -105,16 +105,7 @@ export default function FindProfessionals() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border/50">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-3">
-          <Link to="/home" className="p-2 hover:bg-muted rounded-lg transition-colors">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-          <img src={appLogo} alt="Red Vitalium" className="h-8 w-auto" />
-          <span className="text-lg font-display font-bold text-primary">Profesionales</span>
-        </div>
-      </header>
+      <PageHeader title="Profesionales" backTo="/home" />
 
       {/* Search & Filters */}
       <div className="sticky top-[72px] z-40 bg-background border-b border-border/50 py-4">
