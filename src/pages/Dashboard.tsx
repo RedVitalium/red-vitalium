@@ -12,7 +12,7 @@ import { NotificationSettings } from "@/components/dashboard/NotificationSetting
 import { HealthConnectCard } from "@/components/dashboard/HealthConnectCard";
 import { DemoTour } from "@/components/dashboard/DemoTour";
 import { DailySurveyCard } from "@/components/dashboard/DailySurveyCard";
-import { AdminPanel } from "@/components/dashboard/AdminPanel";
+import { useNavigate } from "react-router-dom";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useCycleData } from "@/hooks/useCycleData";
 import { useUnlockedHabits } from "@/hooks/useUnlockedHabits";
