@@ -372,8 +372,8 @@ export default function AppointmentsNew() {
                       {selectedTime} hrs
                     </p>
                     <p className="flex items-center gap-2">
-                      {modality === 'virtual' ? <Video className="h-4 w-4" /> : <MapPin className="h-4 w-4" />}
-                      {modality === 'virtual' ? 'Videollamada' : selectedProfessionalData.location || 'Presencial'}
+                      {modality === 'videollamada' ? <Video className="h-4 w-4" /> : <MapPin className="h-4 w-4" />}
+                      {modality === 'videollamada' ? 'Videollamada' : selectedProfessionalData.location || 'Presencial'}
                     </p>
                   </div>
                 </motion.div>
