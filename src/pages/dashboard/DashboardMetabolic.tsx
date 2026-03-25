@@ -54,7 +54,7 @@ export default function DashboardMetabolic() {
           <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded-full">Demo</span>
         )}
       </PageHeader>
-      </header>
+      
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-3xl">
