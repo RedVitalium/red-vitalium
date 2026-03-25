@@ -39,6 +39,7 @@ export function AdminModeProvider({ children }: { children: ReactNode }) {
   const [selectedPatient, setSelectedPatient] = useState<SelectedPatient | null>(null);
   const [shouldShowRoleSelection, setShouldShowRoleSelection] = useState(false);
   const [userRoles, setUserRoles] = useState<ActiveRole[]>([]);
+  const [rolesLoaded, setRolesLoaded] = useState(false);
 
   // Fetch all roles for current user
   useEffect(() => {
