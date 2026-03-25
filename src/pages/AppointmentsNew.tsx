@@ -19,7 +19,7 @@ import { es } from "date-fns/locale";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { specialtyLabels, Specialty, useUserRoles, SubscriptionPlan } from "@/hooks/useUserRoles";
 import appLogo from "@/assets/app-logo.png";
 
@@ -55,8 +55,8 @@ export default function AppointmentsNew() {
   const [selectedProfessional, setSelectedProfessional] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState('');
-  const [modality, setModality] = useState<'presencial' | 'virtual'>('presencial');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [modality, setModality] = useState<'presencial' | 'videollamada'>('presencial');
+  const queryClient = useQueryClient();
 
   // BUG 4 FIX: Fetch real professionals from Supabase
   const { data: allProfessionals = [], isLoading: profLoading } = useQuery({
@@ -98,25 +98,18 @@ export default function AppointmentsNew() {
     setSelectedProfessional('');
   }, [selectedSpecialty]);
 
-  // BUG 4 FIX: Write appointment to Supabase + auto-create patient_professionals
-  const handleConfirmAppointment = async () => {
-    if (!selectedSpecialty || !selectedProfessional || !selectedDate || !selectedTime) {
-      toast.error('Por favor completa todos los campos');
-      return;
-    }
+  // useMutation for booking appointment + auto-linking patient_professionals
+  const bookingMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedSpecialty || !selectedProfessional || !selectedDate || !selectedTime) {
+        throw new Error('Por favor completa todos los campos');
+      }
+      if (!user) throw new Error('Debes iniciar sesión para agendar una cita');
 
-    if (!user) {
-      toast.error('Debes iniciar sesión para agendar una cita');
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
       const professionalData = availableProfessionals.find(p => p.id === selectedProfessional);
       if (!professionalData) throw new Error('Profesional no encontrado');
 
-      // 1. Write the appointment
+      // 1. Insert appointment
       const { error: appointmentError } = await supabase
         .from('appointments')
         .insert({
@@ -125,14 +118,13 @@ export default function AppointmentsNew() {
           appointment_date: format(selectedDate, 'yyyy-MM-dd'),
           appointment_time: selectedTime,
           modality: modality,
-          status: 'scheduled',
-          notes: `${specialtyLabels[selectedSpecialty]} - ${modality === 'virtual' ? 'Videollamada' : professionalData.location || 'Presencial'}`,
+          status: 'pending',
+          notes: `${specialtyLabels[selectedSpecialty]} - ${modality === 'videollamada' ? 'Videollamada' : professionalData.location || 'Presencial'}`,
         });
 
       if (appointmentError) throw appointmentError;
 
-      // 2. Auto-create patient_professionals relationship if it doesn't exist
-      // This eliminates the need for manual admin assignment in the standard flow
+      // 2. Auto-upsert patient_professionals relationship
       const { error: assignError } = await supabase
         .from('patient_professionals')
         .upsert(
@@ -146,29 +138,31 @@ export default function AppointmentsNew() {
           { onConflict: 'patient_id,professional_id' }
         );
 
-      // Don't throw on assign error — the appointment is already created
-      // The admin can fix the assignment manually if needed
       if (assignError) {
         console.warn('Could not auto-assign professional:', assignError.message);
       }
 
-      toast.success('¡Cita agendada exitosamente!', {
-        description: `${professionalData.full_name} - ${format(selectedDate, "d 'de' MMMM", { locale: es })} a las ${selectedTime}`,
+      return professionalData;
+    },
+    onSuccess: (professionalData) => {
+      toast.success('Cita solicitada correctamente.', {
+        description: `Tu ${specialtyLabels[selectedSpecialty as Specialty]?.toLowerCase() || 'profesional'} recibirá la solicitud. ${professionalData.full_name} - ${format(selectedDate!, "d 'de' MMMM", { locale: es })} a las ${selectedTime}`,
       });
-
-      // Reset form
+      queryClient.invalidateQueries({ queryKey: ['my-appointments'] });
       setSelectedSpecialty('');
       setSelectedProfessional('');
       setSelectedDate(undefined);
       setSelectedTime('');
       setModality('presencial');
-
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       console.error('Error scheduling appointment:', error);
       toast.error('Error al agendar la cita', { description: error.message });
-    } finally {
-      setIsSubmitting(false);
-    }
+    },
+  });
+
+  const handleConfirmAppointment = () => {
+    bookingMutation.mutate();
   };
 
   const selectedProfessionalData = availableProfessionals.find(p => p.id === selectedProfessional);
@@ -315,9 +309,9 @@ export default function AppointmentsNew() {
                   </Button>
                   <Button
                     type="button"
-                    variant={modality === 'virtual' ? 'default' : 'outline'}
+                    variant={modality === 'videollamada' ? 'default' : 'outline'}
                     className="flex-1"
-                    onClick={() => setModality('virtual')}
+                    onClick={() => setModality('videollamada')}
                   >
                     <Video className="h-4 w-4 mr-2" />
                     Virtual
@@ -377,8 +371,8 @@ export default function AppointmentsNew() {
                       {selectedTime} hrs
                     </p>
                     <p className="flex items-center gap-2">
-                      {modality === 'virtual' ? <Video className="h-4 w-4" /> : <MapPin className="h-4 w-4" />}
-                      {modality === 'virtual' ? 'Videollamada' : selectedProfessionalData.location || 'Presencial'}
+                      {modality === 'videollamada' ? <Video className="h-4 w-4" /> : <MapPin className="h-4 w-4" />}
+                      {modality === 'videollamada' ? 'Videollamada' : selectedProfessionalData.location || 'Presencial'}
                     </p>
                   </div>
                 </motion.div>
@@ -389,9 +383,9 @@ export default function AppointmentsNew() {
                 className="w-full" 
                 size="lg"
                 onClick={handleConfirmAppointment}
-                disabled={!selectedSpecialty || !selectedProfessional || !selectedDate || !selectedTime || isSubmitting}
+                disabled={!selectedSpecialty || !selectedProfessional || !selectedDate || !selectedTime || bookingMutation.isPending}
               >
-                {isSubmitting ? (
+                {bookingMutation.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Agendando...
@@ -420,6 +414,7 @@ export default function AppointmentsNew() {
 }
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
+  pending: { label: "Pendiente", variant: "default" },
   scheduled: { label: "Agendada", variant: "default" },
   completed: { label: "Completada", variant: "secondary" },
   cancelled: { label: "Cancelada", variant: "outline" },
@@ -505,8 +500,8 @@ function MyAppointments({ userId }: { userId: string }) {
                       <p className="text-xs text-muted-foreground">{appt.professional_name}</p>
                     )}
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      {appt.modality === 'virtual' ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
-                      {appt.modality === 'virtual' ? 'Virtual' : 'Presencial'}
+                      {appt.modality === 'videollamada' ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
+                      {appt.modality === 'videollamada' ? 'Videollamada' : 'Presencial'}
                     </p>
                   </div>
                   <Badge variant={cfg.variant}>{cfg.label}</Badge>
