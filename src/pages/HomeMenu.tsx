@@ -109,6 +109,13 @@ export default function HomeMenu() {
   const { hasMultipleRoles, shouldShowRoleSelection, setShouldShowRoleSelection, currentMode: adminCurrentMode, rolesLoaded, setCurrentMode, userRoles } = useAdminMode();
   const [showRoleDialog, setShowRoleDialog] = useState(false);
 
+  useEffect(() => {
+    console.log('[HomeMenu][mount] rolesLoaded:', rolesLoaded);
+    console.log('[HomeMenu][mount] hasMultipleRoles:', hasMultipleRoles);
+    console.log('[HomeMenu][mount] adminCurrentMode:', adminCurrentMode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // BUG 3 FIX: Check if patient has an active cycle
   const { getCycleProgress } = useCycleData(user?.id || null);
   const cycleProgress = getCycleProgress();
