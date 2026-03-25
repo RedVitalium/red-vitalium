@@ -13,6 +13,7 @@ import { HealthConnectCard } from "@/components/dashboard/HealthConnectCard";
 import { DemoTour } from "@/components/dashboard/DemoTour";
 import { DailySurveyCard } from "@/components/dashboard/DailySurveyCard";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useCycleData } from "@/hooks/useCycleData";
 import { useUnlockedHabits } from "@/hooks/useUnlockedHabits";
