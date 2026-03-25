@@ -415,6 +415,7 @@ export default function AppointmentsNew() {
 }
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
+  pending: { label: "Pendiente", variant: "default" },
   scheduled: { label: "Agendada", variant: "default" },
   completed: { label: "Completada", variant: "secondary" },
   cancelled: { label: "Cancelada", variant: "outline" },
