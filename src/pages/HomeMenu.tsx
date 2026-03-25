@@ -120,22 +120,31 @@ export default function HomeMenu() {
   const { getCycleProgress } = useCycleData(user?.id || null);
   const cycleProgress = getCycleProgress();
 
-  // Gate role selection on rolesLoaded to avoid race condition
+  // Trigger role selection only after roles have finished loading
   useEffect(() => {
-    if (!rolesLoaded || !user) return;
+    if (!user) return;
 
-    if (hasMultipleRoles && adminCurrentMode === null) {
-      // Multiple roles, no selection yet → show dialog
+    if (rolesLoaded && hasMultipleRoles && adminCurrentMode === null) {
       setShowRoleDialog(true);
       setShouldShowRoleSelection(true);
-    } else if (!hasMultipleRoles && adminCurrentMode === null) {
-      // Single role → auto-set without dialog
+    }
+  }, [rolesLoaded, hasMultipleRoles, adminCurrentMode, user, setShouldShowRoleSelection]);
+
+  // Single-role users go directly to their only available view
+  useEffect(() => {
+    if (!user || !rolesLoaded) return;
+
+    if (!hasMultipleRoles && adminCurrentMode === null) {
       setCurrentMode(userRoles[0] || 'patient');
-    } else if (shouldShowRoleSelection && hasMultipleRoles) {
-      // Explicitly requested role switch
+    }
+  }, [rolesLoaded, hasMultipleRoles, adminCurrentMode, userRoles, user, setCurrentMode]);
+
+  // Explicitly requested role switch
+  useEffect(() => {
+    if (shouldShowRoleSelection && hasMultipleRoles) {
       setShowRoleDialog(true);
     }
-  }, [rolesLoaded, hasMultipleRoles, adminCurrentMode, shouldShowRoleSelection, user]);
+  }, [shouldShowRoleSelection, hasMultipleRoles]);
 
   const handleSignOut = async () => {
     await signOut();
