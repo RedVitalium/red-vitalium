@@ -50,6 +50,7 @@ export function AdminModeProvider({ children }: { children: ReactNode }) {
     }
 
     const fetchRoles = async () => {
+      console.log('[useAdminMode] fetchRoles started, user:', user?.id);
       const roles: ActiveRole[] = ['patient']; // Everyone is a patient
 
       // Check admin
@@ -71,6 +72,7 @@ export function AdminModeProvider({ children }: { children: ReactNode }) {
       if (profData) roles.push('professional');
 
       setUserRoles(roles);
+      console.log('[useAdminMode] rolesLoaded set to true, roles:', userRoles);
       setRolesLoaded(true);
     };
 
