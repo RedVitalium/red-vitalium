@@ -99,25 +99,18 @@ export default function AppointmentsNew() {
     setSelectedProfessional('');
   }, [selectedSpecialty]);
 
-  // BUG 4 FIX: Write appointment to Supabase + auto-create patient_professionals
-  const handleConfirmAppointment = async () => {
-    if (!selectedSpecialty || !selectedProfessional || !selectedDate || !selectedTime) {
-      toast.error('Por favor completa todos los campos');
-      return;
-    }
+  // useMutation for booking appointment + auto-linking patient_professionals
+  const bookingMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedSpecialty || !selectedProfessional || !selectedDate || !selectedTime) {
+        throw new Error('Por favor completa todos los campos');
+      }
+      if (!user) throw new Error('Debes iniciar sesión para agendar una cita');
 
-    if (!user) {
-      toast.error('Debes iniciar sesión para agendar una cita');
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
       const professionalData = availableProfessionals.find(p => p.id === selectedProfessional);
       if (!professionalData) throw new Error('Profesional no encontrado');
 
-      // 1. Write the appointment
+      // 1. Insert appointment
       const { error: appointmentError } = await supabase
         .from('appointments')
         .insert({
@@ -126,14 +119,13 @@ export default function AppointmentsNew() {
           appointment_date: format(selectedDate, 'yyyy-MM-dd'),
           appointment_time: selectedTime,
           modality: modality,
-          status: 'scheduled',
-          notes: `${specialtyLabels[selectedSpecialty]} - ${modality === 'virtual' ? 'Videollamada' : professionalData.location || 'Presencial'}`,
+          status: 'pending',
+          notes: `${specialtyLabels[selectedSpecialty]} - ${modality === 'videollamada' ? 'Videollamada' : professionalData.location || 'Presencial'}`,
         });
 
       if (appointmentError) throw appointmentError;
 
-      // 2. Auto-create patient_professionals relationship if it doesn't exist
-      // This eliminates the need for manual admin assignment in the standard flow
+      // 2. Auto-upsert patient_professionals relationship
       const { error: assignError } = await supabase
         .from('patient_professionals')
         .upsert(
@@ -147,29 +139,31 @@ export default function AppointmentsNew() {
           { onConflict: 'patient_id,professional_id' }
         );
 
-      // Don't throw on assign error — the appointment is already created
-      // The admin can fix the assignment manually if needed
       if (assignError) {
         console.warn('Could not auto-assign professional:', assignError.message);
       }
 
-      toast.success('¡Cita agendada exitosamente!', {
-        description: `${professionalData.full_name} - ${format(selectedDate, "d 'de' MMMM", { locale: es })} a las ${selectedTime}`,
+      return professionalData;
+    },
+    onSuccess: (professionalData) => {
+      toast.success('Cita solicitada correctamente.', {
+        description: `Tu ${specialtyLabels[selectedSpecialty as Specialty]?.toLowerCase() || 'profesional'} recibirá la solicitud. ${professionalData.full_name} - ${format(selectedDate!, "d 'de' MMMM", { locale: es })} a las ${selectedTime}`,
       });
-
-      // Reset form
+      queryClient.invalidateQueries({ queryKey: ['my-appointments'] });
       setSelectedSpecialty('');
       setSelectedProfessional('');
       setSelectedDate(undefined);
       setSelectedTime('');
       setModality('presencial');
-
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       console.error('Error scheduling appointment:', error);
       toast.error('Error al agendar la cita', { description: error.message });
-    } finally {
-      setIsSubmitting(false);
-    }
+    },
+  });
+
+  const handleConfirmAppointment = () => {
+    bookingMutation.mutate();
   };
 
   const selectedProfessionalData = availableProfessionals.find(p => p.id === selectedProfessional);
