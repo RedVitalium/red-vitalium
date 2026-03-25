@@ -116,36 +116,25 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border/50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/home" className="p-2 hover:bg-muted rounded-lg transition-colors">
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-            <img src={appLogo} alt="Red Vitalium" className="h-8 w-auto" />
-            <span className="text-lg font-display font-bold text-primary">Mi Perfil</span>
-          </div>
-          
-          {!isEditing ? (
-            <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-              <Edit2 className="h-4 w-4 mr-2" />
-              Editar
+      <PageHeader title="Mi Perfil" backTo="/home">
+        {!isEditing ? (
+          <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+            <Edit2 className="h-4 w-4 mr-2" />
+            Editar
+          </Button>
+        ) : (
+          <div className="flex gap-2">
+            <Button variant="ghost" size="sm" onClick={handleCancel}>
+              <X className="h-4 w-4 mr-1" />
+              Cancelar
             </Button>
-          ) : (
-            <div className="flex gap-2">
-              <Button variant="ghost" size="sm" onClick={handleCancel}>
-                <X className="h-4 w-4 mr-1" />
-                Cancelar
-              </Button>
-              <Button size="sm" onClick={handleSave} disabled={isSaving}>
-                <Save className="h-4 w-4 mr-1" />
-                Guardar
-              </Button>
-            </div>
-          )}
-        </div>
-      </header>
+            <Button size="sm" onClick={handleSave} disabled={isSaving}>
+              <Save className="h-4 w-4 mr-1" />
+              Guardar
+            </Button>
+          </div>
+        )}
+      </PageHeader>
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-xl">
