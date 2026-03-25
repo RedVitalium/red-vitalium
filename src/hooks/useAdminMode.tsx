@@ -111,6 +111,7 @@ export function AdminModeProvider({ children }: { children: ReactNode }) {
       setShouldShowRoleSelection,
       userRoles,
       hasMultipleRoles,
+      rolesLoaded,
     }}>
       {children}
     </AdminModeContext.Provider>
