@@ -12,7 +12,8 @@ import { NotificationSettings } from "@/components/dashboard/NotificationSetting
 import { HealthConnectCard } from "@/components/dashboard/HealthConnectCard";
 import { DemoTour } from "@/components/dashboard/DemoTour";
 import { DailySurveyCard } from "@/components/dashboard/DailySurveyCard";
-import { AdminPanel } from "@/components/dashboard/AdminPanel";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useCycleData } from "@/hooks/useCycleData";
 import { useUnlockedHabits } from "@/hooks/useUnlockedHabits";
@@ -73,6 +74,7 @@ const itemVariants = {
 };
 
 export default function Dashboard() {
+const navigate = useNavigate();
 const [searchParams] = useSearchParams();
   const isDemo = searchParams.get("demo") === "true";
   const { user, isAdmin } = useAuth();
@@ -671,10 +673,15 @@ const [searchParams] = useSearchParams();
           </motion.div>
         </TabsContent>
 
-        {/* Admin Tab - Only visible for admin users or when viewing as admin */}
+        {/* Admin Tab - Redirect to Admin page */}
         {(isAdmin || isViewingAsAdmin) && (
           <TabsContent value="admin">
-            <AdminPanel preselectedPatientId={isViewingAsAdmin ? targetUserId : undefined} />
+            <div className="text-center py-12">
+              <p className="text-muted-foreground mb-4">La administración se ha movido a una página dedicada.</p>
+              <Button onClick={() => navigate("/admin")} className="gap-2">
+                Ir al Panel de Administración
+              </Button>
+            </div>
           </TabsContent>
         )}
       </Tabs>
