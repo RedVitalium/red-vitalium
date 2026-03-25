@@ -71,11 +71,7 @@ export function AdminModeProvider({ children }: { children: ReactNode }) {
       if (profData) roles.push('professional');
 
       setUserRoles(roles);
-
-      // If user has multiple roles and hasn't chosen yet, show selection
-      if (roles.length > 1 && currentMode === null) {
-        setShouldShowRoleSelection(true);
-      }
+      setRolesLoaded(true);
     };
 
     fetchRoles();
