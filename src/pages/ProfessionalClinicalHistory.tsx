@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { 
-  ArrowLeft, Brain, Apple, Stethoscope, Dumbbell,
+  Brain, Apple, Stethoscope, Dumbbell,
   Plus, Edit2, Save, X, User, FileText, Sparkles, Pill
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
@@ -23,7 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import appLogo from "@/assets/app-logo.png";
+import { PageHeader } from "@/components/PageHeader";
 import { useEffect } from "react";
 import ClinicalAISummaryTab from "@/components/professional/ClinicalAISummaryTab";
 
@@ -412,20 +412,11 @@ export default function ProfessionalClinicalHistory() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border/50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/professional/history" className="p-2 hover:bg-muted rounded-lg transition-colors">
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-            <img src={appLogo} alt="Red Vitalium" className="h-8 w-auto" />
-            <span className="text-lg font-display font-bold text-primary">Historia Clínica</span>
-          </div>
-          <span className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full">
-            {specialtyLabels[professionalData.specialty]}
-          </span>
-        </div>
-      </header>
+      <PageHeader title="Historia Clínica" backTo="/professional/history">
+        <span className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full">
+          {specialtyLabels[professionalData.specialty]}
+        </span>
+      </PageHeader>
 
       {/* Patient Banner */}
       <div className="bg-primary/5 border-b border-primary/20">
