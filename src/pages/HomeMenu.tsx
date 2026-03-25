@@ -106,22 +106,29 @@ export default function HomeMenu() {
   const navigate = useNavigate();
   const { user, signOut, isAdmin } = useAuth();
   const { subscription, isProfessional, isLoading } = useUserRoles();
-  const { hasMultipleRoles, shouldShowRoleSelection, setShouldShowRoleSelection, currentMode: adminCurrentMode } = useAdminMode();
+  const { hasMultipleRoles, shouldShowRoleSelection, setShouldShowRoleSelection, currentMode: adminCurrentMode, rolesLoaded, setCurrentMode, userRoles } = useAdminMode();
   const [showRoleDialog, setShowRoleDialog] = useState(false);
 
   // BUG 3 FIX: Check if patient has an active cycle
   const { getCycleProgress } = useCycleData(user?.id || null);
   const cycleProgress = getCycleProgress();
 
-  // Show role selection when user has multiple roles and hasn't chosen yet
+  // Gate role selection on rolesLoaded to avoid race condition
   useEffect(() => {
+    if (!rolesLoaded || !user) return;
+
     if (hasMultipleRoles && adminCurrentMode === null) {
+      // Multiple roles, no selection yet → show dialog
       setShowRoleDialog(true);
       setShouldShowRoleSelection(true);
+    } else if (!hasMultipleRoles && adminCurrentMode === null) {
+      // Single role → auto-set without dialog
+      setCurrentMode(userRoles[0] || 'patient');
     } else if (shouldShowRoleSelection && hasMultipleRoles) {
+      // Explicitly requested role switch
       setShowRoleDialog(true);
     }
-  }, [shouldShowRoleSelection, hasMultipleRoles, adminCurrentMode]);
+  }, [rolesLoaded, hasMultipleRoles, adminCurrentMode, shouldShowRoleSelection, user]);
 
   const handleSignOut = async () => {
     await signOut();

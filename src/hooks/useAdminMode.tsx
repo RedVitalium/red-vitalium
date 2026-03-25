@@ -28,6 +28,7 @@ interface AdminModeContextType {
   // All roles the current user has
   userRoles: ActiveRole[];
   hasMultipleRoles: boolean;
+  rolesLoaded: boolean;
 }
 
 const AdminModeContext = createContext<AdminModeContextType | undefined>(undefined);
@@ -38,11 +39,13 @@ export function AdminModeProvider({ children }: { children: ReactNode }) {
   const [selectedPatient, setSelectedPatient] = useState<SelectedPatient | null>(null);
   const [shouldShowRoleSelection, setShouldShowRoleSelection] = useState(false);
   const [userRoles, setUserRoles] = useState<ActiveRole[]>([]);
+  const [rolesLoaded, setRolesLoaded] = useState(false);
 
   // Fetch all roles for current user
   useEffect(() => {
     if (!user) {
       setUserRoles([]);
+      setRolesLoaded(false);
       return;
     }
 
@@ -68,11 +71,7 @@ export function AdminModeProvider({ children }: { children: ReactNode }) {
       if (profData) roles.push('professional');
 
       setUserRoles(roles);
-
-      // If user has multiple roles and hasn't chosen yet, show selection
-      if (roles.length > 1 && currentMode === null) {
-        setShouldShowRoleSelection(true);
-      }
+      setRolesLoaded(true);
     };
 
     fetchRoles();
@@ -85,6 +84,7 @@ export function AdminModeProvider({ children }: { children: ReactNode }) {
       setSelectedPatient(null);
       setShouldShowRoleSelection(false);
       setUserRoles([]);
+      setRolesLoaded(false);
     }
   }, [user]);
 
@@ -111,6 +111,7 @@ export function AdminModeProvider({ children }: { children: ReactNode }) {
       setShouldShowRoleSelection,
       userRoles,
       hasMultipleRoles,
+      rolesLoaded,
     }}>
       {children}
     </AdminModeContext.Provider>
