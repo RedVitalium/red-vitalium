@@ -84,6 +84,7 @@ export function AdminModeProvider({ children }: { children: ReactNode }) {
       setSelectedPatient(null);
       setShouldShowRoleSelection(false);
       setUserRoles([]);
+      setRolesLoaded(false);
     }
   }, [user]);
 
