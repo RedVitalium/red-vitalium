@@ -310,12 +310,6 @@ export default function FindProfessionals() {
                 </p>
               )}
 
-              {selectedProf.years_experience && (
-                <p className="text-sm text-muted-foreground flex items-center gap-1">
-                  <Star className="h-3.5 w-3.5" />
-                  {selectedProf.years_experience} años de experiencia
-                </p>
-              )}
 
               {selectedProf.consultation_price && (
                 <p className="text-sm font-semibold text-primary">
