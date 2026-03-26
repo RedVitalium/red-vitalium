@@ -66,7 +66,7 @@ const plans = [
   },
   {
     name: "Plan Oro",
-    price: "$2,244",
+    price: "$2,250",
     duration: "6 meses · Psicología + Nutrición",
     subtitle: "Suma nutrición personalizada a partir del mes 3.",
     features: ["Todo de Plata", "Nutrición personalizada", "Marcadores metabólicos"],
@@ -74,7 +74,7 @@ const plans = [
   },
   {
     name: "Plan Platino",
-    price: "$3,274",
+    price: "$3,300",
     duration: "6 meses · Psicología + Nutrición + Medicina",
     subtitle: "Añade control médico preventivo y biomarcadores completos.",
     features: ["Todo de Oro", "Medicina preventiva", "Biomarcadores completos"],
@@ -82,7 +82,7 @@ const plans = [
   },
   {
     name: "Plan Black",
-    price: "$4,074",
+    price: "$4,100",
     duration: "6 meses · Programa integral completo",
     subtitle: "Equipo completo. Máximo rendimiento y longevidad.",
     features: ["Todo de Platino", "Fisioterapia", "Programa integral"],
