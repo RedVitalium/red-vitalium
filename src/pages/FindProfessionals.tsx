@@ -220,8 +220,14 @@ export default function FindProfessionals() {
                       </div>
 
                       {prof.bio && (
-                        <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                        <p className="text-sm text-muted-foreground mt-2 line-clamp-3">
                           {prof.bio}
+                        </p>
+                      )}
+
+                      {prof.license_number && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Cédula: {prof.license_number}
                         </p>
                       )}
 
@@ -240,6 +246,13 @@ export default function FindProfessionals() {
                         )}
                       </div>
 
+                      {prof.office_address && prof.office_address !== prof.location && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                          <MapPin className="h-3 w-3" />
+                          Consultorio: {prof.office_address}
+                        </p>
+                      )}
+
                       {/* Actions */}
                       <div className="flex gap-2 mt-4">
                         <Button size="sm" asChild>
@@ -248,8 +261,8 @@ export default function FindProfessionals() {
                             Agendar
                           </Link>
                         </Button>
-                        <Button size="sm" variant="outline">
-                          Ver Perfil
+                        <Button size="sm" variant="outline" onClick={() => setSelectedProf(prof)}>
+                          Conoce más
                         </Button>
                       </div>
                     </div>
@@ -260,6 +273,66 @@ export default function FindProfessionals() {
           </motion.div>
         )}
       </main>
+
+      {/* Professional Detail Dialog */}
+      <Dialog open={!!selectedProf} onOpenChange={(open) => !open && setSelectedProf(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl">
+              {selectedProf?.profile?.full_name || 'Profesional'}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedProf && (
+            <div className="space-y-4">
+              <Badge variant="secondary">{specialtyLabels[selectedProf.specialty]}</Badge>
+
+              {selectedProf.bio && (
+                <p className="text-sm text-muted-foreground">{selectedProf.bio}</p>
+              )}
+
+              {selectedProf.license_number && (
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">Cédula:</span> {selectedProf.license_number}
+                </p>
+              )}
+
+              {selectedProf.location && (
+                <p className="text-sm text-muted-foreground flex items-center gap-1">
+                  <MapPin className="h-3.5 w-3.5" />
+                  {selectedProf.location}
+                </p>
+              )}
+
+              {selectedProf.office_address && (
+                <p className="text-sm text-muted-foreground flex items-center gap-1">
+                  <MapPin className="h-3.5 w-3.5" />
+                  Consultorio: {selectedProf.office_address}
+                </p>
+              )}
+
+              {selectedProf.years_experience && (
+                <p className="text-sm text-muted-foreground flex items-center gap-1">
+                  <Star className="h-3.5 w-3.5" />
+                  {selectedProf.years_experience} años de experiencia
+                </p>
+              )}
+
+              {selectedProf.consultation_price && (
+                <p className="text-sm font-semibold text-primary">
+                  Consulta: ${selectedProf.consultation_price} MXN
+                </p>
+              )}
+
+              <Button className="w-full" asChild>
+                <Link to={`/appointments?professional=${selectedProf.id}`}>
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Agendar Cita
+                </Link>
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
