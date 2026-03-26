@@ -47,6 +47,7 @@ export default function FindProfessionals() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedProf, setSelectedProf] = useState<Professional | null>(null);
 
   // In a real implementation, this would fetch from the database
   useEffect(() => {
