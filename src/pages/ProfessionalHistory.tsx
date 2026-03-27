@@ -71,6 +71,8 @@ export default function ProfessionalHistory() {
     enabled: !!patientId,
   });
 
+  if (!selectedPatient || !professionalData) return null;
+
   const getPreview = (catId: string): string | null => {
     if (catId === 'habits') {
       const sleep = healthPreview?.sleep_hours;
