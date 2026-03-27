@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { PageHeader } from "@/components/PageHeader";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface ProfileData {
   full_name: string | null;
@@ -288,6 +289,21 @@ export default function Profile() {
                 )}
               </div>
             </div>
+          </Card>
+        </motion.div>
+
+        {/* Preferences */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mt-6"
+        >
+          <Card className="p-6">
+            <h3 className="text-lg font-display font-semibold mb-6 text-foreground">
+              Preferencias
+            </h3>
+            <ThemeToggle />
           </Card>
         </motion.div>
       </main>
