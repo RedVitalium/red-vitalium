@@ -26,15 +26,13 @@ export default function ProfessionalHistory() {
   const { selectedPatient, isViewingAsAdmin } = useAdminMode();
   const { professionalData } = useUserRoles();
 
+  const patientId = selectedPatient?.userId;
+
   useEffect(() => {
     if (!isViewingAsAdmin || !selectedPatient) {
       navigate('/professional');
     }
   }, [isViewingAsAdmin, selectedPatient, navigate]);
-
-  if (!selectedPatient || !professionalData) return null;
-
-  const patientId = selectedPatient.userId;
 
   const { data: healthPreview } = useQuery({
     queryKey: ['health-preview', patientId],
@@ -45,7 +43,7 @@ export default function ProfessionalHistory() {
         const { data } = await supabase
           .from('health_data')
           .select('value')
-          .eq('user_id', patientId)
+          .eq('user_id', patientId!)
           .eq('data_type', dt)
           .order('recorded_at', { ascending: false })
           .limit(1)
