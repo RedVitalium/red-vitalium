@@ -687,6 +687,7 @@ const [searchParams] = useSearchParams();
           </TabsContent>
         )}
       </Tabs>
+      </div>
     </div>
   );
 }
