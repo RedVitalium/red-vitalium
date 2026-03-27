@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { PageHeader } from "@/components/PageHeader";
 import { motion } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MetricCard } from "@/components/dashboard/MetricCard";
@@ -121,7 +122,9 @@ const [searchParams] = useSearchParams();
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-background">
+      <PageHeader title="Mi Dashboard" backTo="/home" />
+      <div className="container mx-auto px-4 py-8">
       {/* Demo Tour */}
       {isDemo && (
         <DemoTour onComplete={() => setTourCompleted(true)} />
@@ -685,6 +688,7 @@ const [searchParams] = useSearchParams();
           </TabsContent>
         )}
       </Tabs>
+      </div>
     </div>
   );
 }

@@ -971,7 +971,7 @@ export default function Admin() {
         </Card>
 
         <Tabs defaultValue="cycle" className="space-y-6">
-          <TabsList className="flex flex-wrap w-full max-w-4xl gap-1">
+          <TabsList className="flex w-full max-w-4xl gap-1 overflow-x-auto whitespace-nowrap">
             <TabsTrigger value="cycle" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               Ciclo

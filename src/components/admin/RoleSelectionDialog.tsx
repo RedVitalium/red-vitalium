@@ -38,7 +38,7 @@ const roleConfig: Record<ActiveRole, {
     description: 'Gestionar pacientes y ver sus dashboards',
     colorClass: 'text-accent',
     bgClass: 'bg-accent/10 hover:border-accent hover:bg-accent/5',
-    route: '/admin/select-patient',
+    route: '/admin',
   },
   professional: {
     icon: Stethoscope,
