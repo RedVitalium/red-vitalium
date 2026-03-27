@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
+import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "./hooks/useAuth";
 import { AdminModeProvider } from "./hooks/useAdminMode";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -50,10 +51,11 @@ const LoadingSpinner = () => (
 );
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <AdminModeProvider>
-        <TooltipProvider>
+  <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <AdminModeProvider>
+          <TooltipProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>
@@ -200,10 +202,11 @@ const App = () => (
               </Routes>
             </Suspense>
           </BrowserRouter>
-        </TooltipProvider>
-      </AdminModeProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+          </TooltipProvider>
+        </AdminModeProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default App;
