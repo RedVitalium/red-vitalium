@@ -129,22 +129,22 @@ export default function ProfessionalMode() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border/50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/home" className="p-2 hover:bg-muted rounded-lg transition-colors">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Link to="/home" className="p-2 hover:bg-muted rounded-lg transition-colors shrink-0">
               <ArrowLeft className="h-5 w-5" />
             </Link>
-            <img src={appLogo} alt="Red Vitalium" className="h-8 w-auto" />
-            <span className="text-lg font-display font-bold text-primary">
+            <img src={appLogo} alt="Red Vitalium" className="h-8 w-auto shrink-0 hidden sm:block" />
+            <span className="text-base sm:text-lg font-display font-bold text-primary truncate">
               Panel Profesional
             </span>
           </div>
           {professionalData && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full">
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="text-xs bg-primary/10 text-primary px-2 sm:px-3 py-1 rounded-full">
                 {specialtyLabels[professionalData.specialty]}
               </span>
-              <span className="text-xs bg-muted text-muted-foreground px-3 py-1 rounded-full">
+              <span className="text-xs bg-muted text-muted-foreground px-2 sm:px-3 py-1 rounded-full hidden sm:inline-flex">
                 {patients.length} pacientes
               </span>
             </div>
