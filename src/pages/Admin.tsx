@@ -34,6 +34,7 @@ import {
   Brain,
   Settings
 } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 import { 
   calculateBiologicalAge, 
   biomarkerReferenceRanges,
@@ -923,20 +924,9 @@ export default function Admin() {
   const isHabitMutating = unlockHabitMutation.isPending || lockHabitMutation.isPending;
 
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="container mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <h1 className="text-3xl font-display font-bold text-foreground mb-2">
-            Panel de Administración
-          </h1>
-          <p className="text-muted-foreground">
-            Gestione pacientes, biomarcadores, hábitos y configuración
-          </p>
-        </motion.div>
+    <div className="min-h-screen bg-background">
+      <PageHeader title="Administración" subtitle="Gestión de pacientes y configuración" backTo="/home" />
+      <div className="container mx-auto px-4 py-8">
 
         {/* Patient Selector with Search */}
         <Card className="p-6 mb-8">
@@ -971,28 +961,28 @@ export default function Admin() {
         </Card>
 
         <Tabs defaultValue="cycle" className="space-y-6">
-          <TabsList className="flex w-full max-w-4xl gap-1 overflow-x-auto whitespace-nowrap">
-            <TabsTrigger value="cycle" className="flex items-center gap-2">
+          <TabsList className="flex w-full max-w-4xl gap-1 overflow-x-auto whitespace-nowrap p-1">
+            <TabsTrigger value="cycle" className="flex-shrink-0 flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               Ciclo
             </TabsTrigger>
-            <TabsTrigger value="biomarkers" className="flex items-center gap-2">
+            <TabsTrigger value="biomarkers" className="flex-shrink-0 flex items-center gap-2">
               <Droplets className="h-4 w-4" />
               Biomarcadores
             </TabsTrigger>
-            <TabsTrigger value="biological-age" className="flex items-center gap-2">
+            <TabsTrigger value="biological-age" className="flex-shrink-0 flex items-center gap-2">
               <Calculator className="h-4 w-4" />
               Edad Biológica
             </TabsTrigger>
-            <TabsTrigger value="habits" className="flex items-center gap-2">
+            <TabsTrigger value="habits" className="flex-shrink-0 flex items-center gap-2">
               <Activity className="h-4 w-4" />
               Hábitos
             </TabsTrigger>
-            <TabsTrigger value="psychology" className="flex items-center gap-2">
+            <TabsTrigger value="psychology" className="flex-shrink-0 flex items-center gap-2">
               <Brain className="h-4 w-4" />
               Psicología
             </TabsTrigger>
-            <TabsTrigger value="config" className="flex items-center gap-2">
+            <TabsTrigger value="config" className="flex-shrink-0 flex items-center gap-2">
               <Settings className="h-4 w-4" />
               Configuración
             </TabsTrigger>
