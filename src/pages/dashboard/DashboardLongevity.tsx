@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { AISummaryCard } from "@/components/dashboard/AISummaryCard";
 import { AIInterpretButton } from "@/components/dashboard/AIInterpretButton";
+import { DashboardEmptyState } from "@/components/dashboard/DashboardEmptyState";
+import { MetricTooltip } from "@/components/dashboard/MetricTooltip";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useAdminMode } from "@/hooks/useAdminMode";
 import { LongevityMetricEditor, type MetricType } from "@/components/dashboard/LongevityMetricEditor";
@@ -68,16 +70,19 @@ export default function DashboardLongevity() {
   };
 
   const metrics = [
-    { key: "bio-age", title: "Edad Biológica", subtitle: `vs Edad cronológica (${personalData.age} años)`, value: longevityData.biologicalAge.value, unit: "años", target: "Menor que cronológica", change: longevityData.biologicalAge.change, status: getStatus(longevityData.biologicalAge.value > 0 ? personalData.age - longevityData.biologicalAge.value : 0, 0), icon: <TrendingUp className="h-5 w-5" />, metric: "biological_age" as MetricType, label: "Edad Biológica", demoText: "Tu edad biológica de 48 años es 2 años mayor que tu edad cronológica de 46. Esto indica margen de mejora en marcadores metabólicos y cardiovasculares." },
+    { key: "bio-age", title: "Edad Biológica", subtitle: `vs Edad cronológica (${personalData.age} años)`, value: longevityData.biologicalAge.value, unit: "años", target: "Menor que cronológica", change: longevityData.biologicalAge.change, status: getStatus(longevityData.biologicalAge.value > 0 ? personalData.age - longevityData.biologicalAge.value : 0, 0), icon: <TrendingUp className="h-5 w-5" />, metric: "biological_age" as MetricType, label: "Edad Biológica", tooltip: "Edad Biológica", demoText: "Tu edad biológica de 48 años es 2 años mayor que tu edad cronológica de 46. Esto indica margen de mejora en marcadores metabólicos y cardiovasculares." },
     { key: "rcha", title: "RCHA", subtitle: "Cintura/Altura - Riesgo metabólico", value: longevityData.waistHeightRatio.value, target: "< 0.5", change: longevityData.waistHeightRatio.change, status: getStatus(longevityData.waistHeightRatio.value, 0.5, true), icon: <Activity className="h-5 w-5" />, metric: "waist_circumference" as MetricType, label: "RCHA", demoText: "Tu ratio cintura/altura de 0.52 está ligeramente por encima del umbral ideal de 0.5, indicando riesgo metabólico leve." },
-    { key: "vo2", title: "VO2 Máx", subtitle: "Capacidad aeróbica (ml/kg/min)", value: longevityData.vo2Max.value, target: "> 45", change: longevityData.vo2Max.change, status: getStatus(longevityData.vo2Max.value, 45), icon: <Heart className="h-5 w-5" />, metric: "vo2_max" as MetricType, label: "VO2 Máx", demoText: "Tu VO2 Max de 38 ml/kg/min está por debajo de la meta de 45. Percentil ~45 para hombres de 46 años. Mejorable con entrenamiento de intervalos." },
+    { key: "vo2", title: "VO2 Máx", subtitle: "Capacidad aeróbica (ml/kg/min)", value: longevityData.vo2Max.value, target: "> 45", change: longevityData.vo2Max.change, status: getStatus(longevityData.vo2Max.value, 45), icon: <Heart className="h-5 w-5" />, metric: "vo2_max" as MetricType, label: "VO2 Máx", tooltip: "VO2 Máx", demoText: "Tu VO2 Max de 38 ml/kg/min está por debajo de la meta de 45. Percentil ~45 para hombres de 46 años. Mejorable con entrenamiento de intervalos." },
     { key: "grip-l", title: "Fuerza Agarre Izq.", subtitle: "Potencia muscular (Kg)", value: longevityData.gripStrengthLeft.value, unit: "Kg", target: "> 40 Kg", change: longevityData.gripStrengthLeft.change, status: getStatus(longevityData.gripStrengthLeft.value, 40), icon: <Dumbbell className="h-5 w-5" />, metric: "grip_strength_left" as MetricType, label: "Agarre Izq.", demoText: "Fuerza de agarre izquierdo de 42 Kg, por encima de la meta de 40 Kg. Buen indicador de longevidad y salud muscular." },
     { key: "grip-r", title: "Fuerza Agarre Der.", subtitle: "Potencia muscular (Kg)", value: longevityData.gripStrengthRight.value, unit: "Kg", target: "> 40 Kg", change: longevityData.gripStrengthRight.change, status: getStatus(longevityData.gripStrengthRight.value, 40), icon: <Dumbbell className="h-5 w-5" />, metric: "grip_strength_right" as MetricType, label: "Agarre Der.", demoText: "Fuerza de agarre derecho de 44 Kg, buen nivel. Simetría bilateral adecuada." },
     { key: "bal-l", title: "Equilibrio Pierna Izq.", subtitle: "Tiempo con ojos cerrados", value: longevityData.balanceLeft.value, unit: "seg", target: "> 30 seg", change: longevityData.balanceLeft.change, status: getStatus(longevityData.balanceLeft.value, 30), icon: <Timer className="h-5 w-5" />, metric: "balance_left" as MetricType, label: "Equilibrio Izq.", demoText: "Equilibrio izquierdo de 25 seg, por debajo de la meta de 30. Practicar ejercicios de equilibrio diarios." },
     { key: "bal-r", title: "Equilibrio Pierna Der.", subtitle: "Tiempo con ojos cerrados", value: longevityData.balanceRight.value, unit: "seg", target: "> 30 seg", change: longevityData.balanceRight.change, status: getStatus(longevityData.balanceRight.value, 30), icon: <Timer className="h-5 w-5" />, metric: "balance_right" as MetricType, label: "Equilibrio Der.", demoText: "Equilibrio derecho de 28 seg, cercano a la meta. Buena progresión." },
     { key: "nhdl", title: "Colesterol No-HDL", subtitle: "Predictor metabólico (mg/dL)", value: longevityData.nonHdlCholesterol.value, unit: "mg/dL", target: "< 100", change: longevityData.nonHdlCholesterol.change, status: getStatus(longevityData.nonHdlCholesterol.value, 100, true), icon: <Activity className="h-5 w-5" />, metric: "non_hdl_cholesterol" as MetricType, label: "Colesterol No-HDL", demoText: "Colesterol no-HDL en rango aceptable. Este es un predictor clave de riesgo cardiovascular." },
-    { key: "hrv", title: "VFC (HRV)", subtitle: "Variabilidad cardíaca (ms)", value: longevityData.hrv.value, unit: "ms", target: "> 50", change: longevityData.hrv.change, status: getStatus(longevityData.hrv.value, 50), icon: <TrendingUp className="h-5 w-5" />, metric: "hrv" as MetricType, label: "VFC (HRV)", demoText: "HRV de 45 ms, ligeramente por debajo de la meta de 50. Mejorable con manejo de estrés y sueño de calidad." },
+    { key: "hrv", title: "VFC (HRV)", subtitle: "Variabilidad cardíaca (ms)", value: longevityData.hrv.value, unit: "ms", target: "> 50", change: longevityData.hrv.change, status: getStatus(longevityData.hrv.value, 50), icon: <TrendingUp className="h-5 w-5" />, metric: "hrv" as MetricType, label: "VFC (HRV)", tooltip: "VFC (HRV)", demoText: "HRV de 45 ms, ligeramente por debajo de la meta de 50. Mejorable con manejo de estrés y sueño de calidad." },
   ];
+
+  const hasAnyData = isDemo || Object.keys(aiHealthData).length > 0;
+  const showEmpty = !isDemo && !hasAnyData && !isViewingAsAdmin;
 
   return (
     <div className="min-h-screen bg-background">
@@ -88,6 +93,14 @@ export default function DashboardLongevity() {
       </PageHeader>
 
       <main className="container mx-auto px-4 py-8 max-w-3xl">
+        {showEmpty ? (
+          <DashboardEmptyState
+            icon={Heart}
+            title="Aún no hay datos de longevidad"
+            description="Cuando tu profesional registre tus métricas físicas y biomarcadores, aparecerán aquí."
+          />
+        ) : (
+        <>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
           <AISummaryCard
             section="longevity"
@@ -115,6 +128,7 @@ export default function DashboardLongevity() {
                 change={m.change}
                 status={m.status}
                 icon={m.icon}
+                tooltip={m.tooltip}
               />
               <AIInterpretButton
                 metricName={m.title}
@@ -131,6 +145,8 @@ export default function DashboardLongevity() {
             </div>
           ))}
         </motion.div>
+        </>
+        )}
       </main>
 
       {editingMetric && targetUserId && (

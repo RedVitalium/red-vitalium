@@ -4,6 +4,7 @@ import { Beaker, Lock, TrendingUp, AlertCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AISummaryCard } from "@/components/dashboard/AISummaryCard";
+import { MetricTooltip } from "@/components/dashboard/MetricTooltip";
 import { useUserRoles, isFeatureAvailable } from "@/hooks/useUserRoles";
 import { useAdminMode } from "@/hooks/useAdminMode";
 import { PageHeader } from "@/components/PageHeader";
@@ -132,7 +133,12 @@ export default function DashboardMetabolic() {
                 <Card key={marker.name} className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="font-medium">{marker.name}</h4>
+                      <h4 className="font-medium flex items-center gap-1.5">
+                        {marker.name}
+                        {(marker.name === 'Glucosa en ayunas' || marker.name === 'PCR ultrasensible') && (
+                          <MetricTooltip metric={marker.name} />
+                        )}
+                      </h4>
                       <p className="text-sm text-muted-foreground">
                         Ref: {marker.referenceRange} {marker.unit}
                       </p>
