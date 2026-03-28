@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AISummaryCard } from "@/components/dashboard/AISummaryCard";
 import { AIInterpretButton } from "@/components/dashboard/AIInterpretButton";
+import { DashboardEmptyState } from "@/components/dashboard/DashboardEmptyState";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useAdminMode } from "@/hooks/useAdminMode";
 import { PageHeader } from "@/components/PageHeader";

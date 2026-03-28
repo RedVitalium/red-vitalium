@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { AISummaryCard } from "@/components/dashboard/AISummaryCard";
 import { AIInterpretButton } from "@/components/dashboard/AIInterpretButton";
+import { DashboardEmptyState } from "@/components/dashboard/DashboardEmptyState";
+import { MetricTooltip } from "@/components/dashboard/MetricTooltip";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useAdminMode } from "@/hooks/useAdminMode";
 import { LongevityMetricEditor, type MetricType } from "@/components/dashboard/LongevityMetricEditor";

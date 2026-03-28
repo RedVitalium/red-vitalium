@@ -9,6 +9,7 @@ import { HabitWeekIndicator } from "@/components/dashboard/HabitWeekIndicator";
 import { ProfessionalHabitEditor, InlineGoalEditor } from "@/components/dashboard/ProfessionalHabitEditor";
 import { AISummaryCard } from "@/components/dashboard/AISummaryCard";
 import { AIInterpretButton } from "@/components/dashboard/AIInterpretButton";
+import { DashboardEmptyState } from "@/components/dashboard/DashboardEmptyState";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useCycleData } from "@/hooks/useCycleData";
 import { useUnlockedHabits } from "@/hooks/useUnlockedHabits";
@@ -90,6 +91,9 @@ export default function DashboardHabits() {
   const screenTimeOptions = [30, 45, 60, 75, 90, 105, 120, 135, 150, 180, 210, 240];
   const phoneUnlocksOptions = [20, 30, 40, 50, 60, 70, 80, 90, 100, 120, 150];
 
+  const hasAnyData = !isDemo && (habitsData.sleep.value > 0 || habitsData.sleepQuality.value > 0 || (habitsData.activity.sessionCount || 0) > 0 || habitsData.screenTime.value > 0 || habitsData.phoneUnlocks.value > 0);
+  const showEmpty = !isDemo && !hasAnyData && !isViewingAsAdmin;
+
   return (
     <div className="min-h-screen bg-background">
       <PageHeader title="Hábitos" backTo={backPath}>
@@ -100,6 +104,14 @@ export default function DashboardHabits() {
       </PageHeader>
 
       <main className="container mx-auto px-4 py-8 max-w-3xl">
+        {showEmpty ? (
+          <DashboardEmptyState
+            icon={Moon}
+            title="Aún no hay datos de hábitos"
+            description="Cuando tu programa inicie, aquí verás tu sueño, actividad física y uso de pantalla."
+          />
+        ) : (
+        <>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
           <AISummaryCard
             section="habits"
@@ -178,7 +190,7 @@ export default function DashboardHabits() {
             <ProfessionalHabitEditor />
           </motion.div>
         )}
+        )}
       </main>
     </div>
   );
-}
