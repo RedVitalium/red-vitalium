@@ -195,3 +195,4 @@ export default function DashboardPsychological() {
       </main>
     </div>
   );
+}
