@@ -81,6 +81,9 @@ export default function DashboardLongevity() {
     { key: "hrv", title: "VFC (HRV)", subtitle: "Variabilidad cardíaca (ms)", value: longevityData.hrv.value, unit: "ms", target: "> 50", change: longevityData.hrv.change, status: getStatus(longevityData.hrv.value, 50), icon: <TrendingUp className="h-5 w-5" />, metric: "hrv" as MetricType, label: "VFC (HRV)", demoText: "HRV de 45 ms, ligeramente por debajo de la meta de 50. Mejorable con manejo de estrés y sueño de calidad." },
   ];
 
+  const hasAnyData = isDemo || Object.keys(aiHealthData).length > 0;
+  const showEmpty = !isDemo && !hasAnyData && !isViewingAsAdmin;
+
   return (
     <div className="min-h-screen bg-background">
       <PageHeader title="Longevidad" backTo={backPath}>
@@ -90,6 +93,14 @@ export default function DashboardLongevity() {
       </PageHeader>
 
       <main className="container mx-auto px-4 py-8 max-w-3xl">
+        {showEmpty ? (
+          <DashboardEmptyState
+            icon={Heart}
+            title="Aún no hay datos de longevidad"
+            description="Cuando tu profesional registre tus métricas físicas y biomarcadores, aparecerán aquí."
+          />
+        ) : (
+        <>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
           <AISummaryCard
             section="longevity"
@@ -133,6 +144,8 @@ export default function DashboardLongevity() {
             </div>
           ))}
         </motion.div>
+        </>
+        )}
       </main>
 
       {editingMetric && targetUserId && (

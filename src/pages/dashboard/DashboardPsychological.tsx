@@ -45,6 +45,9 @@ export default function DashboardPsychological() {
 
   const personalContext = { age: personalData.age, sex: personalData.sex };
 
+  const hasAnyData = isDemo || psychologicalData.anxiety.value > 0 || psychologicalData.stress.value > 0 || psychologicalData.depression.value > 0 || psychologicalData.lifeSatisfaction.value > 0;
+  const showEmpty = !isDemo && !hasAnyData && !isViewingAsAdmin;
+
   return (
     <div className="min-h-screen bg-background">
       <PageHeader title="Bienestar Psicológico" backTo={backPath}>
@@ -54,6 +57,14 @@ export default function DashboardPsychological() {
       </PageHeader>
 
       <main className="container mx-auto px-4 py-8 max-w-3xl">
+        {showEmpty ? (
+          <DashboardEmptyState
+            icon={Brain}
+            title="Aún no hay datos psicológicos"
+            description="Completa tus tests psicométricos para ver aquí tus niveles de ansiedad, estrés y bienestar."
+          />
+        ) : (
+        <>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
           <AISummaryCard
             section="psychological"
@@ -179,7 +190,8 @@ export default function DashboardPsychological() {
             </Button>
           </Card>
         </motion.div>
+        </>
+        )}
       </main>
     </div>
   );
-}
