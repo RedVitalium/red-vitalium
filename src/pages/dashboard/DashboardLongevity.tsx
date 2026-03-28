@@ -128,6 +128,7 @@ export default function DashboardLongevity() {
                 change={m.change}
                 status={m.status}
                 icon={m.icon}
+                tooltip={m.tooltip}
               />
               <AIInterpretButton
                 metricName={m.title}
