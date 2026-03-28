@@ -190,7 +190,9 @@ export default function DashboardHabits() {
             <ProfessionalHabitEditor />
           </motion.div>
         )}
+        </>
         )}
       </main>
     </div>
   );
+}
