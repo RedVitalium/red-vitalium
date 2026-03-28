@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { MetricTooltip } from "./MetricTooltip";
 
 type StatusLevel = "optimal" | "warning" | "danger" | "neutral";
 
@@ -14,6 +15,7 @@ interface MetricCardProps {
   status: StatusLevel;
   icon?: React.ReactNode;
   chart?: React.ReactNode;
+  tooltip?: string;
 }
 
 const statusColors = {
@@ -40,6 +42,7 @@ export function MetricCard({
   status,
   icon,
   chart,
+  tooltip,
 }: MetricCardProps) {
   const getTrendIcon = () => {
     if (change === undefined || change === 0) {
@@ -75,7 +78,10 @@ export function MetricCard({
           <div className="p-2 rounded-xl bg-primary/10 text-primary">{icon}</div>
         )}
         <div>
-          <h3 className="font-display font-semibold text-foreground">{title}</h3>
+          <div className="flex items-center gap-1.5">
+            <h3 className="font-display font-semibold text-foreground">{title}</h3>
+            {tooltip && <MetricTooltip metric={tooltip} />}
+          </div>
           {subtitle && (
             <p className="text-xs text-muted-foreground">{subtitle}</p>
           )}
