@@ -142,8 +142,6 @@ export default function DashboardMetabolic() {
                       <p className="text-sm text-muted-foreground">
                         Ref: {marker.referenceRange} {marker.unit}
                       </p>
-                        Ref: {marker.referenceRange} {marker.unit}
-                      </p>
                     </div>
                     <div className="text-right">
                       <p className="text-xl font-bold">
