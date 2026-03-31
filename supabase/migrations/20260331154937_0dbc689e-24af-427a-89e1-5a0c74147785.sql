@@ -1,0 +1,22 @@
+
+DELETE FROM public.professional_notes WHERE professional_id IN (SELECT id FROM public.professionals WHERE user_id = '7b06df2c-261b-4b21-9e69-4ba7e34ee7f0');
+DELETE FROM public.professional_notes WHERE patient_id = '7b06df2c-261b-4b21-9e69-4ba7e34ee7f0';
+DELETE FROM public.user_roles WHERE user_id = '7b06df2c-261b-4b21-9e69-4ba7e34ee7f0';
+DELETE FROM public.professionals WHERE user_id = '7b06df2c-261b-4b21-9e69-4ba7e34ee7f0';
+DELETE FROM public.patient_professionals WHERE patient_id = '7b06df2c-261b-4b21-9e69-4ba7e34ee7f0';
+DELETE FROM public.user_settings WHERE user_id = '7b06df2c-261b-4b21-9e69-4ba7e34ee7f0';
+DELETE FROM public.user_cycles WHERE user_id = '7b06df2c-261b-4b21-9e69-4ba7e34ee7f0';
+DELETE FROM public.user_subscriptions WHERE user_id = '7b06df2c-261b-4b21-9e69-4ba7e34ee7f0';
+DELETE FROM public.health_data WHERE user_id = '7b06df2c-261b-4b21-9e69-4ba7e34ee7f0';
+DELETE FROM public.biomarkers WHERE user_id = '7b06df2c-261b-4b21-9e69-4ba7e34ee7f0';
+DELETE FROM public.body_composition WHERE user_id = '7b06df2c-261b-4b21-9e69-4ba7e34ee7f0';
+DELETE FROM public.daily_survey_responses WHERE user_id = '7b06df2c-261b-4b21-9e69-4ba7e34ee7f0';
+DELETE FROM public.test_results WHERE user_id = '7b06df2c-261b-4b21-9e69-4ba7e34ee7f0';
+DELETE FROM public.ai_summaries WHERE user_id = '7b06df2c-261b-4b21-9e69-4ba7e34ee7f0';
+DELETE FROM public.habit_goals WHERE user_id = '7b06df2c-261b-4b21-9e69-4ba7e34ee7f0';
+DELETE FROM public.unlocked_habits WHERE user_id = '7b06df2c-261b-4b21-9e69-4ba7e34ee7f0';
+DELETE FROM public.activity_goals WHERE user_id = '7b06df2c-261b-4b21-9e69-4ba7e34ee7f0';
+DELETE FROM public.appointments WHERE user_id = '7b06df2c-261b-4b21-9e69-4ba7e34ee7f0';
+DELETE FROM public.patient_medications WHERE user_id = '7b06df2c-261b-4b21-9e69-4ba7e34ee7f0';
+DELETE FROM public.profiles WHERE user_id = '7b06df2c-261b-4b21-9e69-4ba7e34ee7f0';
+DELETE FROM auth.users WHERE id = '7b06df2c-261b-4b21-9e69-4ba7e34ee7f0';
