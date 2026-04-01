@@ -108,9 +108,7 @@ export default function Index() {
 
   useEffect(() => {
     if (window.location.hash === '#planes') {
-      setTimeout(() => {
-        document.getElementById('planes')?.scrollIntoView({ behavior: 'smooth' });
-      }, 300);
+      document.getElementById('planes')?.scrollIntoView({ behavior: 'instant' });
     }
   }, []);
 
