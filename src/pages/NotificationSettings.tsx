@@ -341,5 +341,6 @@ export default function NotificationSettingsPage() {
         </Card>
       </motion.div>
     </div>
+    </div>
   );
 }
