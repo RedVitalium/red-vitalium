@@ -63,6 +63,7 @@ function AnimatedRoutes() {
         {/* Landing page - only for web, native goes to auth */}
         <Route path="/" element={isNativeApp ? <Navigate to="/auth" replace /> : <P><Index /></P>} />
         <Route path="/auth" element={<P><Auth /></P>} />
+        <Route path="/reset-password" element={<P><ResetPassword /></P>} />
         
         {/* New home menu - protected, first page after login */}
         <Route path="/home" element={

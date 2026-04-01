@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { PageHeader } from "@/components/PageHeader";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
