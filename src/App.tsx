@@ -40,6 +40,7 @@ const Reminders = React.lazy(() => import("./pages/Reminders"));
 const Admin = React.lazy(() => import("./pages/Admin"));
 const AdminSelectPatient = React.lazy(() => import("./pages/AdminSelectPatient"));
 const NotificationSettings = React.lazy(() => import("./pages/NotificationSettings"));
+const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
 
 const queryClient = new QueryClient();
 
@@ -62,6 +63,7 @@ function AnimatedRoutes() {
         {/* Landing page - only for web, native goes to auth */}
         <Route path="/" element={isNativeApp ? <Navigate to="/auth" replace /> : <P><Index /></P>} />
         <Route path="/auth" element={<P><Auth /></P>} />
+        <Route path="/reset-password" element={<P><ResetPassword /></P>} />
         
         {/* New home menu - protected, first page after login */}
         <Route path="/home" element={

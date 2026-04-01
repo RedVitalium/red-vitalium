@@ -12,6 +12,78 @@ import { toast } from 'sonner';
 import { Mail, Lock, User } from 'lucide-react';
 import appLogo from '@/assets/app-logo.png';
 import { InformedConsentDialog } from '@/components/InformedConsentDialog';
+import { supabase } from '@/integrations/supabase/client';
+
+function ForgotPasswordForm() {
+  const [show, setShow] = useState(false);
+  const [email, setEmail] = useState('');
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSending(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/reset-password',
+    });
+    if (error) {
+      toast.error('Error al enviar el correo', { description: error.message });
+    } else {
+      setSent(true);
+      toast.success('¡Correo enviado!', {
+        description: 'Revisa tu bandeja de entrada para restablecer tu contraseña.',
+        duration: 6000,
+      });
+    }
+    setSending(false);
+  };
+
+  if (!show) {
+    return (
+      <button
+        type="button"
+        onClick={() => setShow(true)}
+        className="w-full text-center text-sm text-primary hover:underline mt-2"
+      >
+        ¿Olvidaste tu contraseña?
+      </button>
+    );
+  }
+
+  if (sent) {
+    return (
+      <div className="text-center text-sm text-muted-foreground mt-2 p-3 bg-muted/50 rounded-lg">
+        <Mail className="h-5 w-5 mx-auto mb-2 text-primary" />
+        Revisa tu correo electrónico para restablecer tu contraseña.
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="mt-3 space-y-3 p-3 bg-muted/30 rounded-lg">
+      <p className="text-sm text-muted-foreground">Ingresa tu email para recibir un enlace de recuperación:</p>
+      <div className="relative">
+        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="email"
+          placeholder="tu@email.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="pl-10"
+          required
+        />
+      </div>
+      <div className="flex gap-2">
+        <Button type="submit" size="sm" className="flex-1" disabled={sending}>
+          {sending ? 'Enviando...' : 'Enviar enlace'}
+        </Button>
+        <Button type="button" size="sm" variant="ghost" onClick={() => setShow(false)}>
+          Cancelar
+        </Button>
+      </div>
+    </form>
+  );
+}
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -220,6 +292,8 @@ export default function Auth() {
                       {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
                     </Button>
                   </form>
+
+                  <ForgotPasswordForm />
 
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center">

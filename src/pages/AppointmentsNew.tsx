@@ -144,10 +144,32 @@ export default function AppointmentsNew() {
 
       return professionalData;
     },
-    onSuccess: (professionalData) => {
+    onSuccess: async (professionalData) => {
       toast.success('Cita solicitada correctamente.', {
         description: `Tu ${specialtyLabels[selectedSpecialty as Specialty]?.toLowerCase() || 'profesional'} recibirá la solicitud. ${professionalData.full_name} - ${format(selectedDate!, "d 'de' MMMM", { locale: es })} a las ${selectedTime}`,
       });
+
+      // Notify professional via edge function
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('user_id', user!.id)
+          .single();
+
+        await supabase.functions.invoke('notify-appointment', {
+          body: {
+            patient_name: profile?.full_name || user!.email || 'Paciente',
+            appointment_date: format(selectedDate!, "d 'de' MMMM, yyyy", { locale: es }),
+            appointment_time: selectedTime,
+            modality: modality === 'videollamada' ? 'virtual' : 'presencial',
+            professional_id: professionalData.id,
+          },
+        });
+      } catch (notifyErr) {
+        console.warn('Could not notify professional:', notifyErr);
+      }
+
       queryClient.invalidateQueries({ queryKey: ['my-appointments'] });
       setSelectedSpecialty('');
       setSelectedProfessional('');

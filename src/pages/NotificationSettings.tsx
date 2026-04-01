@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { PageHeader } from "@/components/PageHeader";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -137,7 +138,9 @@ export default function NotificationSettingsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl">
+    <div className="min-h-screen bg-background">
+      <PageHeader title="Notificaciones" backTo="/profile" />
+      <div className="container mx-auto px-4 py-8 max-w-2xl">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -338,6 +341,7 @@ export default function NotificationSettingsPage() {
           </ul>
         </Card>
       </motion.div>
+    </div>
     </div>
   );
 }
