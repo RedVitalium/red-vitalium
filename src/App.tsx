@@ -40,6 +40,7 @@ const Reminders = React.lazy(() => import("./pages/Reminders"));
 const Admin = React.lazy(() => import("./pages/Admin"));
 const AdminSelectPatient = React.lazy(() => import("./pages/AdminSelectPatient"));
 const NotificationSettings = React.lazy(() => import("./pages/NotificationSettings"));
+const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
 
 const queryClient = new QueryClient();
 
