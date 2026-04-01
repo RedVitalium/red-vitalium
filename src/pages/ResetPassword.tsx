@@ -16,14 +16,45 @@ export default function ResetPassword() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
+  const [sessionError, setSessionError] = useState('');
 
-  // Listen for the PASSWORD_RECOVERY event
   useEffect(() => {
+    // Extract tokens from URL hash (Supabase redirects with #access_token=...&type=recovery)
+    const hash = window.location.hash;
+    if (hash) {
+      const params = new URLSearchParams(hash.substring(1));
+      const accessToken = params.get('access_token');
+      const refreshToken = params.get('refresh_token');
+      const type = params.get('type');
+
+      if (accessToken && refreshToken && type === 'recovery') {
+        supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        }).then(({ error }) => {
+          if (error) {
+            setSessionError('El enlace ha expirado o es inválido. Solicita uno nuevo.');
+          } else {
+            setSessionReady(true);
+          }
+        });
+        return;
+      }
+    }
+
+    // Fallback: check if there's already a session (e.g. from onAuthStateChange)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
-        // User arrived via recovery link — session is set
+        setSessionReady(true);
       }
     });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setSessionReady(true);
+      else if (!hash) setSessionError('No se encontró una sesión válida. Solicita un nuevo enlace de recuperación.');
+    });
+
     return () => subscription.unsubscribe();
   }, []);
 
@@ -87,6 +118,18 @@ export default function ResetPassword() {
               <div className="text-center py-4">
                 <CheckCircle2 className="h-16 w-16 text-success mx-auto mb-4" />
                 <p className="text-muted-foreground">Redirigiendo...</p>
+              </div>
+            ) : sessionError ? (
+              <div className="text-center py-4 space-y-4">
+                <p className="text-destructive">{sessionError}</p>
+                <Button variant="outline" onClick={() => navigate('/auth')}>
+                  Volver al inicio de sesión
+                </Button>
+              </div>
+            ) : !sessionReady ? (
+              <div className="text-center py-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Verificando enlace...</p>
               </div>
             ) : (
               <form onSubmit={handleReset} className="space-y-4">
