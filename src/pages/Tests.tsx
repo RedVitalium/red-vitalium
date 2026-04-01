@@ -503,15 +503,14 @@ export default function Tests() {
 
   // Test list view
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-background">
+      <PageHeader title="Tests Psicométricos" backTo="/home" />
+      <div className="container mx-auto px-4 py-8">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="text-3xl font-display font-bold text-foreground mb-2">
-          Tests Psicométricos
-        </h1>
         <p className="text-muted-foreground">
           Completa tus evaluaciones programadas para monitorear tu bienestar
         </p>

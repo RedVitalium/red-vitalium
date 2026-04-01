@@ -184,7 +184,9 @@ export default function Reminders() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="min-h-screen bg-background">
+      <PageHeader title="Recordatorios" backTo="/home" />
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -192,9 +194,6 @@ export default function Reminders() {
       >
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-display font-bold text-foreground mb-2">
-              Recordatorios
-            </h1>
             <p className="text-muted-foreground">
               Configura tus rutinas diarias para optimizar tu bienestar
             </p>
