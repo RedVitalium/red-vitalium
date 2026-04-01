@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -105,6 +105,14 @@ const itemVariants = {
 
 export default function Index() {
   const [demoDialogOpen, setDemoDialogOpen] = useState(false);
+
+  useEffect(() => {
+    if (window.location.hash === '#planes') {
+      setTimeout(() => {
+        document.getElementById('planes')?.scrollIntoView({ behavior: 'smooth' });
+      }, 300);
+    }
+  }, []);
 
   return (
     <div className="min-h-screen">
@@ -306,7 +314,7 @@ export default function Index() {
       </section>
 
       {/* Plans Section */}
-      <section className="py-20 bg-background">
+      <section id="planes" className="py-20 bg-background">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

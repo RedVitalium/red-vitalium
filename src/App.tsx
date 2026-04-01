@@ -53,6 +53,13 @@ const LoadingSpinner = () => (
   </div>
 );
 
+function UpgradeRedirect() {
+  React.useEffect(() => {
+    window.location.replace('/#planes');
+  }, []);
+  return null;
+}
+
 const P = ({ children }: { children: React.ReactNode }) => <PageTransition>{children}</PageTransition>;
 
 function AnimatedRoutes() {
@@ -154,6 +161,9 @@ function AnimatedRoutes() {
         <Route path="/admin/select-patient" element={
           <ProtectedRoute requireAdmin><P><AdminSelectPatient /></P></ProtectedRoute>
         } />
+        
+        {/* Upgrade redirect to plans section */}
+        <Route path="/upgrade" element={<UpgradeRedirect />} />
         
         {/* 404 */}
         <Route path="*" element={<P><NotFound /></P>} />
