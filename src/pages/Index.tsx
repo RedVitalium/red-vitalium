@@ -106,6 +106,14 @@ const itemVariants = {
 export default function Index() {
   const [demoDialogOpen, setDemoDialogOpen] = useState(false);
 
+  useEffect(() => {
+    if (window.location.hash === '#planes') {
+      setTimeout(() => {
+        document.getElementById('planes')?.scrollIntoView({ behavior: 'smooth' });
+      }, 300);
+    }
+  }, []);
+
   return (
     <div className="min-h-screen">
       <DemoSelectionDialog open={demoDialogOpen} onOpenChange={setDemoDialogOpen} />
