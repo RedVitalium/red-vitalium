@@ -155,6 +155,9 @@ function AnimatedRoutes() {
           <ProtectedRoute requireAdmin><P><AdminSelectPatient /></P></ProtectedRoute>
         } />
         
+        {/* Upgrade redirect to plans section */}
+        <Route path="/upgrade" element={<Navigate to="/#planes" replace />} />
+        
         {/* 404 */}
         <Route path="*" element={<P><NotFound /></P>} />
       </Routes>
