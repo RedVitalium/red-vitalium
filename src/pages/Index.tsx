@@ -374,7 +374,7 @@ export default function Index() {
             viewport={{ once: true }}
           >
             <VideoPreview
-              youtubeUrl="https://youtube.com/@redvitalium"
+              youtubeUrl="https://youtube.com/shorts/VOaWV0wPhYc?si=TkNYBhZoOsKrZmr-"
               title="Conoce cómo funciona Red Vitalium"
             />
           </motion.div>
