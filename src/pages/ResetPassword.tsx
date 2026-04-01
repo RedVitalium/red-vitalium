@@ -119,6 +119,18 @@ export default function ResetPassword() {
                 <CheckCircle2 className="h-16 w-16 text-success mx-auto mb-4" />
                 <p className="text-muted-foreground">Redirigiendo...</p>
               </div>
+            ) : sessionError ? (
+              <div className="text-center py-4 space-y-4">
+                <p className="text-destructive">{sessionError}</p>
+                <Button variant="outline" onClick={() => navigate('/auth')}>
+                  Volver al inicio de sesión
+                </Button>
+              </div>
+            ) : !sessionReady ? (
+              <div className="text-center py-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Verificando enlace...</p>
+              </div>
             ) : (
               <form onSubmit={handleReset} className="space-y-4">
                 <div className="space-y-2">
