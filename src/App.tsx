@@ -156,7 +156,7 @@ function AnimatedRoutes() {
         } />
         
         {/* Upgrade redirect to plans section */}
-        <Route path="/upgrade" element={<Navigate to="/#planes" replace />} />
+        <Route path="/upgrade" element={<UpgradeRedirect />} />
         
         {/* 404 */}
         <Route path="*" element={<P><NotFound /></P>} />
