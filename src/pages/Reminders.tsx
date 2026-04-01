@@ -466,5 +466,6 @@ export default function Reminders() {
         </Card>
       </motion.div>
     </div>
+    </div>
   );
 }
