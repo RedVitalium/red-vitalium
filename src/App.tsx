@@ -53,6 +53,13 @@ const LoadingSpinner = () => (
   </div>
 );
 
+function UpgradeRedirect() {
+  React.useEffect(() => {
+    window.location.replace('/#planes');
+  }, []);
+  return null;
+}
+
 const P = ({ children }: { children: React.ReactNode }) => <PageTransition>{children}</PageTransition>;
 
 function AnimatedRoutes() {
