@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +11,7 @@ import { AuthProvider } from "./hooks/useAuth";
 import { AdminModeProvider } from "./hooks/useAdminMode";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { PageTransition } from "./components/PageTransition";
+import { restoreNativeSession, startNativeStorageSync } from "./lib/supabase-storage-adapter";
 
 // Static imports (always needed immediately)
 import Index from "./pages/Index";
@@ -172,24 +173,39 @@ function AnimatedRoutes() {
   );
 }
 
-const App = () => (
-  <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <AdminModeProvider>
-          <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Suspense fallback={<LoadingSpinner />}>
-              <AnimatedRoutes />
-            </Suspense>
-          </BrowserRouter>
-          </TooltipProvider>
-        </AdminModeProvider>
-      </AuthProvider>
-    </QueryClientProvider>
-  </ThemeProvider>
-);
+const App = () => {
+  const [ready, setReady] = useState(!Capacitor.isNativePlatform());
+
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      restoreNativeSession().then(() => {
+        startNativeStorageSync();
+        setReady(true);
+      });
+    }
+  }, []);
+
+  if (!ready) return <LoadingSpinner />;
+
+  return (
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <AdminModeProvider>
+            <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Suspense fallback={<LoadingSpinner />}>
+                <AnimatedRoutes />
+              </Suspense>
+            </BrowserRouter>
+            </TooltipProvider>
+          </AdminModeProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
+  );
+};
 
 export default App;
