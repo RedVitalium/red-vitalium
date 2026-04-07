@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +11,7 @@ import { AuthProvider } from "./hooks/useAuth";
 import { AdminModeProvider } from "./hooks/useAdminMode";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { PageTransition } from "./components/PageTransition";
+import { restoreNativeSession, startNativeStorageSync } from "./lib/supabase-storage-adapter";
 
 // Static imports (always needed immediately)
 import Index from "./pages/Index";
