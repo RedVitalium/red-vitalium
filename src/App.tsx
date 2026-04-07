@@ -173,24 +173,39 @@ function AnimatedRoutes() {
   );
 }
 
-const App = () => (
-  <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <AdminModeProvider>
-          <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Suspense fallback={<LoadingSpinner />}>
-              <AnimatedRoutes />
-            </Suspense>
-          </BrowserRouter>
-          </TooltipProvider>
-        </AdminModeProvider>
-      </AuthProvider>
-    </QueryClientProvider>
-  </ThemeProvider>
-);
+const App = () => {
+  const [ready, setReady] = useState(!Capacitor.isNativePlatform());
+
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      restoreNativeSession().then(() => {
+        startNativeStorageSync();
+        setReady(true);
+      });
+    }
+  }, []);
+
+  if (!ready) return <LoadingSpinner />;
+
+  return (
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <AdminModeProvider>
+            <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Suspense fallback={<LoadingSpinner />}>
+                <AnimatedRoutes />
+              </Suspense>
+            </BrowserRouter>
+            </TooltipProvider>
+          </AdminModeProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
+  );
+};
 
 export default App;
