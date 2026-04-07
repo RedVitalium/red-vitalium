@@ -14,12 +14,14 @@ import {
   Lock,
   Rocket,
   Shield,
-  Bell
+  Bell,
+  Smartphone
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRoles, isFeatureAvailable } from "@/hooks/useUserRoles";
 import { useAdminMode } from "@/hooks/useAdminMode";
 import { useCycleData } from "@/hooks/useCycleData";
+import { useHealthConnect } from "@/hooks/useHealthConnect";
 import { RoleSelectionDialog } from "@/components/admin/RoleSelectionDialog";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -80,6 +82,13 @@ const menuItems: MenuItem[] = [
     href: '/tests',
   },
   {
+    id: 'health-connect',
+    label: 'Health Connect',
+    description: 'Conecta tu reloj y dispositivos de salud',
+    icon: Smartphone,
+    href: '/dashboard',
+  },
+  {
     id: 'admin',
     label: 'Administración',
     description: 'Gestionar pacientes, ciclos y biomarcadores',
@@ -119,6 +128,14 @@ export default function HomeMenu() {
   // BUG 3 FIX: Check if patient has an active cycle
   const { getCycleProgress } = useCycleData(user?.id || null);
   const cycleProgress = getCycleProgress();
+  // Auto-sync Health Connect on app open (native only)
+  const { syncAllHealthData, isAvailable: healthAvailable, isPluginLoaded: healthLoaded } = useHealthConnect();
+  useEffect(() => {
+    if (user && healthAvailable && healthLoaded) {
+      console.log('AUTO-SYNC: starting');
+      syncAllHealthData().catch((e) => console.log('AUTO-SYNC: failed', e));
+    }
+  }, [user, healthAvailable, healthLoaded]);
 
   // Trigger role selection only after roles have finished loading
   useEffect(() => {

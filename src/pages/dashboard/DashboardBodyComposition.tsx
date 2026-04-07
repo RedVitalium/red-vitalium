@@ -48,6 +48,29 @@ export default function DashboardBodyComposition() {
     enabled: !isDemo && !!targetUserId,
   });
 
+  // Fetch body metrics from health_data (Health Connect)
+  const { data: healthBodyData } = useQuery({
+    queryKey: ["health-body-data", targetUserId || "self"],
+    queryFn: async () => {
+      const userId = targetUserId;
+      if (!userId) return null;
+      const { data } = await supabase
+        .from("health_data")
+        .select("data_type, value")
+        .eq("user_id", userId)
+        .in("data_type", ["weight", "body_fat"])
+        .order("recorded_at", { ascending: false })
+        .limit(10);
+      return data;
+    },
+    enabled: !isDemo && !!targetUserId,
+  });
+
+  const getHealthValue = (type: string) => {
+    const entry = healthBodyData?.find(h => h.data_type === type);
+    return entry ? Number(entry.value) : 0;
+  };
+
   const bodyData: FullBodyCompositionData = isDemo ? DEMO_DATA_MALE_45 : latestComposition ? {
     weight: latestComposition.weight || personalData.weight || 0,
     bodyFatPercent: latestComposition.body_fat_percent || 0,
@@ -65,12 +88,12 @@ export default function DashboardBodyComposition() {
     bodyAge: latestComposition.body_age || 0,
   } : {
     weight: personalData.weight || 0,
-    bodyFatPercent: 0, bodyType: "-", visceralFat: 0, bodyWaterPercent: 0,
+    bodyFatPercent: getHealthValue("body_fat"), bodyType: "-", visceralFat: 0, bodyWaterPercent: 0,
     muscleMass: 0, boneMass: 0, bmi: 0, metabolicAge: 0, bmr: 0,
     fatFreeMass: 0, subcutaneousFat: 0, protein: 0, bodyAge: 0,
   };
 
-  const hasData = isDemo || bodyData.bodyFatPercent > 0;
+  const hasData = isDemo || bodyData.bodyFatPercent > 0 || bodyData.weight > 0;
 
   const slides = [
     <CompositionOverviewSlide key="overview" data={bodyData} />,

@@ -64,6 +64,8 @@ export function HealthConnectCard() {
         'stress',
         'vo2_max',
         'calories',
+        'weight',
+        'body_fat',
       ]);
     } finally {
       setIsSyncing(false);

@@ -90,7 +90,7 @@ export function MetricCard({
 
       {/* Value */}
       <div className="flex items-end gap-2 mb-2">
-        <span className="text-3xl font-display font-bold text-foreground">{value}</span>
+        <span className="text-3xl font-display font-bold text-foreground">{typeof value === 'number' ? Math.round(value * 10) / 10 : value}</span>
         {unit && <span className="text-sm text-muted-foreground mb-1">{unit}</span>}
       </div>
 

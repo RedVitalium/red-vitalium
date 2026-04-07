@@ -1,17 +1,14 @@
-import React, { Suspense, useState, useEffect } from "react";
+import React, { Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { App as CapApp } from '@capacitor/app';
 import { Capacitor } from "@capacitor/core";
-import { ThemeProvider } from "next-themes";
-import { AnimatePresence } from "framer-motion";
 import { AuthProvider } from "./hooks/useAuth";
 import { AdminModeProvider } from "./hooks/useAdminMode";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import { PageTransition } from "./components/PageTransition";
-import { restoreNativeSession, startNativeStorageSync } from "./lib/supabase-storage-adapter";
 
 // Static imports (always needed immediately)
 import Index from "./pages/Index";
@@ -41,7 +38,6 @@ const Reminders = React.lazy(() => import("./pages/Reminders"));
 const Admin = React.lazy(() => import("./pages/Admin"));
 const AdminSelectPatient = React.lazy(() => import("./pages/AdminSelectPatient"));
 const NotificationSettings = React.lazy(() => import("./pages/NotificationSettings"));
-const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
 
 const queryClient = new QueryClient();
 
@@ -54,158 +50,199 @@ const LoadingSpinner = () => (
   </div>
 );
 
-function UpgradeRedirect() {
+// Back button handler for Android
+function BackButtonHandler() {
   React.useEffect(() => {
-    window.location.replace('/#planes');
+    if (!isNativeApp) return;
+
+    const handler = CapApp.addListener('backButton', () => {
+      const currentPath = window.location.pathname;
+      
+      // On home, auth, or root: minimize app
+      if (currentPath === '/home' || currentPath === '/auth' || currentPath === '/') {
+        CapApp.minimizeApp();
+        return;
+      }
+      
+      // Dashboard sub-pages → go to my-dashboard
+      if (currentPath.startsWith('/dashboard/')) {
+        window.location.pathname = '/my-dashboard';
+        return;
+      }
+      
+      // Professional sub-pages → go to professional
+      if (currentPath === '/professional/history' || currentPath === '/professional/clinical-history') {
+        window.location.pathname = '/professional';
+        return;
+      }
+      
+      // Everything else → go to home
+      window.location.pathname = '/home';
+    });
+
+    return () => {
+      handler.then(h => h.remove());
+    };
   }, []);
+
   return null;
 }
-
-const P = ({ children }: { children: React.ReactNode }) => <PageTransition>{children}</PageTransition>;
-
-function AnimatedRoutes() {
-  const location = useLocation();
-  return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        {/* Landing page - only for web, native goes to auth */}
-        <Route path="/" element={isNativeApp ? <Navigate to="/auth" replace /> : <P><Index /></P>} />
-        <Route path="/auth" element={<P><Auth /></P>} />
-        <Route path="/reset-password" element={<P><ResetPassword /></P>} />
-        
-        {/* New home menu - protected, first page after login */}
-        <Route path="/home" element={
-          <ProtectedRoute><P><HomeMenu /></P></ProtectedRoute>
-        } />
-        
-        {/* Profile page */}
-        <Route path="/profile" element={
-          <ProtectedRoute><P><Profile /></P></ProtectedRoute>
-        } />
-        
-        {/* My Dashboard menu */}
-        <Route path="/my-dashboard" element={
-          <ProtectedRoute><P><MyDashboard /></P></ProtectedRoute>
-        } />
-        
-        {/* Dashboard sub-pages */}
-        <Route path="/dashboard/ai-summary" element={
-          <ProtectedRoute><P><DashboardAISummary /></P></ProtectedRoute>
-        } />
-        <Route path="/dashboard/achievements" element={
-          <ProtectedRoute><P><DashboardAchievements /></P></ProtectedRoute>
-        } />
-        <Route path="/dashboard/habits" element={
-          <ProtectedRoute><P><DashboardHabits /></P></ProtectedRoute>
-        } />
-        <Route path="/dashboard/psychological" element={
-          <ProtectedRoute><P><DashboardPsychological /></P></ProtectedRoute>
-        } />
-        <Route path="/dashboard/longevity" element={
-          <ProtectedRoute><P><DashboardLongevity /></P></ProtectedRoute>
-        } />
-        <Route path="/dashboard/body-composition" element={
-          <ProtectedRoute><P><DashboardBodyComposition /></P></ProtectedRoute>
-        } />
-        <Route path="/dashboard/metabolic" element={
-          <ProtectedRoute><P><DashboardMetabolic /></P></ProtectedRoute>
-        } />
-        
-        {/* Legacy dashboard route */}
-        <Route path="/dashboard" element={
-          <ProtectedRoute><P><Dashboard /></P></ProtectedRoute>
-        } />
-        
-        {/* Appointments with dropdowns */}
-        <Route path="/appointments" element={<P><AppointmentsNew /></P>} />
-        
-        {/* Find professionals */}
-        <Route path="/find-professionals" element={
-          <ProtectedRoute><P><FindProfessionals /></P></ProtectedRoute>
-        } />
-        
-        {/* Professional mode */}
-        <Route path="/professional" element={
-          <ProtectedRoute><P><ProfessionalMode /></P></ProtectedRoute>
-        } />
-        {/* Professional demo (no auth required) */}
-        <Route path="/demo/professional" element={<P><ProfessionalDemoPage /></P>} />
-        <Route path="/professional/history" element={
-          <ProtectedRoute><P><ProfessionalHistory /></P></ProtectedRoute>
-        } />
-        <Route path="/professional/clinical-history" element={
-          <ProtectedRoute><P><ProfessionalClinicalHistory /></P></ProtectedRoute>
-        } />
-        
-        {/* Tests */}
-        <Route path="/tests" element={
-          <ProtectedRoute><P><Tests /></P></ProtectedRoute>
-        } />
-        
-        {/* Reminders */}
-        <Route path="/reminders" element={
-          <ProtectedRoute><P><Reminders /></P></ProtectedRoute>
-        } />
-        
-        {/* Notification settings */}
-        <Route path="/notification-settings" element={
-          <ProtectedRoute><P><NotificationSettings /></P></ProtectedRoute>
-        } />
-        <Route path="/settings/notifications" element={
-          <ProtectedRoute><P><NotificationSettings /></P></ProtectedRoute>
-        } />
-        
-        {/* Admin routes */}
-        <Route path="/admin" element={
-          <ProtectedRoute requireAdmin><P><Admin /></P></ProtectedRoute>
-        } />
-        <Route path="/admin/select-patient" element={
-          <ProtectedRoute requireAdmin><P><AdminSelectPatient /></P></ProtectedRoute>
-        } />
-        
-        {/* Upgrade redirect to plans section */}
-        <Route path="/upgrade" element={<UpgradeRedirect />} />
-        
-        {/* 404 */}
-        <Route path="*" element={<P><NotFound /></P>} />
-      </Routes>
-    </AnimatePresence>
-  );
-}
-
-const App = () => {
-  const [ready, setReady] = useState(!Capacitor.isNativePlatform());
-
-  useEffect(() => {
-    if (Capacitor.isNativePlatform()) {
-      restoreNativeSession().then(() => {
-        startNativeStorageSync();
-        setReady(true);
-      });
-    }
-  }, []);
-
-  if (!ready) return <LoadingSpinner />;
-
-  return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <AdminModeProvider>
-            <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Suspense fallback={<LoadingSpinner />}>
-                <AnimatedRoutes />
-              </Suspense>
-            </BrowserRouter>
-            </TooltipProvider>
-          </AdminModeProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
-  );
-};
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <AuthProvider>
+      <AdminModeProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <BackButtonHandler />
+            <Suspense fallback={<LoadingSpinner />}>
+              <Routes>
+                {/* Landing page - only for web, native goes to auth */}
+                <Route path="/" element={isNativeApp ? <Navigate to="/auth" replace /> : <Index />} />
+                <Route path="/auth" element={<Auth />} />
+                
+                {/* New home menu - protected, first page after login */}
+                <Route path="/home" element={
+                  <ProtectedRoute>
+                    <HomeMenu />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Profile page */}
+                <Route path="/profile" element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                } />
+                
+                {/* My Dashboard menu */}
+                <Route path="/my-dashboard" element={
+                  <ProtectedRoute>
+                    <MyDashboard />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Dashboard sub-pages */}
+                <Route path="/dashboard/ai-summary" element={
+                  <ProtectedRoute>
+                    <DashboardAISummary />
+                  </ProtectedRoute>
+                } />
+                <Route path="/dashboard/achievements" element={
+                  <ProtectedRoute>
+                    <DashboardAchievements />
+                  </ProtectedRoute>
+                } />
+                <Route path="/dashboard/habits" element={
+                  <ProtectedRoute>
+                    <DashboardHabits />
+                  </ProtectedRoute>
+                } />
+                <Route path="/dashboard/psychological" element={
+                  <ProtectedRoute>
+                    <DashboardPsychological />
+                  </ProtectedRoute>
+                } />
+                <Route path="/dashboard/longevity" element={
+                  <ProtectedRoute>
+                    <DashboardLongevity />
+                  </ProtectedRoute>
+                } />
+                <Route path="/dashboard/body-composition" element={
+                  <ProtectedRoute>
+                    <DashboardBodyComposition />
+                  </ProtectedRoute>
+                } />
+                <Route path="/dashboard/metabolic" element={
+                  <ProtectedRoute>
+                    <DashboardMetabolic />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Legacy dashboard route */}
+                <Route path="/dashboard" element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Appointments with dropdowns */}
+                <Route path="/appointments" element={<AppointmentsNew />} />
+                
+                {/* Find professionals */}
+                <Route path="/find-professionals" element={
+                  <ProtectedRoute>
+                    <FindProfessionals />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Professional mode */}
+                <Route path="/professional" element={
+                  <ProtectedRoute>
+                    <ProfessionalMode />
+                  </ProtectedRoute>
+                } />
+                {/* Professional demo (no auth required) */}
+                <Route path="/demo/professional" element={<ProfessionalDemoPage />} />
+                <Route path="/professional/history" element={
+                  <ProtectedRoute>
+                    <ProfessionalHistory />
+                  </ProtectedRoute>
+                } />
+                <Route path="/professional/clinical-history" element={
+                  <ProtectedRoute>
+                    <ProfessionalClinicalHistory />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Tests */}
+                <Route path="/tests" element={
+                  <ProtectedRoute>
+                    <Tests />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Reminders */}
+                <Route path="/reminders" element={
+                  <ProtectedRoute>
+                    <Reminders />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Notification settings */}
+                <Route path="/notification-settings" element={
+                  <ProtectedRoute>
+                    <NotificationSettings />
+                  </ProtectedRoute>
+                } />
+                <Route path="/settings/notifications" element={
+                  <ProtectedRoute>
+                    <NotificationSettings />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Admin routes */}
+                <Route path="/admin" element={
+                  <ProtectedRoute requireAdmin>
+                    <Admin />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/select-patient" element={
+                  <ProtectedRoute requireAdmin>
+                    <AdminSelectPatient />
+                  </ProtectedRoute>
+                } />
+                
+                {/* 404 */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AdminModeProvider>
+    </AuthProvider>
+  </QueryClientProvider>
+);
 
 export default App;

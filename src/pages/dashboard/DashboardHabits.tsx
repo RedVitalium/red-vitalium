@@ -128,7 +128,7 @@ export default function DashboardHabits() {
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="grid md:grid-cols-2 gap-4 mb-8">
           <div>
-            <MetricCard title="Sueño" subtitle="Horas efectivas de sueño" value={habitsData.sleep.value} unit="hrs" target={`> ${sleepHoursGoal} horas`} change={habitsData.sleep.change} status={getStatus(habitsData.sleep.value, sleepHoursGoal)} icon={<Moon className="h-5 w-5" />} chart={habitsData.sleep.data.length > 0 ? <MiniChart data={habitsData.sleep.data} color="success" /> : undefined} />
+            <MetricCard title="Sueño" subtitle="Última noche registrada" value={habitsData.sleep.value} unit="hrs" target={`> ${sleepHoursGoal} horas`} change={habitsData.sleep.change} status={getStatus(habitsData.sleep.value, sleepHoursGoal)} icon={<Moon className="h-5 w-5" />} chart={habitsData.sleep.data.length > 0 ? <MiniChart data={habitsData.sleep.data} color="success" /> : undefined} />
             <AIInterpretButton metricName="Horas de Sueño" value={habitsData.sleep.value} unit="hrs" target={`> ${sleepHoursGoal}`} section="habits" context={personalContext} targetUserId={isViewingAsAdmin ? effectiveUserId || undefined : undefined} isDemo={isDemo} demoText="Tu promedio de 7.2 horas de sueño está dentro del rango recomendado. Mantener este nivel favorece la recuperación física y cognitiva." />
             {isViewingAsAdmin && patientId && <InlineGoalEditor habitType="sleep_hours" currentValue={sleepHoursGoal} options={sleepHoursOptions} unit="hrs" patientId={patientId} selectedMonth={selectedMonth} />}
           </div>
@@ -138,14 +138,90 @@ export default function DashboardHabits() {
             {isViewingAsAdmin && patientId && <InlineGoalEditor habitType="sleep_quality" currentValue={sleepQualityGoal} options={sleepQualityOptions} unit="pts" patientId={patientId} selectedMonth={selectedMonth} />}
           </div>
           <div>
-            <MetricCard title="Actividad Física" subtitle={`${habitsData.activity.sessionCount || 0} sesiones de ${habitsData.activity.avgDuration || 0} min`} value={habitsData.activity.sessionCount || 0} unit="sesiones" target={`${activityGoals.sessionsPerWeek} de ${activityGoals.avgDurationMinutes} min`} change={habitsData.activity.change} status={getStatus(habitsData.activity.sessionCount || 0, activityGoals.sessionsPerWeek)} icon={<Dumbbell className="h-5 w-5" />} chart={habitsData.activity.data.length > 0 ? <MiniChart data={habitsData.activity.data} color="success" /> : undefined} />
-            <AIInterpretButton metricName="Actividad Física" value={habitsData.activity.sessionCount || 0} unit="sesiones/sem" target={`${activityGoals.sessionsPerWeek} sesiones`} section="habits" context={personalContext} targetUserId={isViewingAsAdmin ? effectiveUserId || undefined : undefined} isDemo={isDemo} demoText="4 sesiones por semana cumple la meta. Mantener frecuencia y considerar variar intensidad." />
+            <MetricCard 
+              title="Sueño Profundo" 
+              subtitle="Fase de recuperación física"
+              value={habitsData.sleepDeep.value} 
+              unit="min"
+              target="> 90 min"
+              change={habitsData.sleepDeep.change}
+              status={getStatus(habitsData.sleepDeep.value, 90)} 
+              icon={<Moon className="h-5 w-5" />} />
+          </div>
+          <div>
+            <MetricCard 
+              title="Sueño Ligero" 
+              subtitle="Fase de transición"
+              value={habitsData.sleepLight.value} 
+              unit="min"
+              target="180-300 min"
+              change={habitsData.sleepLight.change}
+              status={habitsData.sleepLight.value > 0 ? "optimal" : "warning"} 
+              icon={<Moon className="h-5 w-5" />} />
+          </div>
+          <div>
+            <MetricCard 
+              title="Sueño REM" 
+              subtitle="Fase de consolidación de memoria"
+              value={habitsData.sleepRem.value} 
+              unit="min"
+              target="> 60 min"
+              change={habitsData.sleepRem.change}
+              status={getStatus(habitsData.sleepRem.value, 60)} 
+              icon={<Moon className="h-5 w-5" />} />
+          </div>
+          <div>
+            <MetricCard 
+              title="SpO2 Nocturno" 
+              subtitle="Oxigenación durante el sueño"
+              value={habitsData.sleepSpo2.value} 
+              unit="%"
+              target="> 95%"
+              change={habitsData.sleepSpo2.change}
+              status={getStatus(habitsData.sleepSpo2.value, 95)} 
+              icon={<Activity className="h-5 w-5" />} />
+          </div>
+          <div>
+           <MetricCard 
+              title="Actividad Física" 
+              subtitle={habitsData.activity.sessionCount > 0 ? `${habitsData.activity.sessionCount} sesiones de ${habitsData.activity.avgDuration} min` : habitsData.activity.value > 0 ? `Última sesión: ${Math.round(habitsData.activity.value)} min` : "Sin actividad registrada"}
+              value={habitsData.activity.sessionCount || habitsData.activity.value || 0} 
+              unit={habitsData.activity.sessionCount > 0 ? "sesiones" : "min"}
+              target={`${activityGoals.sessionsPerWeek} de ${activityGoals.avgDurationMinutes} min`}
+              change={habitsData.activity.change}
+              status={getStatus(habitsData.activity.sessionCount || habitsData.activity.value || 0, activityGoals.sessionsPerWeek)} 
+              icon={<Dumbbell className="h-5 w-5" />} 
+              chart={habitsData.activity.data.length > 0 ? <MiniChart data={habitsData.activity.data} color="success" /> : undefined} />
+           <AIInterpretButton metricName="Actividad Física" value={habitsData.activity.sessionCount || 0} unit="sesiones/sem" target={`${activityGoals.sessionsPerWeek} sesiones`} section="habits" context={personalContext} targetUserId={isViewingAsAdmin ? effectiveUserId || undefined : undefined} isDemo={isDemo} demoText="4 sesiones por semana cumple la meta. Mantener frecuencia y considerar variar intensidad." />
             {isViewingAsAdmin && patientId && (
               <div className="space-y-1">
                 <InlineGoalEditor habitType="activity_sessions" currentValue={activityGoals.sessionsPerWeek} options={activitySessionOptions} unit="ses/sem" patientId={patientId} selectedMonth={selectedMonth} />
                 <InlineGoalEditor habitType="activity_duration" currentValue={activityGoals.avgDurationMinutes} options={activityDurationOptions} unit="min" patientId={patientId} selectedMonth={selectedMonth} />
               </div>
             )}
+          </div>
+          <div>
+            <MetricCard 
+              title="Pasos del Día" 
+              subtitle="Último registro"
+              value={habitsData.steps.value} 
+              unit="pasos"
+              target="> 8000"
+              change={habitsData.steps.change}
+              status={getStatus(habitsData.steps.value, 8000)} 
+              icon={<Activity className="h-5 w-5" />}
+              chart={habitsData.steps.data.length > 0 ? <MiniChart data={habitsData.steps.data} color="success" /> : undefined} />
+          </div>
+          <div>
+            <MetricCard 
+              title="Calorías Activas" 
+              subtitle="Energía quemada hoy"
+              value={habitsData.calories.value} 
+              unit="kcal"
+              target="> 300"
+              change={habitsData.calories.change}
+              status={getStatus(habitsData.calories.value, 300)} 
+              icon={<Activity className="h-5 w-5" />} />
           </div>
           <div>
             <MetricCard title="Tiempo en Pantalla" subtitle="Promedio diario (semana anterior)" value={habitsData.screenTime.value} unit="min" target={`< ${screenTimeGoal} min`} change={habitsData.screenTime.change} status={getStatus(habitsData.screenTime.value, screenTimeGoal, true)} icon={<Smartphone className="h-5 w-5" />} />

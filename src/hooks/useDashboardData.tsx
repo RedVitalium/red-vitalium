@@ -44,10 +44,16 @@ const demoPsychologicalData = {
 const demoHabitsData = {
   sleep: { value: 7.8, change: 10, data: [{ value: 6.5 }, { value: 7 }, { value: 7.2 }, { value: 7.5 }, { value: 7.8 }, { value: 8 }] },
   sleepQuality: { value: 88, change: 5 },
+  sleepDeep: { value: 95, change: 0 },
+  sleepLight: { value: 210, change: 0 },
+  sleepRem: { value: 65, change: 0 },
+  sleepSpo2: { value: 96.5, change: 0 },
   activity: { value: 45, change: 15, sessionCount: 5, avgDuration: 40, data: [{ value: 3 }, { value: 4 }, { value: 4 }, { value: 5 }, { value: 5 }, { value: 5 }], weeklyData: [] as { value: number; date: string }[] },
   yoga: { value: 3, sessionCount: 3, change: 10, data: [{ value: 2 }, { value: 2 }, { value: 3 }, { value: 3 }] },
   screenTime: { value: 95, change: -8, data: [{ value: 120 }, { value: 115 }, { value: 108 }, { value: 102 }, { value: 98 }, { value: 95 }] },
   phoneUnlocks: { value: 58, change: -18, data: [{ value: 85 }, { value: 78 }, { value: 72 }, { value: 68 }, { value: 62 }, { value: 58 }] },
+  steps: { value: 8500, change: 12, data: [{ value: 6000 }, { value: 7200 }, { value: 8000 }, { value: 7800 }, { value: 8200 }, { value: 8500 }] },
+  calories: { value: 350, change: 5, data: [{ value: 280 }, { value: 310 }, { value: 330 }, { value: 345 }, { value: 350 }] },
 };
 
 const demoLongevityData = {
@@ -60,7 +66,9 @@ const demoLongevityData = {
   balanceRight: { value: 42, change: 12, data: [{ value: 30 }, { value: 34 }, { value: 37 }, { value: 40 }, { value: 42 }] },
   nonHdlCholesterol: { value: 95, change: -5 },
   hrv: { value: 62, change: 10, data: [{ value: 48 }, { value: 52 }, { value: 56 }, { value: 59 }, { value: 62 }] },
+  heartRate: { value: 76, change: 0, data: [{ value: 78 }, { value: 75 }, { value: 76 }] },
   restingHr: { value: 58, change: -5, data: [{ value: 65 }, { value: 63 }, { value: 61 }, { value: 59 }, { value: 58 }] },
+  spo2: { value: 97.5, change: 0, data: [{ value: 97 }, { value: 97.2 }, { value: 97.5 }] },
 };
 
 const demoWeeklyProgress = {
@@ -131,10 +139,16 @@ const emptyPsychologicalData = {
 const emptyHabitsData = {
   sleep: { value: 0, change: 0, data: [] as { value: number }[] },
   sleepQuality: { value: 0, change: 0 },
+  sleepDeep: { value: 0, change: 0 },
+  sleepLight: { value: 0, change: 0 },
+  sleepRem: { value: 0, change: 0 },
+  sleepSpo2: { value: 0, change: 0 },
   activity: { value: 0, change: 0, sessionCount: 0, avgDuration: 0, data: [] as { value: number }[], weeklyData: [] as { value: number; date: string }[] },
   yoga: { value: 0, sessionCount: 0, change: 0, data: [] as { value: number }[] },
   screenTime: { value: 0, change: 0, data: [] as { value: number }[] },
   phoneUnlocks: { value: 0, change: 0, data: [] as { value: number }[] },
+  steps: { value: 0, change: 0, data: [] as { value: number }[] },
+  calories: { value: 0, change: 0, data: [] as { value: number }[] },
 };
 
 const emptyLongevityData = {
@@ -147,7 +161,9 @@ const emptyLongevityData = {
   balanceRight: { value: 0, change: 0, data: [] as { value: number }[] },
   nonHdlCholesterol: { value: 0, change: 0 },
   hrv: { value: 0, change: 0, data: [] as { value: number }[] },
+  heartRate: { value: 0, change: 0, data: [] as { value: number }[] },
   restingHr: { value: 0, change: 0, data: [] as { value: number }[] },
+  spo2: { value: 0, change: 0, data: [] as { value: number }[] },
 };
 
 const emptyWeeklyProgress = {
@@ -171,10 +187,23 @@ function calculateAge(dateOfBirth: string | null): number {
   return age;
 }
 
-// Helper to get health data value by type (most recent)
+// Alias map: dashboard names → Health Connect names
+const dataTypeAliases: Record<string, string[]> = {
+  'sleep_hours': ['sleep_hours', 'sleep_duration'],
+  'sleep_quality': ['sleep_quality', 'sleep_score'],
+  'resting_heart_rate': ['resting_heart_rate'],
+  'screen_time': ['screen_time'],
+  'phone_unlocks': ['phone_unlocks'],
+  'steps': ['steps'],
+  'activity_duration': ['activity_duration'],
+  'hrv': ['hrv'],
+  'vo2_max': ['vo2_max'],
+};
+
 function getHealthDataValue(healthData: Array<{ data_type: string; value: number }> | null, dataType: string): number {
   if (!healthData) return 0;
-  const entry = healthData.find(h => h.data_type === dataType);
+  const aliases = dataTypeAliases[dataType] || [dataType];
+  const entry = healthData.find(h => aliases.includes(h.data_type));
   return entry?.value || 0;
 }
 
@@ -197,7 +226,8 @@ function getWeeklyAverageValue(
   
   // Filter data from the previous week
   const weekData = healthData.filter(h => {
-    if (h.data_type !== dataType) return false;
+    const aliases = dataTypeAliases[dataType] || [dataType];
+    if (!aliases.includes(h.data_type)) return false;
     const recordedDate = new Date(h.recorded_at);
     return recordedDate >= startOfPreviousWeek && recordedDate < endOfPreviousWeek;
   });
@@ -232,7 +262,8 @@ function getWeeklyHistoryForChart(
     startOfWeek.setDate(endOfWeek.getDate() - 7);
     
     const weekData = healthData.filter(h => {
-      if (h.data_type !== dataType) return false;
+      const aliases = dataTypeAliases[dataType] || [dataType];
+      if (!aliases.includes(h.data_type)) return false;
       const recordedDate = new Date(h.recorded_at);
       return recordedDate >= startOfWeek && recordedDate < endOfWeek;
     });
@@ -472,22 +503,24 @@ function getWeeklyActivityHistory(
 
 // Helper to get health data history for charts with dates
 function getHealthDataHistoryWithDates(
-  healthData: Array<{ data_type: string; value: number; recorded_at: string }> | null, 
+  healthData: Array<{ data_type: string; value: number; recorded_at: string }> | null,
   dataType: string
 ): DataPointWithDate[] {
   if (!healthData) return [];
+  const aliases = dataTypeAliases[dataType] || [dataType];
   return healthData
-    .filter(h => h.data_type === dataType)
+    .filter(h => aliases.includes(h.data_type))
     .map(h => ({ value: Number(h.value), date: h.recorded_at }))
-    .slice(0, 10)
-    .reverse();
+    .slice(0, 10);
 }
+
 
 // Helper to get health data history for charts (simple)
 function getHealthDataHistory(healthData: Array<{ data_type: string; value: number }> | null, dataType: string): { value: number }[] {
   if (!healthData) return [];
+  const aliases = dataTypeAliases[dataType] || [dataType];
   return healthData
-    .filter(h => h.data_type === dataType)
+    .filter(h => aliases.includes(h.data_type))
     .map(h => ({ value: Number(h.value) }))
     .slice(0, 6)
     .reverse();
@@ -604,7 +637,7 @@ export function useDashboardData(overrideUserId?: string) {
     age: calculateAge(profileData.date_of_birth),
     sex: profileData.sex || "",
     height: profileData.height || 0,
-    weight: profileData.weight || 0,
+    weight: profileData.weight || getHealthDataValue(healthData, "weight") || 0,
     waistHeightRatio: profileData.waist_circumference && profileData.height 
       ? Number((profileData.waist_circumference / 100 / profileData.height).toFixed(2))
       : 0,
@@ -701,11 +734,15 @@ export function useDashboardData(overrideUserId?: string) {
       data: sleepData 
     },
     sleepQuality: { value: getHealthDataValue(healthData, "sleep_quality"), change: 0 },
+    sleepDeep: { value: getHealthDataValue(healthData, "sleep_deep"), change: 0 },
+    sleepLight: { value: getHealthDataValue(healthData, "sleep_light"), change: 0 },
+    sleepRem: { value: getHealthDataValue(healthData, "sleep_rem"), change: 0 },
+    sleepSpo2: { value: getHealthDataValue(healthData, "sleep_spo2"), change: 0 },
     activity: { 
       // Session count and average duration for activity
       sessionCount: getWeeklyActivitySessionCount(healthData),
       avgDuration: getWeeklyAvgSessionDuration(healthData),
-      value: getWeeklyActivityTotal(healthData), 
+      value: getWeeklyActivityTotal(healthData) || getHealthDataValue(healthData, "activity_duration"),
       change: calculateChange(sessionCountHistory.map(d => ({ value: d.value }))), 
       data: sessionCountHistory.map(d => ({ value: d.value })),
       weeklyData: activityWeeklyData
@@ -729,8 +766,17 @@ export function useDashboardData(overrideUserId?: string) {
       data: phoneUnlocksWeeklyData.map(d => ({ value: d.value })),
       weeklyData: phoneUnlocksWeeklyData
     },
+    steps: {
+      value: getHealthDataValue(healthData, "steps"),
+      change: 0,
+      data: getHealthDataHistory(healthData, "steps"),
+    },
+    calories: {
+      value: getHealthDataValue(healthData, "calories"),
+      change: 0,
+      data: getHealthDataHistory(healthData, "calories"),
+    },
   };
-
   // Build longevity data from biomarkers and health_data
   const vo2MaxData = getHealthDataHistory(healthData, "vo2_max");
   const gripStrengthLeftData = getHealthDataHistory(healthData, "grip_strength_left");
@@ -781,10 +827,20 @@ export function useDashboardData(overrideUserId?: string) {
       change: calculateChange(hrvData),
       data: hrvData
     },
+   heartRate: {
+      value: getHealthDataValue(healthData, "heart_rate"),
+      change: 0,
+      data: getHealthDataHistory(healthData, "heart_rate"),
+    },
     restingHr: {
       value: getHealthDataValue(healthData, "resting_heart_rate"),
       change: calculateChange(restingHrData),
       data: restingHrData
+    },
+    spo2: {
+      value: getHealthDataValue(healthData, "spo2"),
+      change: 0,
+      data: getHealthDataHistory(healthData, "spo2"),
     },
   };
 
