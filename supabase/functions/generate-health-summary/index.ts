@@ -16,8 +16,47 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY is not configured");
+
+    // Helper to call Anthropic Claude API
+    const callAnthropic = async (systemPrompt: string, userMessage: string): Promise<string> => {
+      const resp = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "x-api-key": ANTHROPIC_API_KEY!,
+          "anthropic-version": "2023-06-01",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: 4096,
+          system: systemPrompt,
+          messages: [{ role: "user", content: userMessage }],
+        }),
+      });
+
+      if (!resp.ok) {
+        const status = resp.status;
+        if (status === 429) throw { status: 429, message: "Límite de solicitudes excedido. Intenta de nuevo en unos minutos." };
+        if (status === 402) throw { status: 402, message: "Créditos insuficientes para IA." };
+        const errorText = await resp.text();
+        console.error("Anthropic API error:", status, errorText);
+        throw new Error(`Anthropic API error: ${status}`);
+      }
+
+      const result = await resp.json();
+      return result.content?.[0]?.text || "";
+    };
+
+    const parseJsonResponse = (raw: string): any => {
+      try {
+        const jsonMatch = raw.match(/```json\s*([\s\S]*?)\s*```/) || raw.match(/({[\s\S]*})/);
+        return JSON.parse(jsonMatch ? jsonMatch[1] : raw);
+      } catch {
+        return { score: null, summary: raw };
+      }
+    };
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header");
