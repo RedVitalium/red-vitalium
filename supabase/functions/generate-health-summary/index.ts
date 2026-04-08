@@ -40,30 +40,30 @@ serve(async (req) => {
     const isClinicalUnified = section === "clinical-unified";
     
     const fetchPromises: Promise<any>[] = [
-      supabase.from("profiles").select("*").eq("user_id", dataUserId).maybeSingle().then((r: any) => r),
-      supabase.from("health_data").select("*").eq("user_id", dataUserId).order("recorded_at", { ascending: false }).limit(200).then((r: any) => r),
-      supabase.from("biomarkers").select("*").eq("user_id", dataUserId).order("recorded_at", { ascending: false }).limit(10).then((r: any) => r),
-      supabase.from("test_results").select("*").eq("user_id", dataUserId).order("completed_at", { ascending: false }).limit(20).then((r: any) => r),
-      supabase.from("body_composition").select("*").eq("user_id", dataUserId).order("recorded_at", { ascending: false }).limit(10).then((r: any) => r),
+      Promise.resolve(supabase.from("profiles").select("*").eq("user_id", dataUserId).maybeSingle()),
+      Promise.resolve(supabase.from("health_data").select("*").eq("user_id", dataUserId).order("recorded_at", { ascending: false }).limit(200)),
+      Promise.resolve(supabase.from("biomarkers").select("*").eq("user_id", dataUserId).order("recorded_at", { ascending: false }).limit(10)),
+      Promise.resolve(supabase.from("test_results").select("*").eq("user_id", dataUserId).order("completed_at", { ascending: false }).limit(20)),
+      Promise.resolve(supabase.from("body_composition").select("*").eq("user_id", dataUserId).order("recorded_at", { ascending: false }).limit(10)),
       // New: medications, daily survey, cycles (indices 5, 6, 7)
-      supabase.from("patient_medications").select("*").eq("user_id", dataUserId).eq("is_active", true).order("created_at", { ascending: false }).then((r: any) => r),
-      supabase.from("daily_survey_responses").select("*, daily_survey_questions(question_text, habit_category)").eq("user_id", dataUserId).order("response_date", { ascending: false }).limit(90).then((r: any) => r),
-      supabase.from("user_cycles").select("*").eq("user_id", dataUserId).order("started_at", { ascending: false }).limit(5).then((r: any) => r),
+      Promise.resolve(supabase.from("patient_medications").select("*").eq("user_id", dataUserId).eq("is_active", true).order("created_at", { ascending: false })),
+      Promise.resolve(supabase.from("daily_survey_responses").select("*, daily_survey_questions(question_text, habit_category)").eq("user_id", dataUserId).order("response_date", { ascending: false }).limit(90)),
+      Promise.resolve(supabase.from("user_cycles").select("*").eq("user_id", dataUserId).order("started_at", { ascending: false }).limit(5)),
     ];
     
     // For clinical sections, also fetch professional notes and subscription
     if (isClinicalSection || isClinicalUnified) {
       fetchPromises.push(
-        supabase.from("professional_notes").select("*").eq("patient_id", dataUserId).order("created_at", { ascending: false }).limit(50).then((r: any) => r)
+        Promise.resolve(supabase.from("professional_notes").select("*").eq("patient_id", dataUserId).order("created_at", { ascending: false }).limit(50))
       );
       fetchPromises.push(
-        supabase.from("habit_goals").select("*").eq("user_id", dataUserId).order("created_at", { ascending: false }).limit(20).then((r: any) => r)
+        Promise.resolve(supabase.from("habit_goals").select("*").eq("user_id", dataUserId).order("created_at", { ascending: false }).limit(20))
       );
       fetchPromises.push(
-        supabase.from("unlocked_habits").select("*").eq("user_id", dataUserId).then((r: any) => r)
+        Promise.resolve(supabase.from("unlocked_habits").select("*").eq("user_id", dataUserId))
       );
       fetchPromises.push(
-        supabase.from("user_subscriptions").select("*").eq("user_id", dataUserId).eq("is_active", true).maybeSingle().then((r: any) => r)
+        Promise.resolve(supabase.from("user_subscriptions").select("*").eq("user_id", dataUserId).eq("is_active", true).maybeSingle())
       );
     }
     
