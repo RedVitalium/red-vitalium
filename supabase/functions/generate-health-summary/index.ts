@@ -844,10 +844,15 @@ RESPONDE en JSON: {"score": number(0-100), "summary": "texto", "highlights": ["s
 
     let dataForAI: any;
     if (section === "overall") {
-      dataForAI = allSectionData;
+      dataForAI = { ...allSectionData };
     } else {
-      dataForAI = allSectionData[section] || {};
+      dataForAI = { ...(allSectionData[section] || {}) };
     }
+
+    // Inject new context into AI data
+    if (medicationsContext) dataForAI.medicaciones_activas = medicationsContext;
+    if (surveyAdherence) dataForAI.adherencia_encuesta = surveyAdherence;
+    if (cycleContext) dataForAI.ciclo_actual = cycleContext;
 
     contextParts.push(`\nDATOS REALES del paciente (todo lo que NO aparece aquí NO EXISTE):\n${JSON.stringify(dataForAI, null, 2)}`);
     const userMessage = contextParts.join("\n");
