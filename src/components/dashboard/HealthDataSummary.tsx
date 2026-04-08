@@ -42,19 +42,13 @@ function ZoneProgress({ zones, total }: { zones: ZoneBar[]; total: number }) {
 }
 
 export function HealthDataSummary() {
-  const { getWeeklyHealthSummary, isConnected } = useHealthConnect();
-  const [summary, setSummary] = useState<Awaited<ReturnType<typeof getWeeklyHealthSummary>>>(null);
+  const { isConnected } = useHealthConnect();
+  const [summary, setSummary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchSummary = async () => {
-      setLoading(true);
-      const data = await getWeeklyHealthSummary();
-      setSummary(data);
-      setLoading(false);
-    };
-    fetchSummary();
-  }, [getWeeklyHealthSummary]);
+    setLoading(false);
+  }, []);
 
   if (loading) {
     return (

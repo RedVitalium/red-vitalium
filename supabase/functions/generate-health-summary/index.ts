@@ -40,26 +40,30 @@ serve(async (req) => {
     const isClinicalUnified = section === "clinical-unified";
     
     const fetchPromises: Promise<any>[] = [
-      supabase.from("profiles").select("*").eq("user_id", dataUserId).maybeSingle(),
-      supabase.from("health_data").select("*").eq("user_id", dataUserId).order("recorded_at", { ascending: false }).limit(200),
-      supabase.from("biomarkers").select("*").eq("user_id", dataUserId).order("recorded_at", { ascending: false }).limit(10),
-      supabase.from("test_results").select("*").eq("user_id", dataUserId).order("completed_at", { ascending: false }).limit(20),
-      supabase.from("body_composition").select("*").eq("user_id", dataUserId).order("recorded_at", { ascending: false }).limit(10),
+      supabase.from("profiles").select("*").eq("user_id", dataUserId).maybeSingle().then((r: any) => r),
+      supabase.from("health_data").select("*").eq("user_id", dataUserId).order("recorded_at", { ascending: false }).limit(200).then((r: any) => r),
+      supabase.from("biomarkers").select("*").eq("user_id", dataUserId).order("recorded_at", { ascending: false }).limit(10).then((r: any) => r),
+      supabase.from("test_results").select("*").eq("user_id", dataUserId).order("completed_at", { ascending: false }).limit(20).then((r: any) => r),
+      supabase.from("body_composition").select("*").eq("user_id", dataUserId).order("recorded_at", { ascending: false }).limit(10).then((r: any) => r),
+      // New: medications, daily survey, cycles (indices 5, 6, 7)
+      supabase.from("patient_medications").select("*").eq("user_id", dataUserId).eq("is_active", true).order("created_at", { ascending: false }).then((r: any) => r),
+      supabase.from("daily_survey_responses").select("*, daily_survey_questions(question_text, habit_category)").eq("user_id", dataUserId).order("response_date", { ascending: false }).limit(90).then((r: any) => r),
+      supabase.from("user_cycles").select("*").eq("user_id", dataUserId).order("started_at", { ascending: false }).limit(5).then((r: any) => r),
     ];
     
     // For clinical sections, also fetch professional notes and subscription
     if (isClinicalSection || isClinicalUnified) {
       fetchPromises.push(
-        supabase.from("professional_notes").select("*").eq("patient_id", dataUserId).order("created_at", { ascending: false }).limit(50)
+        supabase.from("professional_notes").select("*").eq("patient_id", dataUserId).order("created_at", { ascending: false }).limit(50).then((r: any) => r)
       );
       fetchPromises.push(
-        supabase.from("habit_goals").select("*").eq("user_id", dataUserId).order("created_at", { ascending: false }).limit(20)
+        supabase.from("habit_goals").select("*").eq("user_id", dataUserId).order("created_at", { ascending: false }).limit(20).then((r: any) => r)
       );
       fetchPromises.push(
-        supabase.from("unlocked_habits").select("*").eq("user_id", dataUserId)
+        supabase.from("unlocked_habits").select("*").eq("user_id", dataUserId).then((r: any) => r)
       );
       fetchPromises.push(
-        supabase.from("user_subscriptions").select("*").eq("user_id", dataUserId).eq("is_active", true).maybeSingle()
+        supabase.from("user_subscriptions").select("*").eq("user_id", dataUserId).eq("is_active", true).maybeSingle().then((r: any) => r)
       );
     }
     
@@ -71,10 +75,15 @@ serve(async (req) => {
     const biomarkers = biomarkersRes.data || [];
     const testResults = testResultsRes.data || [];
     const bodyComp = bodyCompRes.data || [];
-    const professionalNotes = (isClinicalSection || isClinicalUnified) ? (results[5]?.data || []) : [];
-    const habitGoals = (isClinicalSection || isClinicalUnified) ? (results[6]?.data || []) : [];
-    const unlockedHabits = (isClinicalSection || isClinicalUnified) ? (results[7]?.data || []) : [];
-    const subscription = (isClinicalSection || isClinicalUnified) ? (results[8]?.data || null) : null;
+    // New data sources (indices 5, 6, 7)
+    const medications = results[5]?.data || [];
+    const dailySurvey = results[6]?.data || [];
+    const cycles = results[7]?.data || [];
+    // Clinical data (indices 8, 9, 10, 11 — only present for clinical sections)
+    const professionalNotes = (isClinicalSection || isClinicalUnified) ? (results[8]?.data || []) : [];
+    const habitGoals = (isClinicalSection || isClinicalUnified) ? (results[9]?.data || []) : [];
+    const unlockedHabits = (isClinicalSection || isClinicalUnified) ? (results[10]?.data || []) : [];
+    const subscription = (isClinicalSection || isClinicalUnified) ? (results[11]?.data || null) : null;
     const patientPlan = subscription?.plan || "plata"; // default to plata
 
     const age = profile?.date_of_birth
@@ -324,6 +333,39 @@ SWLS (Satisfacción con la vida, puntuación ALTA = MEJOR):
   Muy alta: 31-35, Alta: 26-30, Ligeramente alta: 21-25, Neutral: 20, Ligeramente baja: 15-19, Baja: 10-14, Muy baja: 5-9
 `;
 
+    // Build additional context from new data sources
+    const buildMedicationsContext = () => {
+      if (medications.length === 0) return null;
+      return medications.map((m: any) => ({
+        name: m.medication_name,
+        dosage: m.dosage,
+        frequency: m.frequency,
+        start_date: m.start_date,
+      }));
+    };
+
+    const buildSurveyAdherence = () => {
+      if (dailySurvey.length === 0) return null;
+      const uniqueDays = new Set(dailySurvey.map((r: any) => r.response_date));
+      const totalDays = uniqueDays.size;
+      const yesAnswers = dailySurvey.filter((r: any) => r.answer === true).length;
+      const avgCompliance = totalDays > 0 ? Math.round((yesAnswers / dailySurvey.length) * 100) : 0;
+      return { total_dias: totalDays, promedio_cumplimiento: avgCompliance };
+    };
+
+    const buildCycleContext = () => {
+      if (cycles.length === 0) return null;
+      const activeCycle = cycles.find((c: any) => c.is_active);
+      if (!activeCycle) return null;
+      const startDate = new Date(activeCycle.started_at);
+      const weeksSinceStart = Math.floor((Date.now() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1;
+      return { numero: cycles.length, semana: weeksSinceStart };
+    };
+
+    const medicationsContext = buildMedicationsContext();
+    const surveyAdherence = buildSurveyAdherence();
+    const cycleContext = buildCycleContext();
+
     // CRITICAL anti-hallucination instruction
     const antiHallucinationRule = `
 REGLA CRÍTICA - PROHIBIDO INVENTAR DATOS:
@@ -333,7 +375,8 @@ REGLA CRÍTICA - PROHIBIDO INVENTAR DATOS:
 - La puntuación general solo promedia marcadores CON datos reales. NO penalices por datos faltantes.
 - Usa las TABLAS DE REFERENCIA proporcionadas para clasificar cada valor según edad y sexo.
 - Indica la clasificación (Excelente/Bueno/Promedio/Bajo) según la tabla correspondiente.
-- Solo indica percentil aproximado si puedes calcularlo con las tablas y tienes edad+sexo.`;
+- Solo indica percentil aproximado si puedes calcularlo con las tablas y tienes edad+sexo.
+- Si el paciente tiene medicaciones activas (especialmente Monjaro/tirzepatida o semaglutida), mencionar que los cambios en peso y glucosa pueden estar influenciados por la medicación.`;
 
 
     if (isClinicalSection) {
@@ -432,6 +475,11 @@ Solo usa datos que aparezcan en el JSON. Si no hay notas profesionales, menciona
 La puntuación (0-100) refleja el estado general en esta área clínica.
 
 RESPONDE en JSON: {"score": number(0-100) o null si no hay datos suficientes, "summary": "texto de resumen clínico completo 3-5 oraciones", "markers": [{"name": "string", "status": "green|yellow|red", "note": "breve"}], "recommendations": ["string"] (máx 3)}`;
+
+      // Inject new context into clinical sections too
+      if (medicationsContext) clinicalContext.medicaciones_activas = medicationsContext;
+      if (surveyAdherence) clinicalContext.adherencia_encuesta = surveyAdherence;
+      if (cycleContext) clinicalContext.ciclo_actual = cycleContext;
 
       const clinicalUserMsg = `Paciente: ${age ? `${age} años` : 'edad desconocida'}, ${sex || 'sexo desconocido'}.
 Área: ${specialtyLabelsMap[clinicalSpecialty]}
@@ -559,6 +607,11 @@ ${JSON.stringify(clinicalContext, null, 2)}`;
       if (unlockedHabits.length > 0) {
         unifiedContext.unlockedHabits = unlockedHabits.map((h: any) => h.habit_id);
       }
+      
+      // Inject new context into unified clinical
+      if (medicationsContext) unifiedContext.medicaciones_activas = medicationsContext;
+      if (surveyAdherence) unifiedContext.adherencia_encuesta = surveyAdherence;
+      if (cycleContext) unifiedContext.ciclo_actual = cycleContext;
       
       unifiedContext.specialtyData = specialtyData;
 
@@ -801,10 +854,15 @@ RESPONDE en JSON: {"score": number(0-100), "summary": "texto", "highlights": ["s
 
     let dataForAI: any;
     if (section === "overall") {
-      dataForAI = allSectionData;
+      dataForAI = { ...allSectionData };
     } else {
-      dataForAI = allSectionData[section] || {};
+      dataForAI = { ...(allSectionData[section] || {}) };
     }
+
+    // Inject new context into AI data
+    if (medicationsContext) dataForAI.medicaciones_activas = medicationsContext;
+    if (surveyAdherence) dataForAI.adherencia_encuesta = surveyAdherence;
+    if (cycleContext) dataForAI.ciclo_actual = cycleContext;
 
     contextParts.push(`\nDATOS REALES del paciente (todo lo que NO aparece aquí NO EXISTE):\n${JSON.stringify(dataForAI, null, 2)}`);
     const userMessage = contextParts.join("\n");
