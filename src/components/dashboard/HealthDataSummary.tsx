@@ -47,14 +47,8 @@ export function HealthDataSummary() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchSummary = async () => {
-      setLoading(true);
-      const data = await getWeeklyHealthSummary();
-      setSummary(data);
-      setLoading(false);
-    };
-    fetchSummary();
-  }, [getWeeklyHealthSummary]);
+    setLoading(false);
+  }, []);
 
   if (loading) {
     return (
