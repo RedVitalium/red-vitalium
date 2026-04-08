@@ -75,10 +75,15 @@ serve(async (req) => {
     const biomarkers = biomarkersRes.data || [];
     const testResults = testResultsRes.data || [];
     const bodyComp = bodyCompRes.data || [];
-    const professionalNotes = (isClinicalSection || isClinicalUnified) ? (results[5]?.data || []) : [];
-    const habitGoals = (isClinicalSection || isClinicalUnified) ? (results[6]?.data || []) : [];
-    const unlockedHabits = (isClinicalSection || isClinicalUnified) ? (results[7]?.data || []) : [];
-    const subscription = (isClinicalSection || isClinicalUnified) ? (results[8]?.data || null) : null;
+    // New data sources (indices 5, 6, 7)
+    const medications = results[5]?.data || [];
+    const dailySurvey = results[6]?.data || [];
+    const cycles = results[7]?.data || [];
+    // Clinical data (indices 8, 9, 10, 11 — only present for clinical sections)
+    const professionalNotes = (isClinicalSection || isClinicalUnified) ? (results[8]?.data || []) : [];
+    const habitGoals = (isClinicalSection || isClinicalUnified) ? (results[9]?.data || []) : [];
+    const unlockedHabits = (isClinicalSection || isClinicalUnified) ? (results[10]?.data || []) : [];
+    const subscription = (isClinicalSection || isClinicalUnified) ? (results[11]?.data || null) : null;
     const patientPlan = subscription?.plan || "plata"; // default to plata
 
     const age = profile?.date_of_birth
