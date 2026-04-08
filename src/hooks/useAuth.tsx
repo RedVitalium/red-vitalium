@@ -72,11 +72,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
-    const { lovable } = await import('@/integrations/lovable/index');
-    const result = await lovable.auth.signInWithOAuth('google', {
-      redirect_uri: window.location.origin + '/home',
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin + '/home',
+      },
     });
-    return { error: result.error || null };
+    return { error };
   };
 
   const signOut = async () => {
