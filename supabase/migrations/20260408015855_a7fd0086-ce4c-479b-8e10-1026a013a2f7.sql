@@ -1,0 +1,1 @@
+UPDATE public.profiles SET wearable_model = 'Samsung Galaxy Watch 5' WHERE user_id = (SELECT id FROM auth.users WHERE email = 'larrysalgado@gmail.com');
