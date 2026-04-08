@@ -54,16 +54,16 @@ serve(async (req) => {
     // For clinical sections, also fetch professional notes and subscription
     if (isClinicalSection || isClinicalUnified) {
       fetchPromises.push(
-        supabase.from("professional_notes").select("*").eq("patient_id", dataUserId).order("created_at", { ascending: false }).limit(50)
+        supabase.from("professional_notes").select("*").eq("patient_id", dataUserId).order("created_at", { ascending: false }).limit(50).then((r: any) => r)
       );
       fetchPromises.push(
-        supabase.from("habit_goals").select("*").eq("user_id", dataUserId).order("created_at", { ascending: false }).limit(20)
+        supabase.from("habit_goals").select("*").eq("user_id", dataUserId).order("created_at", { ascending: false }).limit(20).then((r: any) => r)
       );
       fetchPromises.push(
-        supabase.from("unlocked_habits").select("*").eq("user_id", dataUserId)
+        supabase.from("unlocked_habits").select("*").eq("user_id", dataUserId).then((r: any) => r)
       );
       fetchPromises.push(
-        supabase.from("user_subscriptions").select("*").eq("user_id", dataUserId).eq("is_active", true).maybeSingle()
+        supabase.from("user_subscriptions").select("*").eq("user_id", dataUserId).eq("is_active", true).maybeSingle().then((r: any) => r)
       );
     }
     
