@@ -476,6 +476,11 @@ La puntuación (0-100) refleja el estado general en esta área clínica.
 
 RESPONDE en JSON: {"score": number(0-100) o null si no hay datos suficientes, "summary": "texto de resumen clínico completo 3-5 oraciones", "markers": [{"name": "string", "status": "green|yellow|red", "note": "breve"}], "recommendations": ["string"] (máx 3)}`;
 
+      // Inject new context into clinical sections too
+      if (medicationsContext) clinicalContext.medicaciones_activas = medicationsContext;
+      if (surveyAdherence) clinicalContext.adherencia_encuesta = surveyAdherence;
+      if (cycleContext) clinicalContext.ciclo_actual = cycleContext;
+
       const clinicalUserMsg = `Paciente: ${age ? `${age} años` : 'edad desconocida'}, ${sex || 'sexo desconocido'}.
 Área: ${specialtyLabelsMap[clinicalSpecialty]}
 
