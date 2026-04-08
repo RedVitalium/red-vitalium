@@ -634,6 +634,12 @@ INSTRUCCIONES:
 - La puntuación general (0-100) promedia SOLO las especialidades con datos reales.
 - Máximo 4 recomendaciones generales.
 
+RESUMEN PARA EL PROFESIONAL:
+- Destacar las 3 tendencias principales (positivas o negativas)
+- Listar qué debería revisar el psicólogo en la próxima sesión basándose en los datos
+- Si hay datos de encuesta diaria, reportar adherencia: "El paciente completó la encuesta X de Y días (Z%)"
+- Si el ciclo actual es semana 4 (semana autónoma), mencionar que es período de evaluación sin recordatorios
+
 RESPONDE en JSON exacto:
 {
   "score": number(0-100) o null,
