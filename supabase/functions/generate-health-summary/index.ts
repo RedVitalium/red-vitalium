@@ -681,29 +681,9 @@ Plan: ${unifiedContext.plan}
 DATOS REALES del paciente (todo lo que NO aparece aquí NO EXISTE):
 ${JSON.stringify(unifiedContext, null, 2)}`;
 
-      const unifiedResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            { role: "system", content: unifiedPrompt },
-            { role: "user", content: unifiedUserMsg },
-          ],
-        }),
-      });
-
-      if (!unifiedResponse.ok) throw new Error(`AI error: ${unifiedResponse.status}`);
-      const unifiedResult = await unifiedResponse.json();
-      const rawUnified = unifiedResult.choices?.[0]?.message?.content || "";
+      const rawUnified = await callAnthropic(unifiedPrompt, unifiedUserMsg);
       
-      let parsedUnified: any;
-      try {
-        const jsonMatch = rawUnified.match(/```json\s*([\s\S]*?)\s*```/) || rawUnified.match(/({[\s\S]*})/);
-        parsedUnified = JSON.parse(jsonMatch ? jsonMatch[1] : rawUnified);
-      } catch {
-        parsedUnified = { score: null, summary: rawUnified };
-      }
+      const parsedUnified = parseJsonResponse(rawUnified);
 
       const unifiedSummaryText = JSON.stringify(parsedUnified);
       
