@@ -194,18 +194,23 @@ export default function Auth() {
     e.preventDefault();
     setLoading(true);
     
-    // Save or clear remembered email
-    if (rememberMe) {
-      await saveRememberedEmail(signInEmail);
-    } else {
-      await clearRememberedEmail();
-    }
-    
     const { error } = await signIn(signInEmail, signInPassword);
     
     if (error) {
       toast.error('Error al iniciar sesión', { description: error.message });
     } else {
+      try {
+        const { Preferences } = await import('@capacitor/preferences');
+        if (rememberMe) {
+          await Preferences.set({ key: 'vitalium_email', value: signInEmail });
+          await Preferences.set({ key: 'vitalium_password', value: signInPassword });
+          await Preferences.set({ key: 'vitalium_remember', value: 'true' });
+        } else {
+          await Preferences.remove({ key: 'vitalium_email' });
+          await Preferences.remove({ key: 'vitalium_password' });
+          await Preferences.remove({ key: 'vitalium_remember' });
+        }
+      } catch (e) {}
       toast.success('¡Bienvenido de vuelta!');
       navigate('/home');
     }
