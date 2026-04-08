@@ -387,31 +387,6 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Video Section */}
-      <section className="py-16 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-8"
-          >
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
-              Mira cómo funciona
-            </h2>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-          >
-            <VideoPreview
-              youtubeUrl="https://youtube.com/shorts/VOaWV0wPhYc?si=TkNYBhZoOsKrZmr-"
-              title="Conoce cómo funciona Red Vitalium"
-            />
-          </motion.div>
-        </div>
-      </section>
 
       {/* CTA Section */}
       <section className="py-20 bg-secondary text-secondary-foreground">
