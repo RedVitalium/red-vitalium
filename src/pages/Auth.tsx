@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
@@ -8,11 +8,46 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Mail, Lock, User } from 'lucide-react';
+import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 import appLogo from '@/assets/app-logo.png';
 import { InformedConsentDialog } from '@/components/InformedConsentDialog';
 import { supabase } from '@/integrations/supabase/client';
+import { Capacitor } from '@capacitor/core';
+
+const REMEMBER_KEY = 'rv_remember_email';
+
+async function loadRememberedEmail(): Promise<string> {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const { Preferences } = await import('@capacitor/preferences');
+      const { value } = await Preferences.get({ key: REMEMBER_KEY });
+      return value || '';
+    } catch { return ''; }
+  }
+  try { return localStorage.getItem(REMEMBER_KEY) || ''; } catch { return ''; }
+}
+
+async function saveRememberedEmail(email: string) {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const { Preferences } = await import('@capacitor/preferences');
+      await Preferences.set({ key: REMEMBER_KEY, value: email });
+    } catch {}
+  }
+  try { localStorage.setItem(REMEMBER_KEY, email); } catch {}
+}
+
+async function clearRememberedEmail() {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const { Preferences } = await import('@capacitor/preferences');
+      await Preferences.remove({ key: REMEMBER_KEY });
+    } catch {}
+  }
+  try { localStorage.removeItem(REMEMBER_KEY); } catch {}
+}
 
 function ForgotPasswordForm() {
   const [show, setShow] = useState(false);
@@ -85,11 +120,46 @@ function ForgotPasswordForm() {
   );
 }
 
+function PasswordInput({ id, value, onChange, placeholder = '••••••••', ...props }: {
+  id: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder?: string;
+  [key: string]: any;
+}) {
+  const [showPassword, setShowPassword] = useState(false);
+
+  return (
+    <div className="relative">
+      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <Input
+        id={id}
+        type={showPassword ? 'text' : 'password'}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        className="pl-10 pr-10"
+        {...props}
+      />
+      <button
+        type="button"
+        onClick={() => setShowPassword(!showPassword)}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+        tabIndex={-1}
+        aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+      >
+        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+      </button>
+    </div>
+  );
+}
+
 export default function Auth() {
   const navigate = useNavigate();
   const { signUp, signIn, signInWithGoogle } = useAuth();
   const [loading, setLoading] = useState(false);
   const [showConsent, setShowConsent] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   
   // Sign In form
   const [signInEmail, setSignInEmail] = useState('');
@@ -100,9 +170,26 @@ export default function Auth() {
   const [signUpPassword, setSignUpPassword] = useState('');
   const [signUpName, setSignUpName] = useState('');
 
+  // Load remembered email on mount
+  useEffect(() => {
+    loadRememberedEmail().then((email) => {
+      if (email) {
+        setSignInEmail(email);
+        setRememberMe(true);
+      }
+    });
+  }, []);
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    
+    // Save or clear remembered email
+    if (rememberMe) {
+      await saveRememberedEmail(signInEmail);
+    } else {
+      await clearRememberedEmail();
+    }
     
     const { error } = await signIn(signInEmail, signInPassword);
     
@@ -118,7 +205,6 @@ export default function Auth() {
 
   const handleSignUp = (e: React.FormEvent) => {
     e.preventDefault();
-    // Show informed consent before creating the account
     setShowConsent(true);
   };
 
@@ -134,20 +220,10 @@ export default function Auth() {
       return;
     }
 
-    // BUG 2 FIX: Check if we actually have a session after signup.
-    // If email confirmation is enabled in Supabase, signUp succeeds but
-    // there's no active session yet → navigating to /home would bounce
-    // the user back to /auth via ProtectedRoute (user = null).
-    //
-    // If email confirmation is DISABLED (recommended for Gen Zero),
-    // the session is immediately active and navigate('/home') works.
-    //
-    // We import supabase here just for the session check:
     const { supabase } = await import('@/integrations/supabase/client');
     const { data: { session } } = await supabase.auth.getSession();
 
     if (session) {
-      // Save research consent if accepted
       if (researchConsent) {
         await supabase.from('profiles')
           .update({ 
@@ -156,17 +232,13 @@ export default function Auth() {
           })
           .eq('user_id', session.user.id);
       }
-      // Email confirmation is disabled — session is active, go to home
       toast.success('¡Cuenta creada exitosamente!');
       navigate('/home');
     } else {
-      // Email confirmation is enabled — no session yet
-      // Show a friendly message instead of navigating to a protected route
       toast.success('¡Cuenta creada exitosamente!', { 
         description: '¡Revisa tu correo! Te enviamos un enlace de confirmación.',
         duration: 8000,
       });
-      // Stay on /auth so user can check email and come back to sign in
     }
     
     setLoading(false);
@@ -180,8 +252,6 @@ export default function Auth() {
       toast.error('Error con Google', { description: error.message });
       setLoading(false);
     }
-    // Note: Google OAuth redirects the browser, so no navigate() needed here.
-    // The redirectTo in useAuth.tsx handles where the user lands after OAuth.
   };
 
   const handleAppleSignIn = () => {
@@ -274,18 +344,23 @@ export default function Auth() {
                     
                     <div className="space-y-2">
                       <Label htmlFor="signin-password">Contraseña</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="signin-password"
-                          type="password"
-                          placeholder="••••••••"
-                          value={signInPassword}
-                          onChange={(e) => setSignInPassword(e.target.value)}
-                          className="pl-10"
-                          required
-                        />
-                      </div>
+                      <PasswordInput
+                        id="signin-password"
+                        value={signInPassword}
+                        onChange={(e) => setSignInPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="remember-me"
+                        checked={rememberMe}
+                        onCheckedChange={(checked) => setRememberMe(checked === true)}
+                      />
+                      <Label htmlFor="remember-me" className="text-sm font-normal cursor-pointer">
+                        Recordarme
+                      </Label>
                     </div>
 
                     <Button type="submit" className="w-full" disabled={loading}>
@@ -374,19 +449,13 @@ export default function Auth() {
                     
                     <div className="space-y-2">
                       <Label htmlFor="signup-password">Contraseña</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="signup-password"
-                          type="password"
-                          placeholder="••••••••"
-                          value={signUpPassword}
-                          onChange={(e) => setSignUpPassword(e.target.value)}
-                          className="pl-10"
-                          minLength={6}
-                          required
-                        />
-                      </div>
+                      <PasswordInput
+                        id="signup-password"
+                        value={signUpPassword}
+                        onChange={(e) => setSignUpPassword(e.target.value)}
+                        minLength={6}
+                        required
+                      />
                       <p className="text-xs text-muted-foreground">Mínimo 6 caracteres</p>
                     </div>
 
