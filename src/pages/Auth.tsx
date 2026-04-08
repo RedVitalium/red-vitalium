@@ -172,30 +172,45 @@ export default function Auth() {
 
   // Load remembered email on mount
   useEffect(() => {
-    loadRememberedEmail().then((email) => {
-      if (email) {
-        setSignInEmail(email);
-        setRememberMe(true);
+    const loadSaved = async () => {
+      try {
+        const { Preferences } = await import('@capacitor/preferences');
+        const { value: savedEmail } = await Preferences.get({ key: 'vitalium_email' });
+        const { value: savedPassword } = await Preferences.get({ key: 'vitalium_password' });
+        const { value: savedRemember } = await Preferences.get({ key: 'vitalium_remember' });
+        if (savedRemember === 'true' && savedEmail) {
+          setSignInEmail(savedEmail);
+          if (savedPassword) setSignInPassword(savedPassword);
+          setRememberMe(true);
+        }
+      } catch (e) {
+        console.log('Could not load saved credentials');
       }
-    });
+    };
+    loadSaved();
   }, []);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
-    // Save or clear remembered email
-    if (rememberMe) {
-      await saveRememberedEmail(signInEmail);
-    } else {
-      await clearRememberedEmail();
-    }
-    
     const { error } = await signIn(signInEmail, signInPassword);
     
     if (error) {
       toast.error('Error al iniciar sesión', { description: error.message });
     } else {
+      try {
+        const { Preferences } = await import('@capacitor/preferences');
+        if (rememberMe) {
+          await Preferences.set({ key: 'vitalium_email', value: signInEmail });
+          await Preferences.set({ key: 'vitalium_password', value: signInPassword });
+          await Preferences.set({ key: 'vitalium_remember', value: 'true' });
+        } else {
+          await Preferences.remove({ key: 'vitalium_email' });
+          await Preferences.remove({ key: 'vitalium_password' });
+          await Preferences.remove({ key: 'vitalium_remember' });
+        }
+      } catch (e) {}
       toast.success('¡Bienvenido de vuelta!');
       navigate('/home');
     }
