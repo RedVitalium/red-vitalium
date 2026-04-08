@@ -333,6 +333,39 @@ SWLS (Satisfacción con la vida, puntuación ALTA = MEJOR):
   Muy alta: 31-35, Alta: 26-30, Ligeramente alta: 21-25, Neutral: 20, Ligeramente baja: 15-19, Baja: 10-14, Muy baja: 5-9
 `;
 
+    // Build additional context from new data sources
+    const buildMedicationsContext = () => {
+      if (medications.length === 0) return null;
+      return medications.map((m: any) => ({
+        name: m.medication_name,
+        dosage: m.dosage,
+        frequency: m.frequency,
+        start_date: m.start_date,
+      }));
+    };
+
+    const buildSurveyAdherence = () => {
+      if (dailySurvey.length === 0) return null;
+      const uniqueDays = new Set(dailySurvey.map((r: any) => r.response_date));
+      const totalDays = uniqueDays.size;
+      const yesAnswers = dailySurvey.filter((r: any) => r.answer === true).length;
+      const avgCompliance = totalDays > 0 ? Math.round((yesAnswers / dailySurvey.length) * 100) : 0;
+      return { total_dias: totalDays, promedio_cumplimiento: avgCompliance };
+    };
+
+    const buildCycleContext = () => {
+      if (cycles.length === 0) return null;
+      const activeCycle = cycles.find((c: any) => c.is_active);
+      if (!activeCycle) return null;
+      const startDate = new Date(activeCycle.started_at);
+      const weeksSinceStart = Math.floor((Date.now() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1;
+      return { numero: cycles.length, semana: weeksSinceStart };
+    };
+
+    const medicationsContext = buildMedicationsContext();
+    const surveyAdherence = buildSurveyAdherence();
+    const cycleContext = buildCycleContext();
+
     // CRITICAL anti-hallucination instruction
     const antiHallucinationRule = `
 REGLA CRÍTICA - PROHIBIDO INVENTAR DATOS:
@@ -342,7 +375,8 @@ REGLA CRÍTICA - PROHIBIDO INVENTAR DATOS:
 - La puntuación general solo promedia marcadores CON datos reales. NO penalices por datos faltantes.
 - Usa las TABLAS DE REFERENCIA proporcionadas para clasificar cada valor según edad y sexo.
 - Indica la clasificación (Excelente/Bueno/Promedio/Bajo) según la tabla correspondiente.
-- Solo indica percentil aproximado si puedes calcularlo con las tablas y tienes edad+sexo.`;
+- Solo indica percentil aproximado si puedes calcularlo con las tablas y tienes edad+sexo.
+- Si el paciente tiene medicaciones activas (especialmente Monjaro/tirzepatida o semaglutida), mencionar que los cambios en peso y glucosa pueden estar influenciados por la medicación.`;
 
 
     if (isClinicalSection) {
