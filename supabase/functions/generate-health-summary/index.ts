@@ -773,6 +773,15 @@ RESPONDE SOLO con texto plano (NO JSON).`;
     }
 
     // ======= SECTION-SPECIFIC PROMPTS =======
+    const trendInstruction = `
+ENFOQUE EN TENDENCIAS:
+- Si hay datos de múltiples días/semanas, SIEMPRE reportar la tendencia: "mejoró X%", "se mantuvo estable", "disminuyó X%"
+- Comparar los últimos 7 días vs los 7 anteriores cuando haya datos suficientes
+- Para valores individuales sin historial, interpretar en CONTEXTO del paciente completo (edad, sexo, medicaciones, otros marcadores)
+- Cuando haya tablas de referencia por edad/sexo, indicar el PERCENTIL aproximado: "Tu VO2 Max de 41 te ubica en el percentil 55 para hombres de 45 años"
+- NO reportar solo el último valor. Siempre dar contexto temporal o poblacional.
+- Si el paciente tiene medicaciones activas, mencionar su posible influencia en los marcadores relevantes.`;
+
     const sectionPrompts: Record<string, string> = {
       overall: `Eres un médico especialista en medicina preventiva. Genera un resumen integral de salud.
 ${antiHallucinationRule}
@@ -781,6 +790,7 @@ ${referenceTablesText}
 Las ÚNICAS secciones con datos reales son: ${sectionsWithData.join(", ")}. Solo evalúa estas.
 Para cada sección con datos, clasifica cada marcador según las tablas de referencia.
 La puntuación general (0-100) debe ser el promedio ponderado SOLO de las secciones que tienen datos.
+${trendInstruction}
 
 RESPONDE en JSON:
 {"score": number (0-100), "summary": "texto 2-3 oraciones resumen global", "sections": [{"name": "string", "score": number, "status": "green|yellow|red", "summary": "texto corto con clasificación por tablas"}], "recommendations": ["string"] (máx 3)}`,
@@ -792,6 +802,7 @@ ${referenceTablesText}
 INSTRUCCIONES: Analiza SOLO los siguientes marcadores de hábitos que tienen datos reales. 
 Para cada uno clasifícalo según tablas de referencia. La puntuación (0-100) promedia SOLO los marcadores presentes.
 Marcadores posibles: sueño (horas y calidad), actividad física, tiempo de pantalla, desbloqueos de teléfono.
+${trendInstruction}
 
 RESPONDE en JSON: {"score": number(0-100), "summary": "texto resumen de hábitos", "markers": [{"name": "string", "status": "green|yellow|red", "trend": "improving|stable|declining", "note": "clasificación y recomendación breve"}], "recommendations": ["string"] (máx 3)}`,
 
@@ -806,6 +817,7 @@ REGLA ESPECIAL DASS-21: Valores BAJOS son POSITIVOS (menos síntomas).
 SWLS: >25 = verde, 20-25 = amarillo, <20 = rojo
 
 Analiza SOLO los marcadores psicológicos presentes. La puntuación (0-100) promedia SOLO los que tienen datos.
+${trendInstruction}
 
 RESPONDE en JSON: {"score": number(0-100), "summary": "texto", "markers": [{"name": "string", "status": "green|yellow|red", "trend": "improving|stable|declining", "note": "clasificación según escala"}], "recommendations": ["string"] (máx 3)}`,
 
@@ -817,6 +829,7 @@ INSTRUCCIONES: Analiza SOLO los marcadores de longevidad presentes.
 Para cada marcador con datos, clasifícalo según las tablas de referencia para la edad y sexo del paciente.
 La puntuación (0-100) promedia SOLO los marcadores presentes ponderando su clasificación.
 Si tienes edad y sexo, indica categoría (Excelente/Bueno/Promedio/Bajo) para cada marcador.
+${trendInstruction}
 
 RESPONDE en JSON: {"score": number(0-100), "summary": "texto", "markers": [{"name": "string", "status": "green|yellow|red", "trend": "improving|stable|declining", "note": "clasificación por edad/sexo y breve interpretación"}], "recommendations": ["string"] (máx 3)}`,
 
@@ -827,6 +840,7 @@ ${referenceTablesText}
 INSTRUCCIONES: Analiza SOLO los marcadores de composición corporal presentes.
 Clasifica cada uno según las tablas de referencia (% grasa por edad/sexo, grasa visceral, IMC, etc.).
 La puntuación (0-100) promedia SOLO los marcadores presentes.
+${trendInstruction}
 
 RESPONDE en JSON: {"score": number(0-100), "summary": "texto", "markers": [{"name": "string", "status": "green|yellow|red", "trend": "improving|stable|declining", "note": "clasificación según tablas"}], "recommendations": ["string"] (máx 3)}`,
 
@@ -837,6 +851,7 @@ ${referenceTablesText}
 INSTRUCCIONES: Analiza SOLO los biomarcadores metabólicos presentes.
 Clasifica cada uno según rangos de referencia para edad y sexo.
 La puntuación (0-100) promedia SOLO los marcadores presentes.
+${trendInstruction}
 
 RESPONDE en JSON: {"score": number(0-100), "summary": "texto", "markers": [{"name": "string", "status": "green|yellow|red", "trend": "improving|stable|declining", "note": "clasificación según rangos"}], "recommendations": ["string"] (máx 3)}`,
 
