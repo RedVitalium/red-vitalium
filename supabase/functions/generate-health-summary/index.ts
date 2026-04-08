@@ -872,47 +872,24 @@ RESPONDE en JSON: {"score": number(0-100), "summary": "texto", "highlights": ["s
 
     console.log("Sending to AI - section:", section, "data keys:", Object.keys(dataForAI));
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userMessage },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Límite de solicitudes excedido. Intenta de nuevo en unos minutos." }), {
+    let rawContent: string;
+    try {
+      rawContent = await callAnthropic(systemPrompt, userMessage);
+    } catch (e: any) {
+      if (e.status === 429) {
+        return new Response(JSON.stringify({ error: e.message }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos insuficientes para IA." }), {
+      if (e.status === 402) {
+        return new Response(JSON.stringify({ error: e.message }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      throw new Error(`AI gateway error: ${response.status}`);
+      throw e;
     }
 
-    const aiResult = await response.json();
-    const rawContent = aiResult.choices?.[0]?.message?.content || "";
-
-    let parsed: any;
-    try {
-      const jsonMatch = rawContent.match(/```json\s*([\s\S]*?)\s*```/) || rawContent.match(/({[\s\S]*})/);
-      parsed = JSON.parse(jsonMatch ? jsonMatch[1] : rawContent);
-    } catch {
-      parsed = { score: 50, summary: rawContent };
-    }
+    const parsed = parseJsonResponse(rawContent);
 
     const summaryText = JSON.stringify(parsed);
     const score = parsed.score || null;
