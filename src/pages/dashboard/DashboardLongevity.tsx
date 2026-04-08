@@ -115,7 +115,7 @@ export default function DashboardLongevity() {
                 unit={m.unit}
                 target={m.target}
                 change={m.change}
-                status={m.status}
+                status={m.status as "optimal" | "warning" | "danger" | "neutral"}
                 icon={m.icon}
               />
               <AIInterpretButton

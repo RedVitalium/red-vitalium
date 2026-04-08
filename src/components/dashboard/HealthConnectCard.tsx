@@ -204,12 +204,9 @@ export function HealthConnectCard() {
           </div>
 
           {/* Next Sync Info */}
-          {status.isEnabled && status.nextSync && (
+          {status !== 'unavailable' && false && (
             <div className="text-center text-xs text-muted-foreground">
-              Próxima sincronización: {status.nextSync.toLocaleTimeString('es-ES', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-              })}
+              Próxima sincronización: --:--
             </div>
           )}
         </div>

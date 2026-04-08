@@ -608,6 +608,11 @@ ${JSON.stringify(clinicalContext, null, 2)}`;
         unifiedContext.unlockedHabits = unlockedHabits.map((h: any) => h.habit_id);
       }
       
+      // Inject new context into unified clinical
+      if (medicationsContext) unifiedContext.medicaciones_activas = medicationsContext;
+      if (surveyAdherence) unifiedContext.adherencia_encuesta = surveyAdherence;
+      if (cycleContext) unifiedContext.ciclo_actual = cycleContext;
+      
       unifiedContext.specialtyData = specialtyData;
 
       const unifiedPrompt = `Eres un equipo médico multidisciplinario. Genera UN SOLO resumen clínico integral del paciente.
