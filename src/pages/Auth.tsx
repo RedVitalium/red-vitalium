@@ -172,12 +172,22 @@ export default function Auth() {
 
   // Load remembered email on mount
   useEffect(() => {
-    loadRememberedEmail().then((email) => {
-      if (email) {
-        setSignInEmail(email);
-        setRememberMe(true);
+    const loadSaved = async () => {
+      try {
+        const { Preferences } = await import('@capacitor/preferences');
+        const { value: savedEmail } = await Preferences.get({ key: 'vitalium_email' });
+        const { value: savedPassword } = await Preferences.get({ key: 'vitalium_password' });
+        const { value: savedRemember } = await Preferences.get({ key: 'vitalium_remember' });
+        if (savedRemember === 'true' && savedEmail) {
+          setSignInEmail(savedEmail);
+          if (savedPassword) setSignInPassword(savedPassword);
+          setRememberMe(true);
+        }
+      } catch (e) {
+        console.log('Could not load saved credentials');
       }
-    });
+    };
+    loadSaved();
   }, []);
 
   const handleSignIn = async (e: React.FormEvent) => {
