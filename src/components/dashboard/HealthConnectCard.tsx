@@ -171,7 +171,7 @@ export function HealthConnectCard() {
               </div>
             </div>
             <Switch
-              checked={status.isEnabled}
+              checked={false}
               onCheckedChange={setEnabled}
               disabled={!isBackgroundLoaded}
             />
