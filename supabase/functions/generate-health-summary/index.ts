@@ -16,8 +16,47 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY is not configured");
+
+    // Helper to call Anthropic Claude API
+    const callAnthropic = async (systemPrompt: string, userMessage: string): Promise<string> => {
+      const resp = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "x-api-key": ANTHROPIC_API_KEY!,
+          "anthropic-version": "2023-06-01",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: 4096,
+          system: systemPrompt,
+          messages: [{ role: "user", content: userMessage }],
+        }),
+      });
+
+      if (!resp.ok) {
+        const status = resp.status;
+        if (status === 429) throw { status: 429, message: "Límite de solicitudes excedido. Intenta de nuevo en unos minutos." };
+        if (status === 402) throw { status: 402, message: "Créditos insuficientes para IA." };
+        const errorText = await resp.text();
+        console.error("Anthropic API error:", status, errorText);
+        throw new Error(`Anthropic API error: ${status}`);
+      }
+
+      const result = await resp.json();
+      return result.content?.[0]?.text || "";
+    };
+
+    const parseJsonResponse = (raw: string): any => {
+      try {
+        const jsonMatch = raw.match(/```json\s*([\s\S]*?)\s*```/) || raw.match(/({[\s\S]*})/);
+        return JSON.parse(jsonMatch ? jsonMatch[1] : raw);
+      } catch {
+        return { score: null, summary: raw };
+      }
+    };
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header");
@@ -487,29 +526,9 @@ RESPONDE en JSON: {"score": number(0-100) o null si no hay datos suficientes, "s
 DATOS REALES del paciente (todo lo que NO aparece aquí NO EXISTE):
 ${JSON.stringify(clinicalContext, null, 2)}`;
 
-      const clinicalResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            { role: "system", content: clinicalSystemPrompt },
-            { role: "user", content: clinicalUserMsg },
-          ],
-        }),
-      });
-
-      if (!clinicalResponse.ok) throw new Error(`AI error: ${clinicalResponse.status}`);
-      const clinicalResult = await clinicalResponse.json();
-      const rawClinical = clinicalResult.choices?.[0]?.message?.content || "";
+      const rawClinical = await callAnthropic(clinicalSystemPrompt, clinicalUserMsg);
       
-      let parsedClinical: any;
-      try {
-        const jsonMatch = rawClinical.match(/```json\s*([\s\S]*?)\s*```/) || rawClinical.match(/({[\s\S]*})/);
-        parsedClinical = JSON.parse(jsonMatch ? jsonMatch[1] : rawClinical);
-      } catch {
-        parsedClinical = { score: null, summary: rawClinical };
-      }
+      const parsedClinical = parseJsonResponse(rawClinical);
 
       const clinicalSummaryText = JSON.stringify(parsedClinical);
       
@@ -662,29 +681,9 @@ Plan: ${unifiedContext.plan}
 DATOS REALES del paciente (todo lo que NO aparece aquí NO EXISTE):
 ${JSON.stringify(unifiedContext, null, 2)}`;
 
-      const unifiedResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            { role: "system", content: unifiedPrompt },
-            { role: "user", content: unifiedUserMsg },
-          ],
-        }),
-      });
-
-      if (!unifiedResponse.ok) throw new Error(`AI error: ${unifiedResponse.status}`);
-      const unifiedResult = await unifiedResponse.json();
-      const rawUnified = unifiedResult.choices?.[0]?.message?.content || "";
+      const rawUnified = await callAnthropic(unifiedPrompt, unifiedUserMsg);
       
-      let parsedUnified: any;
-      try {
-        const jsonMatch = rawUnified.match(/```json\s*([\s\S]*?)\s*```/) || rawUnified.match(/({[\s\S]*})/);
-        parsedUnified = JSON.parse(jsonMatch ? jsonMatch[1] : rawUnified);
-      } catch {
-        parsedUnified = { score: null, summary: rawUnified };
-      }
+      const parsedUnified = parseJsonResponse(rawUnified);
 
       const unifiedSummaryText = JSON.stringify(parsedUnified);
       
@@ -752,24 +751,7 @@ INSTRUCCIONES:
 Datos del marcador: ${JSON.stringify(metricData)}
 RESPONDE SOLO con texto plano (NO JSON).`;
 
-      const interpretResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            { role: "system", content: interpretPrompt },
-            { role: "user", content: "Interpreta este marcador." },
-          ],
-        }),
-      });
-
-      if (!interpretResponse.ok) throw new Error(`AI error: ${interpretResponse.status}`);
-      const interpretResult = await interpretResponse.json();
-      const interpretText = interpretResult.choices?.[0]?.message?.content || "No se pudo interpretar.";
+      const interpretText = await callAnthropic(interpretPrompt, "Interpreta este marcador.");
 
       return new Response(JSON.stringify({
         summary: JSON.stringify({ summary: interpretText, score: null }),
@@ -890,47 +872,24 @@ RESPONDE en JSON: {"score": number(0-100), "summary": "texto", "highlights": ["s
 
     console.log("Sending to AI - section:", section, "data keys:", Object.keys(dataForAI));
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userMessage },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Límite de solicitudes excedido. Intenta de nuevo en unos minutos." }), {
+    let rawContent: string;
+    try {
+      rawContent = await callAnthropic(systemPrompt, userMessage);
+    } catch (e: any) {
+      if (e.status === 429) {
+        return new Response(JSON.stringify({ error: e.message }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos insuficientes para IA." }), {
+      if (e.status === 402) {
+        return new Response(JSON.stringify({ error: e.message }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      throw new Error(`AI gateway error: ${response.status}`);
+      throw e;
     }
 
-    const aiResult = await response.json();
-    const rawContent = aiResult.choices?.[0]?.message?.content || "";
-
-    let parsed: any;
-    try {
-      const jsonMatch = rawContent.match(/```json\s*([\s\S]*?)\s*```/) || rawContent.match(/({[\s\S]*})/);
-      parsed = JSON.parse(jsonMatch ? jsonMatch[1] : rawContent);
-    } catch {
-      parsed = { score: 50, summary: rawContent };
-    }
+    const parsed = parseJsonResponse(rawContent);
 
     const summaryText = JSON.stringify(parsed);
     const score = parsed.score || null;
