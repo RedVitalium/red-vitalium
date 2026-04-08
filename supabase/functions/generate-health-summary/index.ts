@@ -751,24 +751,7 @@ INSTRUCCIONES:
 Datos del marcador: ${JSON.stringify(metricData)}
 RESPONDE SOLO con texto plano (NO JSON).`;
 
-      const interpretResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            { role: "system", content: interpretPrompt },
-            { role: "user", content: "Interpreta este marcador." },
-          ],
-        }),
-      });
-
-      if (!interpretResponse.ok) throw new Error(`AI error: ${interpretResponse.status}`);
-      const interpretResult = await interpretResponse.json();
-      const interpretText = interpretResult.choices?.[0]?.message?.content || "No se pudo interpretar.";
+      const interpretText = await callAnthropic(interpretPrompt, "Interpreta este marcador.");
 
       return new Response(JSON.stringify({
         summary: JSON.stringify({ summary: interpretText, score: null }),
