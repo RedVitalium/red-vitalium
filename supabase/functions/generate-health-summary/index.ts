@@ -526,29 +526,9 @@ RESPONDE en JSON: {"score": number(0-100) o null si no hay datos suficientes, "s
 DATOS REALES del paciente (todo lo que NO aparece aquí NO EXISTE):
 ${JSON.stringify(clinicalContext, null, 2)}`;
 
-      const clinicalResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            { role: "system", content: clinicalSystemPrompt },
-            { role: "user", content: clinicalUserMsg },
-          ],
-        }),
-      });
-
-      if (!clinicalResponse.ok) throw new Error(`AI error: ${clinicalResponse.status}`);
-      const clinicalResult = await clinicalResponse.json();
-      const rawClinical = clinicalResult.choices?.[0]?.message?.content || "";
+      const rawClinical = await callAnthropic(clinicalSystemPrompt, clinicalUserMsg);
       
-      let parsedClinical: any;
-      try {
-        const jsonMatch = rawClinical.match(/```json\s*([\s\S]*?)\s*```/) || rawClinical.match(/({[\s\S]*})/);
-        parsedClinical = JSON.parse(jsonMatch ? jsonMatch[1] : rawClinical);
-      } catch {
-        parsedClinical = { score: null, summary: rawClinical };
-      }
+      const parsedClinical = parseJsonResponse(rawClinical);
 
       const clinicalSummaryText = JSON.stringify(parsedClinical);
       
