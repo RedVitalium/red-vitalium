@@ -1,7 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
 
-const SUPABASE_AUTH_KEY = 'sb-rjeixmzbdceoohnihdtf-auth-token';
+const SUPABASE_AUTH_KEY = 'sb-huxadvolwgfdjgsnraxm-auth-token';
 
 /**
  * On native platforms, syncs Supabase auth tokens between localStorage and
