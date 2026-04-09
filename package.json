@@ -9,7 +9,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "sync:android": "npx cap sync android && ./scripts/post-sync.sh"
+    "sync:android": "npx cap sync android && scripts\\post-sync.bat"
   },
   "dependencies": {
     "@capacitor/android": "^8.0.1",
