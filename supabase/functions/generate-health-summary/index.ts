@@ -70,7 +70,13 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) throw new Error("Not authenticated");
 
-    const { section, healthData: clientHealthData, targetUserId } = await req.json();
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
+      body = {};
+    }
+    const { section = "overall", healthData: clientHealthData, targetUserId } = body;
     const dataUserId = targetUserId || user.id;
 
     // === FETCH ALL DATA SERVER-SIDE ===
@@ -406,7 +412,11 @@ SWLS (Satisfacción con la vida, puntuación ALTA = MEJOR):
     const cycleContext = buildCycleContext();
 
     // CRITICAL anti-hallucination instruction
+    const spanishRule = `Responde siempre en español. El paciente es hispanohablante. Todos los títulos y subtítulos deben estar en español: usa Psicológico, Longevidad, Hábitos, Composición Corporal, Metabólico.`;
+
     const antiHallucinationRule = `
+${spanishRule}
+
 REGLA CRÍTICA - PROHIBIDO INVENTAR DATOS:
 - Los ÚNICOS datos que existen del paciente son los del JSON proporcionado.
 - NO inventes, supongas ni infieras valores que NO están en el JSON.
