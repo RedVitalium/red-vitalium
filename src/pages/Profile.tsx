@@ -292,7 +292,8 @@ export default function Profile() {
           </Card>
         </motion.div>
 
-        {/* Preferences */}
+        {/* Preferences - Hidden until dark mode is properly implemented */}
+        {/*
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -306,6 +307,7 @@ export default function Profile() {
             <ThemeToggle />
           </Card>
         </motion.div>
+        */}
       </main>
     </div>
   );

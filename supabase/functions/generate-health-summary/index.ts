@@ -412,7 +412,7 @@ SWLS (Satisfacción con la vida, puntuación ALTA = MEJOR):
     const cycleContext = buildCycleContext();
 
     // CRITICAL anti-hallucination instruction
-    const spanishRule = `Responde siempre en español. El paciente es hispanohablante. Todos los títulos y subtítulos deben estar en español: usa Psicológico, Longevidad, Hábitos, Composición Corporal, Metabólico.`;
+    const spanishRule = `Responde siempre en español. El paciente es hispanohablante. IMPORTANTE: Todos los títulos y subtítulos deben estar en español: Psicológico, Longevidad, Hábitos, Composición Corporal, Metabólico. Nunca uses inglés.`;
 
     const antiHallucinationRule = `
 ${spanishRule}
