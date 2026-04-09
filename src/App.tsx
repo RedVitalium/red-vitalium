@@ -39,6 +39,8 @@ const Admin = React.lazy(() => import("./pages/Admin"));
 const AdminSelectPatient = React.lazy(() => import("./pages/AdminSelectPatient"));
 const NotificationSettings = React.lazy(() => import("./pages/NotificationSettings"));
 
+const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
+
 const queryClient = new QueryClient();
 
 // Detect if running as native app
@@ -101,6 +103,7 @@ const App = () => (
                 {/* Landing page - only for web, native goes to auth */}
                 <Route path="/" element={isNativeApp ? <Navigate to="/auth" replace /> : <Index />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 
                 {/* New home menu - protected, first page after login */}
                 <Route path="/home" element={
