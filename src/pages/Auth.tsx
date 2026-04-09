@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 import appLogo from '@/assets/app-logo.png';
 import { InformedConsentDialog } from '@/components/InformedConsentDialog';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/custom-client';
 import { Capacitor } from '@capacitor/core';
 
 const REMEMBER_KEY = 'rv_remember_email';
@@ -235,7 +235,7 @@ export default function Auth() {
       return;
     }
 
-    const { supabase } = await import('@/integrations/supabase/client');
+    const { supabase } = await import('@/integrations/supabase/custom-client');
     const { data: { session } } = await supabase.auth.getSession();
 
     if (session) {

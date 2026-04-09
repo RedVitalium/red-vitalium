@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useAuth } from './useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/custom-client';
 
 export type ActiveRole = 'patient' | 'admin' | 'professional';
 
