@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRoles, planLabels } from "@/hooks/useUserRoles";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/custom-client";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";

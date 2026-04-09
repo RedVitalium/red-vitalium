@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/custom-client";
 import { specialtyLabels, Specialty } from "@/hooks/useUserRoles";
 import { PageHeader } from "@/components/PageHeader";
 
