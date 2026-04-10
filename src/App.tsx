@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { App as CapApp } from '@capacitor/app';
 import { Capacitor } from "@capacitor/core";
 import { AuthProvider } from "./hooks/useAuth";
+import { supabase } from "@/integrations/supabase/custom-client";
 import { AdminModeProvider } from "./hooks/useAdminMode";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
