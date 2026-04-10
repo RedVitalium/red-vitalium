@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/custom-client';
 import { User, Session } from '@supabase/supabase-js';
+import { Capacitor } from '@capacitor/core';
 
 interface AuthContextType {
   user: User | null;
@@ -26,6 +27,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+        // Persist session to Preferences on native
+        if (Capacitor.isNativePlatform() && session) {
+          import('@capacitor/preferences').then(({ Preferences }) => {
+            Preferences.set({
+              key: 'supabase_session',
+              value: JSON.stringify({
+                access_token: session.access_token,
+                refresh_token: session.refresh_token,
+              }),
+            });
+          }).catch(() => {});
+        }
         if (session?.user) {
           setTimeout(async () => {
             const { data } = await supabase
@@ -82,6 +95,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    // Clear native session
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const { Preferences } = await import('@capacitor/preferences');
+        await Preferences.remove({ key: 'supabase_session' });
+      } catch {}
+    }
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
