@@ -126,6 +126,7 @@ function BackButtonHandler() {
 }
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <NativeSessionLoader>
     <AuthProvider>
       <AdminModeProvider>
         <TooltipProvider>
