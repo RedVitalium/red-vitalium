@@ -5,11 +5,17 @@ import { Flame, Clock, Droplets, Activity } from "lucide-react";
 
 interface Props {
   data: FullBodyCompositionData;
+  chronologicalAge?: number;
 }
 
-export function MetabolicProfileSlide({ data }: Props) {
-  const ageDiff = data.metabolicAge - 45;
+export function MetabolicProfileSlide({ data, chronologicalAge }: Props) {
+  const referenceAge = chronologicalAge && chronologicalAge > 0 ? chronologicalAge : null;
+  const ageDiff = referenceAge ? data.metabolicAge - referenceAge : 0;
   const ageStatus = ageDiff <= 0 ? "text-green-500" : ageDiff <= 3 ? "text-yellow-500" : "text-red-500";
+
+  const ageDesc = referenceAge
+    ? (ageDiff <= 0 ? `${Math.abs(ageDiff)} años menor` : `${ageDiff} años mayor`)
+    : (data.metabolicAge > 0 ? "Sin edad cronológica" : "-");
 
   // Water fill opacity based on hydration
   const waterOpacity = Math.min(data.bodyWaterPercent / 100, 0.5);
@@ -28,7 +34,7 @@ export function MetabolicProfileSlide({ data }: Props) {
       label: "Edad Metabólica",
       value: `${data.metabolicAge}`,
       unit: "años",
-      desc: ageDiff <= 0 ? `${Math.abs(ageDiff)} años menor` : `${ageDiff} años mayor`,
+      desc: ageDesc,
       color: ageStatus,
     },
     {

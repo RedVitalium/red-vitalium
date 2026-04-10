@@ -128,6 +128,7 @@ export default function DashboardHabits() {
               change={habitsData.sleepSpo2.change}
               status={getStatus(habitsData.sleepSpo2.value, 95)} 
               icon={<Activity className="h-5 w-5" />} />
+            <AIInterpretButton metricName="SpO2 Nocturno" value={habitsData.sleepSpo2.value} unit="%" target="> 95%" section="habits" context={personalContext} targetUserId={isViewingAsAdmin ? effectiveUserId || undefined : undefined} isDemo={isDemo} demoText="SpO2 nocturno de 96.5% está en rango normal. Valores por debajo de 94% podrían indicar problemas respiratorios durante el sueño." />
           </div>
           <div>
             <MetricCard 
@@ -139,6 +140,7 @@ export default function DashboardHabits() {
               change={habitsData.heartRate.change}
               status={habitsData.heartRate.value > 0 ? (habitsData.heartRate.value >= 60 && habitsData.heartRate.value <= 100 ? "optimal" : "warning") : "warning"} 
               icon={<Heart className="h-5 w-5" />} />
+            <AIInterpretButton metricName="Frecuencia Cardíaca" value={habitsData.heartRate.value} unit="bpm" target="60-100 bpm" section="habits" context={personalContext} targetUserId={isViewingAsAdmin ? effectiveUserId || undefined : undefined} isDemo={isDemo} demoText="Frecuencia cardíaca promedio de 72 bpm está en rango saludable. Valores en reposo por debajo de 60 pueden indicar buena condición aeróbica." />
           </div>
           <div>
             <MetricCard 
@@ -151,6 +153,7 @@ export default function DashboardHabits() {
               status={getStatus(habitsData.steps.value, 8000)} 
               icon={<Activity className="h-5 w-5" />}
               chart={habitsData.steps.data.length > 0 ? <MiniChart data={habitsData.steps.data} color="success" /> : undefined} />
+            <AIInterpretButton metricName="Pasos del Día" value={habitsData.steps.value} unit="pasos" target="> 8000 pasos" section="habits" context={personalContext} targetUserId={isViewingAsAdmin ? effectiveUserId || undefined : undefined} isDemo={isDemo} demoText="8500 pasos diarios supera la meta. Mantener más de 7500 pasos se asocia con menor mortalidad cardiovascular." />
           </div>
           <div>
             <MetricCard 
@@ -162,6 +165,7 @@ export default function DashboardHabits() {
               change={habitsData.calories.change}
               status={getStatus(habitsData.calories.value, 300)} 
               icon={<Activity className="h-5 w-5" />} />
+            <AIInterpretButton metricName="Calorías Activas" value={habitsData.calories.value} unit="kcal" target="> 300 kcal" section="habits" context={personalContext} targetUserId={isViewingAsAdmin ? effectiveUserId || undefined : undefined} isDemo={isDemo} demoText="350 kcal activas cumple la meta diaria. Un gasto calórico constante favorece el control de peso y la salud metabólica." />
           </div>
           <div>
            <MetricCard 

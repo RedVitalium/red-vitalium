@@ -192,10 +192,13 @@ export type Database = {
           protein: number | null
           recorded_at: string
           recorded_by: string | null
+          skeletal_muscle: number | null
+          smi: number | null
           source: string | null
           subcutaneous_fat: number | null
           user_id: string
           visceral_fat: number | null
+          waist_hip_ratio: number | null
           weight: number | null
         }
         Insert: {
@@ -214,10 +217,13 @@ export type Database = {
           protein?: number | null
           recorded_at?: string
           recorded_by?: string | null
+          skeletal_muscle?: number | null
+          smi?: number | null
           source?: string | null
           subcutaneous_fat?: number | null
           user_id: string
           visceral_fat?: number | null
+          waist_hip_ratio?: number | null
           weight?: number | null
         }
         Update: {
@@ -236,10 +242,13 @@ export type Database = {
           protein?: number | null
           recorded_at?: string
           recorded_by?: string | null
+          skeletal_muscle?: number | null
+          smi?: number | null
           source?: string | null
           subcutaneous_fat?: number | null
           user_id?: string
           visceral_fat?: number | null
+          waist_hip_ratio?: number | null
           weight?: number | null
         }
         Relationships: []

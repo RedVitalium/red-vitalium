@@ -13,6 +13,9 @@ export interface FullBodyCompositionData {
   subcutaneousFat: number;
   protein: number;
   bodyAge: number;
+  skeletalMuscle?: number;
+  smi?: number;
+  waistHipRatio?: number;
 }
 
 export const DEMO_DATA_MALE_45: FullBodyCompositionData = {
@@ -30,4 +33,7 @@ export const DEMO_DATA_MALE_45: FullBodyCompositionData = {
   subcutaneousFat: 20.1,
   protein: 16.8,
   bodyAge: 47,
+  skeletalMuscle: 28.5,
+  smi: 7.8,
+  waistHipRatio: 0.92,
 };
