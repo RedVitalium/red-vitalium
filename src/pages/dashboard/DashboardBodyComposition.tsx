@@ -87,7 +87,7 @@ export default function DashboardBodyComposition() {
     protein: latestComposition.protein || 0,
     bodyAge: latestComposition.body_age || 0,
   } : {
-    weight: personalData.weight || 0,
+    weight: personalData.weight || getHealthValue("weight") || 0,
     bodyFatPercent: getHealthValue("body_fat"), bodyType: "-", visceralFat: 0, bodyWaterPercent: 0,
     muscleMass: 0, boneMass: 0, bmi: 0, metabolicAge: 0, bmr: 0,
     fatFreeMass: 0, subcutaneousFat: 0, protein: 0, bodyAge: 0,

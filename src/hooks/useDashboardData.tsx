@@ -771,10 +771,15 @@ export function useDashboardData(overrideUserId?: string) {
       change: 0,
       data: getHealthDataHistory(healthData, "steps"),
     },
-    calories: {
+   calories: {
       value: getHealthDataValue(healthData, "calories"),
       change: 0,
       data: getHealthDataHistory(healthData, "calories"),
+    },
+    heartRate: {
+      value: getHealthDataValue(healthData, "heart_rate"),
+      change: 0,
+      data: getHealthDataHistory(healthData, "heart_rate"),
     },
   };
   // Build longevity data from biomarkers and health_data

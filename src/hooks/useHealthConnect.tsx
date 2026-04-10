@@ -305,18 +305,24 @@ export function useHealthConnect() {
               break;
             }
 
-            case 'spo2': {
-              console.log('SYNC: reading oxygenSaturation');
+            case 'sleep_spo2': {
+              console.log('SYNC: reading oxygenSaturation (nocturnal)');
               const { samples } = await Health.readSamples({
                 dataType: 'oxygenSaturation',
-                startDate: startOfDay.toISOString(),
+                startDate: yesterday.toISOString(),
                 endDate: endOfDay.toISOString(),
                 limit: 50,
               });
               if (samples && samples.length > 0) {
-                value = Math.round((samples.reduce((sum: number, s: any) => sum + (s.value || 0), 0) / samples.length) * 10) / 10;
+                // Filter for nighttime/early morning samples (before 8am)
+                const nightSamples = samples.filter((s: any) => {
+                  const hour = new Date(s.startDate || s.endDate).getHours();
+                  return hour < 8 || hour >= 22;
+                });
+                const relevantSamples = nightSamples.length > 0 ? nightSamples : samples;
+                value = Math.round((relevantSamples.reduce((sum: number, s: any) => sum + (s.value || 0), 0) / relevantSamples.length) * 10) / 10;
               }
-              console.log('SYNC: SpO2 =', value);
+              console.log('SYNC: sleep_spo2 =', value);
               break;
             }
 
@@ -502,7 +508,7 @@ export function useHealthConnect() {
       'heart_rate',
       'resting_heart_rate',
       'hrv',
-      'spo2',
+      'sleep_spo2',
       'weight',
       'body_fat',
       'sleep_duration',
