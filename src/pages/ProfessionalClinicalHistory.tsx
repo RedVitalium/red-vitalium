@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { 
   Brain, Apple, Stethoscope, Dumbbell,
-  Plus, Edit2, Save, X, User, FileText, Sparkles, Pill
+  Plus, Edit2, Save, X, User, FileText, Sparkles, Pill, Ruler, Watch
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -435,7 +435,7 @@ export default function ProfessionalClinicalHistory() {
 
       <main className="container mx-auto px-4 py-6 max-w-xl">
         <Tabs defaultValue="ai-summary" className="w-full">
-          <TabsList className="w-full grid grid-cols-6 mb-4">
+          <TabsList className="w-full grid grid-cols-7 mb-4">
             <TabsTrigger value="ai-summary" className="flex flex-col items-center gap-1 text-xs py-2">
               <Sparkles className="h-4 w-4" />
               <span className="hidden sm:inline">IA</span>
@@ -443,6 +443,10 @@ export default function ProfessionalClinicalHistory() {
             <TabsTrigger value="medications" className="flex flex-col items-center gap-1 text-xs py-2">
               <Pill className="h-4 w-4" />
               <span className="hidden sm:inline">Med</span>
+            </TabsTrigger>
+            <TabsTrigger value="measurements" className="flex flex-col items-center gap-1 text-xs py-2">
+              <Ruler className="h-4 w-4" />
+              <span className="hidden sm:inline">Medic.</span>
             </TabsTrigger>
             {clinicalSections.map(section => {
               const Icon = section.icon;
@@ -464,6 +468,13 @@ export default function ProfessionalClinicalHistory() {
 
           <TabsContent value="medications">
             {renderMedicationsTab()}
+          </TabsContent>
+
+          <TabsContent value="measurements">
+            <MeasurementsTab 
+              patientUserId={selectedPatient.userId}
+              isAssigned={!!isAssigned}
+            />
           </TabsContent>
 
           {clinicalSections.map(section => (
@@ -559,5 +570,187 @@ export default function ProfessionalClinicalHistory() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+// Measurements Tab Component
+function MeasurementsTab({ patientUserId, isAssigned }: { patientUserId: string; isAssigned: boolean }) {
+  const queryClient = useQueryClient();
+  const [measureValues, setMeasureValues] = useState<Record<string, string>>({});
+  const [wearableModel, setWearableModel] = useState("");
+
+  const MEASURE_FIELDS = [
+    { key: "grip_strength_left", label: "Fuerza Agarre Izq.", unit: "kg" },
+    { key: "grip_strength_right", label: "Fuerza Agarre Der.", unit: "kg" },
+    { key: "balance_left", label: "Equilibrio Pierna Izq.", unit: "seg" },
+    { key: "balance_right", label: "Equilibrio Pierna Der.", unit: "seg" },
+    { key: "waist_circumference", label: "Cintura", unit: "cm" },
+  ];
+
+  const { data: latestMeasures } = useQuery({
+    queryKey: ['patient-measures', patientUserId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('health_data')
+        .select('data_type, value, recorded_at')
+        .eq('user_id', patientUserId)
+        .in('data_type', ['grip_strength_left', 'grip_strength_right', 'balance_left', 'balance_right'])
+        .order('recorded_at', { ascending: false })
+        .limit(20);
+      return data || [];
+    },
+    enabled: !!patientUserId,
+  });
+
+  const { data: patientProfile } = useQuery({
+    queryKey: ['patient-profile-measures', patientUserId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('wearable_model, waist_circumference')
+        .eq('user_id', patientUserId)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!patientUserId,
+  });
+
+  const getLatestValue = (dataType: string) => {
+    const entry = latestMeasures?.find(m => m.data_type === dataType);
+    return entry ? Number(entry.value) : null;
+  };
+
+  const saveMeasuresMutation = useMutation({
+    mutationFn: async () => {
+      const healthEntries = MEASURE_FIELDS
+        .filter(f => f.key !== 'waist_circumference' && measureValues[f.key])
+        .map(f => ({
+          user_id: patientUserId,
+          data_type: f.key,
+          value: parseFloat(measureValues[f.key]),
+          unit: f.unit,
+          source: 'professional',
+        }));
+
+      if (healthEntries.length > 0) {
+        const { error } = await supabase.from('health_data').insert(healthEntries);
+        if (error) throw error;
+      }
+
+      if (measureValues.waist_circumference) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ waist_circumference: parseFloat(measureValues.waist_circumference) })
+          .eq('user_id', patientUserId);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patient-measures', patientUserId] });
+      queryClient.invalidateQueries({ queryKey: ['patient-profile-measures', patientUserId] });
+      queryClient.invalidateQueries({ queryKey: ['health_data'] });
+      queryClient.invalidateQueries({ queryKey: ['profile', patientUserId] });
+      setMeasureValues({});
+      toast.success("Mediciones guardadas");
+    },
+    onError: (e: any) => toast.error("Error: " + e.message),
+  });
+
+  const saveWearableMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ wearable_model: wearableModel })
+        .eq('user_id', patientUserId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patient-profile-measures', patientUserId] });
+      queryClient.invalidateQueries({ queryKey: ['profile', patientUserId] });
+      toast.success("Dispositivo actualizado");
+    },
+    onError: (e: any) => toast.error("Error: " + e.message),
+  });
+
+  const hasAnyMeasure = MEASURE_FIELDS.some(f => measureValues[f.key]);
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <div className="flex items-center gap-2 mb-4">
+        <Ruler className="h-5 w-5 text-primary" />
+        <h2 className="text-lg font-display font-bold text-foreground">Mediciones</h2>
+      </div>
+
+      {!isAssigned ? (
+        <p className="text-sm text-muted-foreground text-center py-6">
+          No estás asignado a este paciente
+        </p>
+      ) : (
+        <div className="space-y-6">
+          <Card className="p-4 space-y-3">
+            <h3 className="text-sm font-semibold text-foreground">Nuevas Mediciones</h3>
+            <p className="text-xs text-muted-foreground">Solo los campos con valor serán guardados.</p>
+            {MEASURE_FIELDS.map(field => {
+              const latest = field.key === 'waist_circumference'
+                ? patientProfile?.waist_circumference
+                : getLatestValue(field.key);
+              return (
+                <div key={field.key} className="space-y-1">
+                  <Label className="text-xs flex items-center justify-between">
+                    {field.label}
+                    {latest !== null && latest !== undefined && (
+                      <span className="text-muted-foreground font-normal">Actual: {latest} {field.unit}</span>
+                    )}
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      step="0.1"
+                      placeholder="Valor"
+                      value={measureValues[field.key] ?? ""}
+                      onChange={(e) => setMeasureValues(prev => ({ ...prev, [field.key]: e.target.value }))}
+                      className="h-9"
+                    />
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">{field.unit}</span>
+                  </div>
+                </div>
+              );
+            })}
+            <Button
+              onClick={() => saveMeasuresMutation.mutate()}
+              disabled={!hasAnyMeasure || saveMeasuresMutation.isPending}
+              className="w-full"
+            >
+              {saveMeasuresMutation.isPending ? "Guardando..." : "Guardar Mediciones"}
+            </Button>
+          </Card>
+
+          <Card className="p-4 space-y-3">
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <Watch className="h-4 w-4 text-muted-foreground" />
+              Dispositivo Wearable
+            </h3>
+            {patientProfile?.wearable_model && (
+              <p className="text-xs text-muted-foreground">Actual: {patientProfile.wearable_model}</p>
+            )}
+            <div className="flex gap-2">
+              <Input
+                placeholder="Ej: Xiaomi Mi Band 8"
+                value={wearableModel}
+                onChange={(e) => setWearableModel(e.target.value)}
+                className="h-9"
+              />
+              <Button
+                size="sm"
+                onClick={() => saveWearableMutation.mutate()}
+                disabled={!wearableModel.trim() || saveWearableMutation.isPending}
+              >
+                <Save className="h-4 w-4" />
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+    </motion.div>
   );
 }
