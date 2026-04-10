@@ -86,20 +86,27 @@ export default function DashboardBodyComposition() {
     subcutaneousFat: latestComposition.subcutaneous_fat || 0,
     protein: latestComposition.protein || 0,
     bodyAge: latestComposition.body_age || 0,
+    skeletalMuscle: (latestComposition as any).skeletal_muscle || 0,
+    smi: (latestComposition as any).smi || 0,
+    waistHipRatio: (latestComposition as any).waist_hip_ratio || 0,
   } : {
     weight: personalData.weight || getHealthValue("weight") || 0,
     bodyFatPercent: getHealthValue("body_fat"), bodyType: "-", visceralFat: 0, bodyWaterPercent: 0,
     muscleMass: 0, boneMass: 0, bmi: 0, metabolicAge: 0, bmr: 0,
     fatFreeMass: 0, subcutaneousFat: 0, protein: 0, bodyAge: 0,
+    skeletalMuscle: 0, smi: 0, waistHipRatio: 0,
   };
 
   const hasData = isDemo || bodyData.bodyFatPercent > 0 || bodyData.weight > 0;
 
+  const patientAge = personalData.age || 0;
+  const patientSex = personalData.sex || "";
+
   const slides = [
     <CompositionOverviewSlide key="overview" data={bodyData} />,
-    <FatAnalysisSlide key="fat" data={bodyData} />,
+    <FatAnalysisSlide key="fat" data={bodyData} age={patientAge} sex={patientSex} />,
     <MuscleAndLeanSlide key="muscle" data={bodyData} />,
-    <MetabolicProfileSlide key="metabolic" data={bodyData} />,
+    <MetabolicProfileSlide key="metabolic" data={bodyData} chronologicalAge={patientAge} />,
   ];
 
   const goNext = () => setCurrentSlide((p) => (p + 1) % slides.length);

@@ -54,6 +54,7 @@ const demoHabitsData = {
   phoneUnlocks: { value: 58, change: -18, data: [{ value: 85 }, { value: 78 }, { value: 72 }, { value: 68 }, { value: 62 }, { value: 58 }] },
   steps: { value: 8500, change: 12, data: [{ value: 6000 }, { value: 7200 }, { value: 8000 }, { value: 7800 }, { value: 8200 }, { value: 8500 }] },
   calories: { value: 350, change: 5, data: [{ value: 280 }, { value: 310 }, { value: 330 }, { value: 345 }, { value: 350 }] },
+  heartRate: { value: 72, change: -3, data: [{ value: 76 }, { value: 74 }, { value: 73 }, { value: 72 }] },
 };
 
 const demoLongevityData = {
@@ -149,6 +150,7 @@ const emptyHabitsData = {
   phoneUnlocks: { value: 0, change: 0, data: [] as { value: number }[] },
   steps: { value: 0, change: 0, data: [] as { value: number }[] },
   calories: { value: 0, change: 0, data: [] as { value: number }[] },
+  heartRate: { value: 0, change: 0, data: [] as { value: number }[] },
 };
 
 const emptyLongevityData = {

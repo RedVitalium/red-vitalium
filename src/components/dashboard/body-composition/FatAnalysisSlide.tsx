@@ -5,12 +5,35 @@ import { AlertTriangle, CheckCircle2 } from "lucide-react";
 
 interface Props {
   data: FullBodyCompositionData;
+  age?: number;
+  sex?: string;
 }
 
-function getFatStatus(fatPercent: number) {
-  if (fatPercent < 14) return { label: "Bajo", color: "text-blue-500", icon: AlertTriangle };
-  if (fatPercent <= 20) return { label: "Saludable", color: "text-green-500", icon: CheckCircle2 };
-  if (fatPercent <= 25) return { label: "Aceptable", color: "text-yellow-500", icon: AlertTriangle };
+function getBodyFatRanges(age: number, sex: string) {
+  const isMale = sex.toLowerCase().includes("mas") || sex.toLowerCase() === "m" || sex.toLowerCase() === "male";
+  
+  if (isMale) {
+    if (age >= 50) return { athlete: 15, good: 20, average: 26 };
+    if (age >= 40) return { athlete: 14, good: 19, average: 25 };
+    if (age >= 30) return { athlete: 12, good: 17, average: 23 };
+    return { athlete: 11, good: 16, average: 22 }; // 20-29
+  } else {
+    if (age >= 50) return { athlete: 19, good: 26, average: 33 };
+    if (age >= 40) return { athlete: 18, good: 25, average: 32 };
+    if (age >= 30) return { athlete: 17, good: 24, average: 31 };
+    return { athlete: 16, good: 23, average: 30 }; // 20-29
+  }
+}
+
+// Generic fallback ranges (average across all age groups)
+const GENERIC_RANGES = { athlete: 14, good: 19, average: 25 };
+
+function getFatStatus(fatPercent: number, age?: number, sex?: string) {
+  const ranges = (age && age > 0 && sex) ? getBodyFatRanges(age, sex) : GENERIC_RANGES;
+  
+  if (fatPercent < ranges.athlete) return { label: "Atleta", color: "text-blue-500", icon: CheckCircle2 };
+  if (fatPercent <= ranges.good) return { label: "Bueno", color: "text-green-500", icon: CheckCircle2 };
+  if (fatPercent <= ranges.average) return { label: "Promedio", color: "text-yellow-500", icon: AlertTriangle };
   return { label: "Alto", color: "text-red-500", icon: AlertTriangle };
 }
 
@@ -20,10 +43,17 @@ function getVisceralStatus(level: number) {
   return { label: "Muy Alto", color: "text-red-500" };
 }
 
-export function FatAnalysisSlide({ data }: Props) {
-  const fatStatus = getFatStatus(data.bodyFatPercent);
+export function FatAnalysisSlide({ data, age, sex }: Props) {
+  const fatStatus = getFatStatus(data.bodyFatPercent, age, sex);
   const visceralStatus = getVisceralStatus(data.visceralFat);
   const StatusIcon = fatStatus.icon;
+
+  // Calculate indicator position based on age/sex ranges
+  const ranges = (age && age > 0 && sex) ? getBodyFatRanges(age, sex) : GENERIC_RANGES;
+  const maxRange = ranges.average + 15; // extend beyond "alto"
+  const indicatorPos = Math.min((data.bodyFatPercent / maxRange) * 100, 95);
+  const greenEnd = (ranges.good / maxRange) * 100;
+  const yellowEnd = (ranges.average / maxRange) * 100;
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -55,20 +85,20 @@ export function FatAnalysisSlide({ data }: Props) {
             </div>
             <div className="h-2 bg-muted rounded-full mt-2 overflow-hidden relative">
               <div className="absolute inset-0 flex">
-                <div className="h-full bg-green-500/30" style={{ width: "20%" }} />
-                <div className="h-full bg-yellow-500/30" style={{ width: "25%" }} />
-                <div className="h-full bg-red-500/30" style={{ width: "55%" }} />
+                <div className="h-full bg-green-500/30" style={{ width: `${greenEnd}%` }} />
+                <div className="h-full bg-yellow-500/30" style={{ width: `${yellowEnd - greenEnd}%` }} />
+                <div className="h-full bg-red-500/30" style={{ width: `${100 - yellowEnd}%` }} />
               </div>
               <motion.div
                 className="absolute top-0 w-1 h-full bg-foreground rounded-full"
                 initial={{ left: "0%" }}
-                animate={{ left: `${Math.min(data.bodyFatPercent * 2, 95)}%` }}
+                animate={{ left: `${indicatorPos}%` }}
                 transition={{ duration: 1, delay: 0.5 }}
               />
             </div>
             <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-              <span>Bajo</span>
-              <span>Normal</span>
+              <span>Bueno</span>
+              <span>Promedio</span>
               <span>Alto</span>
             </div>
           </motion.div>

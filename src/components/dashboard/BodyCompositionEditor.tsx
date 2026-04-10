@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/custom-client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -18,24 +19,38 @@ interface BodyCompositionEditorProps {
   targetUserId: string;
 }
 
-const FIELDS = [
-  { key: "weight", label: "Peso", unit: "kg" },
-  { key: "body_fat_percent", label: "% Grasa Corporal", unit: "%" },
-  { key: "visceral_fat", label: "Grasa Visceral", unit: "nivel" },
-  { key: "subcutaneous_fat", label: "Grasa Subcutánea", unit: "%" },
-  { key: "muscle_mass", label: "Masa Muscular", unit: "%" },
-  { key: "fat_free_mass", label: "Masa Libre de Grasa", unit: "kg" },
-  { key: "bone_mass", label: "Masa Ósea", unit: "kg" },
-  { key: "body_water_percent", label: "Agua Corporal", unit: "%" },
-  { key: "protein", label: "Proteína", unit: "%" },
+const STEP1_FIELDS = [
   { key: "bmi", label: "IMC", unit: "kg/m²" },
-  { key: "bmr", label: "Metabolismo Basal", unit: "kcal" },
+  { key: "muscle_mass", label: "Masa Muscular", unit: "kg" },
+  { key: "visceral_fat", label: "Grasa Visceral", unit: "nivel" },
+  { key: "bmr", label: "Metabolismo Basal (TMB)", unit: "kcal" },
   { key: "metabolic_age", label: "Edad Metabólica", unit: "años" },
-  { key: "body_age", label: "Edad Corporal", unit: "años" },
-  { key: "body_type", label: "Tipo Corporal", unit: "" },
 ] as const;
 
-type FieldKey = typeof FIELDS[number]["key"];
+const STEP2_FIELDS = [
+  { key: "body_water_percent", label: "Agua Corporal", unit: "%" },
+  { key: "protein", label: "Proteína", unit: "%" },
+  { key: "bone_mass", label: "Masa Ósea", unit: "%" },
+  { key: "fat_free_mass", label: "Peso Sin Grasa", unit: "kg" },
+  { key: "subcutaneous_fat", label: "Grasa Subcutánea", unit: "%" },
+  { key: "skeletal_muscle", label: "Músculo Esquelético", unit: "%" },
+  { key: "smi", label: "SMI (Índice Músculo Esquelético)", unit: "" },
+  { key: "waist_hip_ratio", label: "Relación Cintura-Cadera", unit: "" },
+] as const;
+
+const EXTRA_FIELDS = [
+  { key: "weight", label: "Peso", unit: "kg" },
+  { key: "body_fat_percent", label: "% Grasa Corporal", unit: "%" },
+  { key: "body_age", label: "Edad Corporal", unit: "años" },
+] as const;
+
+const BODY_TYPE_OPTIONS = ["Muscular", "Normal", "Obeso", "Atlético", "Delgado"];
+
+const ALL_NUMERIC_KEYS = [
+  ...STEP1_FIELDS.map(f => f.key),
+  ...STEP2_FIELDS.map(f => f.key),
+  ...EXTRA_FIELDS.map(f => f.key),
+];
 
 export function BodyCompositionEditor({ open, onOpenChange, targetUserId }: BodyCompositionEditorProps) {
   const { user } = useAuth();
@@ -43,7 +58,6 @@ export function BodyCompositionEditor({ open, onOpenChange, targetUserId }: Body
   const [saving, setSaving] = useState(false);
   const [values, setValues] = useState<Record<string, string>>({});
 
-  // Fetch history
   const { data: history = [] } = useQuery({
     queryKey: ["body-composition-history", targetUserId],
     queryFn: async () => {
@@ -63,8 +77,7 @@ export function BodyCompositionEditor({ open, onOpenChange, targetUserId }: Body
   };
 
   const handleSave = async () => {
-    const numericFields = FIELDS.filter(f => f.key !== "body_type");
-    const hasAnyValue = numericFields.some(f => values[f.key]) || values.body_type;
+    const hasAnyValue = ALL_NUMERIC_KEYS.some(k => values[k]) || values.body_type;
     if (!hasAnyValue) {
       toast.error("Ingresa al menos un valor");
       return;
@@ -78,9 +91,9 @@ export function BodyCompositionEditor({ open, onOpenChange, targetUserId }: Body
         source: "manual",
       };
 
-      for (const field of numericFields) {
-        if (values[field.key]) {
-          record[field.key] = parseFloat(values[field.key]);
+      for (const key of ALL_NUMERIC_KEYS) {
+        if (values[key]) {
+          record[key] = parseFloat(values[key]);
         }
       }
       if (values.body_type) {
@@ -90,7 +103,6 @@ export function BodyCompositionEditor({ open, onOpenChange, targetUserId }: Body
       const { error } = await supabase.from("body_composition").insert(record as any);
       if (error) throw error;
 
-      // Also update weight in profiles if provided
       if (values.weight) {
         await supabase.from("profiles").update({ weight: parseFloat(values.weight) }).eq("user_id", targetUserId);
       }
@@ -108,6 +120,23 @@ export function BodyCompositionEditor({ open, onOpenChange, targetUserId }: Body
     }
   };
 
+  const renderNumericField = (field: { key: string; label: string; unit: string }) => (
+    <div key={field.key} className="space-y-1">
+      <Label className="text-xs">{field.label}</Label>
+      <div className="flex items-center gap-2">
+        <Input
+          type="number"
+          step="0.1"
+          placeholder="Valor"
+          value={values[field.key] ?? ""}
+          onChange={(e) => updateValue(field.key, e.target.value)}
+          className="h-9"
+        />
+        {field.unit && <span className="text-xs text-muted-foreground whitespace-nowrap">{field.unit}</span>}
+      </div>
+    </div>
+  );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
@@ -124,28 +153,43 @@ export function BodyCompositionEditor({ open, onOpenChange, targetUserId }: Body
             <TabsTrigger value="history" className="flex-1">Historial</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="add" className="space-y-3 mt-4">
-            <p className="text-sm text-muted-foreground">
-              Ingresa los valores de la última medición de la báscula. Solo los campos con valor serán guardados.
-            </p>
+          <TabsContent value="add" className="space-y-4 mt-4">
+            {/* Extra fields: weight, body fat, body age */}
             <div className="grid grid-cols-1 gap-3">
-              {FIELDS.map(({ key, label, unit }) => (
-                <div key={key} className="space-y-1">
-                  <Label className="text-xs">{label}</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type={key === "body_type" ? "text" : "number"}
-                      step="0.1"
-                      placeholder={key === "body_type" ? "Ej: Grasa Oculta" : "Valor"}
-                      value={values[key] ?? ""}
-                      onChange={(e) => updateValue(key, e.target.value)}
-                      className="h-9"
-                    />
-                    {unit && <span className="text-xs text-muted-foreground whitespace-nowrap">{unit}</span>}
-                  </div>
-                </div>
-              ))}
+              {EXTRA_FIELDS.map(renderNumericField)}
             </div>
+
+            {/* Step 1: Principal data */}
+            <div>
+              <h4 className="text-sm font-semibold text-primary mb-2">Datos Principales</h4>
+              <div className="grid grid-cols-1 gap-3">
+                {STEP1_FIELDS.map(renderNumericField)}
+              </div>
+            </div>
+
+            {/* Step 2: Secondary data */}
+            <div>
+              <h4 className="text-sm font-semibold text-muted-foreground mb-2">Datos Secundarios</h4>
+              <div className="grid grid-cols-1 gap-3">
+                {STEP2_FIELDS.map(renderNumericField)}
+              </div>
+            </div>
+
+            {/* Step 3: Body Type selector */}
+            <div>
+              <h4 className="text-sm font-semibold text-muted-foreground mb-2">Tipo Corporal</h4>
+              <Select value={values.body_type || ""} onValueChange={(v) => updateValue("body_type", v)}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Selecciona tipo corporal" />
+                </SelectTrigger>
+                <SelectContent>
+                  {BODY_TYPE_OPTIONS.map(opt => (
+                    <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <Button onClick={handleSave} disabled={saving} className="w-full">
               {saving ? "Guardando..." : "Guardar Medición"}
             </Button>
@@ -168,7 +212,7 @@ export function BodyCompositionEditor({ open, onOpenChange, targetUserId }: Body
                     </div>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
                       {entry.body_fat_percent && <span>Grasa: {entry.body_fat_percent}%</span>}
-                      {entry.muscle_mass && <span>Músculo: {entry.muscle_mass}%</span>}
+                      {entry.muscle_mass && <span>Músculo: {entry.muscle_mass} kg</span>}
                       {entry.visceral_fat && <span>Visceral: {entry.visceral_fat}</span>}
                       {entry.bmi && <span>IMC: {entry.bmi}</span>}
                       {entry.metabolic_age && <span>Edad Met.: {entry.metabolic_age}</span>}
