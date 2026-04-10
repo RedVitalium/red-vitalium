@@ -585,6 +585,7 @@ function MeasurementsTab({ patientUserId, isAssigned }: { patientUserId: string;
     { key: "balance_left", label: "Equilibrio Pierna Izq.", unit: "seg" },
     { key: "balance_right", label: "Equilibrio Pierna Der.", unit: "seg" },
     { key: "waist_circumference", label: "Cintura", unit: "cm" },
+    { key: "height", label: "Altura", unit: "cm" },
   ];
 
   const { data: latestMeasures } = useQuery({
@@ -607,7 +608,7 @@ function MeasurementsTab({ patientUserId, isAssigned }: { patientUserId: string;
     queryFn: async () => {
       const { data } = await supabase
         .from('profiles')
-        .select('wearable_model, waist_circumference')
+        .select('wearable_model, waist_circumference, height')
         .eq('user_id', patientUserId)
         .maybeSingle();
       return data;
@@ -623,8 +624,7 @@ function MeasurementsTab({ patientUserId, isAssigned }: { patientUserId: string;
   const saveMeasuresMutation = useMutation({
     mutationFn: async () => {
       const healthEntries = MEASURE_FIELDS
-        .filter(f => f.key !== 'waist_circumference' && measureValues[f.key])
-        .map(f => ({
+          .filter(f => f.key !== 'waist_circumference' && f.key !== 'height' && measureValues[f.key])        .map(f => ({
           user_id: patientUserId,
           data_type: f.key,
           value: parseFloat(measureValues[f.key]),
@@ -637,10 +637,13 @@ function MeasurementsTab({ patientUserId, isAssigned }: { patientUserId: string;
         if (error) throw error;
       }
 
-      if (measureValues.waist_circumference) {
+     if (measureValues.waist_circumference || measureValues.height) {
+        const profileUpdate: Record<string, number> = {};
+        if (measureValues.waist_circumference) profileUpdate.waist_circumference = parseFloat(measureValues.waist_circumference);
+        if (measureValues.height) profileUpdate.height = parseFloat(measureValues.height);
         const { error } = await supabase
           .from('profiles')
-          .update({ waist_circumference: parseFloat(measureValues.waist_circumference) })
+          .update(profileUpdate)
           .eq('user_id', patientUserId);
         if (error) throw error;
       }
