@@ -282,6 +282,7 @@ const App = () => (
         </TooltipProvider>
       </AdminModeProvider>
     </AuthProvider>
+    </NativeSessionLoader>
   </QueryClientProvider>
 );
 
