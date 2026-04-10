@@ -467,7 +467,10 @@ export default function Index() {
             ))}
           </div>
           <p className="text-sm opacity-70">© 2026 Red Vitalium. Todos los derechos reservados.</p>
-          <p className="text-xs mt-2 opacity-50">Longevidad y Bienestar Basado en Datos</p>
+          <Link to="/privacy" className="text-xs mt-2 opacity-50 hover:opacity-80 transition-opacity underline">
+            Política de Privacidad
+          </Link>
+          <p className="text-xs mt-1 opacity-50">Longevidad y Bienestar Basado en Datos</p>
         </div>
       </footer>
 
