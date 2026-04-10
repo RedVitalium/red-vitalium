@@ -65,7 +65,7 @@ export function MetricCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        "relative rounded-2xl p-6 border-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-1",
+        "relative rounded-2xl p-6 border-2 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 min-h-[180px] flex flex-col",
         statusColors[status]
       )}
     >
