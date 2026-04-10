@@ -1,12 +1,35 @@
 import { motion } from "framer-motion";
 import { BodySilhouette } from "./BodySilhouette";
 import { FullBodyCompositionData } from "./types";
+import { cn } from "@/lib/utils";
 
 interface Props {
   data: FullBodyCompositionData;
+  age?: number;
+  sex?: string;
 }
 
-export function CompositionOverviewSlide({ data }: Props) {
+function getBmiStatus(bmi: number): "optimal" | "warning" | "danger" {
+  if (bmi === 0) return "optimal";
+  if (bmi >= 18.5 && bmi <= 24.9) return "optimal";
+  if ((bmi >= 25 && bmi <= 29.9) || (bmi >= 16 && bmi < 18.5)) return "warning";
+  return "danger";
+}
+
+function getVisceralFatStatus(vf: number): "optimal" | "warning" | "danger" {
+  if (vf === 0) return "optimal";
+  if (vf >= 1 && vf <= 9) return "optimal";
+  if (vf >= 10 && vf <= 14) return "warning";
+  return "danger";
+}
+
+const statusColors: Record<string, string> = {
+  optimal: "ring-2 ring-green-400/60 bg-green-50/30 dark:bg-green-950/20",
+  warning: "ring-2 ring-yellow-400/60 bg-yellow-50/30 dark:bg-yellow-950/20",
+  danger: "ring-2 ring-red-400/60 bg-red-50/30 dark:bg-red-950/20",
+};
+
+export function CompositionOverviewSlide({ data, age, sex }: Props) {
   const segments = [
     { label: "Agua", value: data.bodyWaterPercent, color: "hsl(200, 80%, 55%)" },
     { label: "Músculo", value: data.muscleMass, color: "hsl(0, 70%, 55%)" },
@@ -14,6 +37,9 @@ export function CompositionOverviewSlide({ data }: Props) {
     { label: "Hueso", value: (data.boneMass / data.weight) * 100, color: "hsl(0, 0%, 65%)" },
     { label: "Proteína", value: data.protein, color: "hsl(280, 60%, 55%)" },
   ];
+
+  const bmiStatus = getBmiStatus(data.bmi);
+  const visceralStatus = getVisceralFatStatus(data.visceralFat);
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -61,7 +87,7 @@ export function CompositionOverviewSlide({ data }: Props) {
         </div>
       </div>
       <div className="grid grid-cols-3 gap-3 w-full mt-2">
-        <div className="text-center p-2 bg-muted/50 rounded-lg">
+        <div className={cn("text-center p-2 rounded-lg", data.bmi > 0 ? statusColors[bmiStatus] : "bg-muted/50")}>
           <p className="text-xs text-muted-foreground">IMC</p>
           <p className="text-lg font-bold">{data.bmi}</p>
         </div>
@@ -69,9 +95,9 @@ export function CompositionOverviewSlide({ data }: Props) {
           <p className="text-xs text-muted-foreground">Tipo Corporal</p>
           <p className="text-sm font-bold leading-tight">{data.bodyType}</p>
         </div>
-        <div className="text-center p-2 bg-muted/50 rounded-lg">
-          <p className="text-xs text-muted-foreground">Edad Corporal</p>
-          <p className="text-lg font-bold">{data.bodyAge} <span className="text-xs font-normal">años</span></p>
+        <div className={cn("text-center p-2 rounded-lg", data.visceralFat > 0 ? statusColors[visceralStatus] : "bg-muted/50")}>
+          <p className="text-xs text-muted-foreground">Grasa Visceral</p>
+          <p className="text-lg font-bold">{data.visceralFat}</p>
         </div>
       </div>
     </div>
