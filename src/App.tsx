@@ -47,6 +47,39 @@ const queryClient = new QueryClient();
 // Detect if running as native app
 const isNativeApp = Capacitor.isNativePlatform();
 
+// Rehydrate native session from Preferences before rendering
+function NativeSessionLoader({ children }: { children: React.ReactNode }) {
+  const [ready, setReady] = React.useState(!isNativeApp);
+
+  React.useEffect(() => {
+    if (!isNativeApp) return;
+    (async () => {
+      try {
+        const { Preferences } = await import('@capacitor/preferences');
+        const { value } = await Preferences.get({ key: 'supabase_session' });
+        if (value) {
+          const parsed = JSON.parse(value);
+          const { error } = await supabase.auth.setSession({
+            access_token: parsed.access_token,
+            refresh_token: parsed.refresh_token,
+          });
+          if (error) {
+            console.warn('Session restore failed, clearing:', error.message);
+            await Preferences.remove({ key: 'supabase_session' });
+          }
+        }
+      } catch (e) {
+        console.warn('Error restoring native session:', e);
+      } finally {
+        setReady(true);
+      }
+    })();
+  }, []);
+
+  if (!ready) return <LoadingSpinner />;
+  return <>{children}</>;
+}
+
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center h-screen">
     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
