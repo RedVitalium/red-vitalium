@@ -30,6 +30,26 @@ const tooltipData: Record<string, { description: string; range: string }> = {
     description: "La Proteína C Reactiva ultrasensible mide la inflamación sistémica de bajo grado. Marcador de riesgo cardiovascular e inflamación crónica.",
     range: "Rango saludable: < 1.0 mg/L. Riesgo moderado: 1–3. Alto riesgo: > 3.",
   },
+  "RCHA": {
+    description: "El Ratio Cintura/Altura (RCHA) es un indicador de distribución de grasa abdominal y riesgo metabólico. Se calcula dividiendo la circunferencia de cintura entre la altura.",
+    range: "Saludable: < 0.5. Riesgo moderado: 0.5–0.6. Riesgo alto: > 0.6.",
+  },
+  "Fuerza Agarre Izq.": {
+    description: "La fuerza de agarre es un predictor validado de longevidad y salud muscular general. Se mide con un dinamómetro.",
+    range: "Hombres: > 40 Kg (bueno), > 50 Kg (excelente). Mujeres: > 25 Kg (bueno), > 35 Kg (excelente). Disminuye con la edad.",
+  },
+  "Fuerza Agarre Der.": {
+    description: "La fuerza de agarre es un predictor validado de longevidad y salud muscular general. Se mide con un dinamómetro.",
+    range: "Hombres: > 40 Kg (bueno), > 50 Kg (excelente). Mujeres: > 25 Kg (bueno), > 35 Kg (excelente). Disminuye con la edad.",
+  },
+  "Equilibrio Pierna Izq.": {
+    description: "El equilibrio unipodal con ojos cerrados mide la propiocepción y estabilidad neuromuscular. Es un marcador funcional de envejecimiento.",
+    range: "Bueno: > 10 seg. Meta: > 30 seg. Excelente: > 45 seg. < 10 seg indica riesgo de caídas.",
+  },
+  "Equilibrio Pierna Der.": {
+    description: "El equilibrio unipodal con ojos cerrados mide la propiocepción y estabilidad neuromuscular. Es un marcador funcional de envejecimiento.",
+    range: "Bueno: > 10 seg. Meta: > 30 seg. Excelente: > 45 seg. < 10 seg indica riesgo de caídas.",
+  },
 };
 
 export function MetricTooltip({ metric }: MetricTooltipProps) {

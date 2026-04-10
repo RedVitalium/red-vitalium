@@ -40,6 +40,7 @@ const AdminSelectPatient = React.lazy(() => import("./pages/AdminSelectPatient")
 const NotificationSettings = React.lazy(() => import("./pages/NotificationSettings"));
 
 const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
+const Privacy = React.lazy(() => import("./pages/Privacy"));
 
 const queryClient = new QueryClient();
 
@@ -104,6 +105,7 @@ const App = () => (
                 <Route path="/" element={isNativeApp ? <Navigate to="/auth" replace /> : <Index />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/privacy" element={<Privacy />} />
                 
                 {/* New home menu - protected, first page after login */}
                 <Route path="/home" element={

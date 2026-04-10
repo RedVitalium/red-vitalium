@@ -4,6 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import { Heart, Timer, Dumbbell, Activity, TrendingUp, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MetricCard } from "@/components/dashboard/MetricCard";
+import { MetricTooltip } from "@/components/dashboard/MetricTooltip";
 import { AISummaryCard } from "@/components/dashboard/AISummaryCard";
 import { AIInterpretButton } from "@/components/dashboard/AIInterpretButton";
 import { useDashboardData } from "@/hooks/useDashboardData";
@@ -109,7 +110,12 @@ export default function DashboardLongevity() {
           {metrics.map((m) => (
             <div key={m.key}>
               <MetricCard
-                title={m.title}
+                title={
+                  <span className="flex items-center gap-1.5">
+                    {m.title}
+                    <MetricTooltip metric={m.title} />
+                  </span>
+                }
                 subtitle={m.subtitle}
                 value={m.value}
                 unit={m.unit}

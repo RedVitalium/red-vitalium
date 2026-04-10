@@ -6,7 +6,7 @@ import { MetricTooltip } from "./MetricTooltip";
 type StatusLevel = "optimal" | "warning" | "danger" | "neutral";
 
 interface MetricCardProps {
-  title: string;
+  title: React.ReactNode;
   subtitle?: string;
   value: number | string;
   unit?: string;
