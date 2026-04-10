@@ -95,7 +95,7 @@ export function MetricCard({
       </div>
 
       {/* Change & Target */}
-      <div className="flex items-center justify-between text-sm">
+      <div className="flex items-center justify-between text-sm mt-auto">
         {change !== undefined && (
           <div className={cn("flex items-center gap-1 font-medium", getTrendColor())}>
             {getTrendIcon()}
