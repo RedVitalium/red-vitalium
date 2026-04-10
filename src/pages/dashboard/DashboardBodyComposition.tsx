@@ -103,7 +103,7 @@ export default function DashboardBodyComposition() {
   const patientSex = personalData.sex || "";
 
   const slides = [
-    <CompositionOverviewSlide key="overview" data={bodyData} />,
+    <CompositionOverviewSlide key="overview" data={bodyData} age={patientAge} sex={patientSex} />,
     <FatAnalysisSlide key="fat" data={bodyData} age={patientAge} sex={patientSex} />,
     <MuscleAndLeanSlide key="muscle" data={bodyData} />,
     <MetabolicProfileSlide key="metabolic" data={bodyData} chronologicalAge={patientAge} />,
