@@ -35,6 +35,7 @@ const ProfessionalMode = React.lazy(() => import("./pages/ProfessionalMode"));
 const ProfessionalDemoPage = React.lazy(() => import("./pages/ProfessionalDemoPage"));
 const ProfessionalHistory = React.lazy(() => import("./pages/ProfessionalHistory"));
 const ProfessionalClinicalHistory = React.lazy(() => import("./pages/ProfessionalClinicalHistory"));
+const UploadScreenshot = React.lazy(() => import("./pages/UploadScreenshot"));
 const Reminders = React.lazy(() => import("./pages/Reminders"));
 const Admin = React.lazy(() => import("./pages/Admin"));
 const AdminSelectPatient = React.lazy(() => import("./pages/AdminSelectPatient"));
@@ -235,7 +236,9 @@ const App = () => (
                     <ProfessionalClinicalHistory />
                   </ProtectedRoute>
                 } />
-                
+                <Route path="/professional/upload-screenshot" element={
+                  <ProtectedRoute><UploadScreenshot /></ProtectedRoute>
+                  } />
                 {/* Tests */}
                 <Route path="/tests" element={
                   <ProtectedRoute>

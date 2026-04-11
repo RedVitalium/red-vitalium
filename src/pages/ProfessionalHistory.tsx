@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/custom-client";
 import { PageHeader } from "@/components/PageHeader";
 
 const categorySummaries = [
+  { id: 'upload-screenshot', label: 'Subir Captura', icon: FileText, href: '/professional/upload-screenshot' },
   { id: 'achievements', label: 'Logros', icon: Trophy, href: '/dashboard/achievements' },
   { id: 'habits', label: 'Hábitos', icon: Activity, href: '/dashboard/habits' },
   { id: 'psychological', label: 'Bienestar Psicológico', icon: Brain, href: '/dashboard/psychological' },
