@@ -637,13 +637,17 @@ function MeasurementsTab({ patientUserId, isAssigned }: { patientUserId: string;
         if (error) throw error;
       }
 
-     if (measureValues.waist_circumference || measureValues.height) {
-        const profileUpdate: Record<string, number> = {};
-        if (measureValues.waist_circumference) profileUpdate.waist_circumference = parseFloat(measureValues.waist_circumference);
-        if (measureValues.height) profileUpdate.height = parseFloat(measureValues.height);
+     if (measureValues.waist_circumference) {
         const { error } = await supabase
           .from('profiles')
-          .update(profileUpdate)
+          .update({ waist_circumference: parseFloat(measureValues.waist_circumference) })
+          .eq('user_id', patientUserId);
+        if (error) throw error;
+      }
+      if (measureValues.height) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ height: parseFloat(measureValues.height) })
           .eq('user_id', patientUserId);
         if (error) throw error;
       }
@@ -653,7 +657,6 @@ function MeasurementsTab({ patientUserId, isAssigned }: { patientUserId: string;
       queryClient.invalidateQueries({ queryKey: ['patient-profile-measures', patientUserId] });
       queryClient.invalidateQueries({ queryKey: ['health_data'] });
       queryClient.invalidateQueries({ queryKey: ['profile', patientUserId] });
-      setMeasureValues({});
       toast.success("Mediciones guardadas");
     },
     onError: (e: any) => toast.error("Error: " + e.message),
