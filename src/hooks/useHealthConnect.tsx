@@ -259,37 +259,98 @@ export function useHealthConnect() {
               break;
             }
 
-            case 'heart_rate': {
+           case 'heart_rate': {
               console.log('SYNC: reading heartRate');
+              // General HR for today
               const { samples } = await Health.readSamples({
                 dataType: 'heartRate',
                 startDate: startOfDay.toISOString(),
                 endDate: endOfDay.toISOString(),
-                limit: 200,
+                limit: 1000,
               });
               if (samples && samples.length > 0) {
                 value = Math.round(samples.reduce((sum: number, s: any) => sum + (s.value || 0), 0) / samples.length);
                 metadata = { totalSamples: samples.length };
+                
+                // Save ALL individual samples with real timestamps
+                for (const sample of samples) {
+                  const sampleTime = sample.startDate || sample.endDate;
+                  if (sampleTime && sample.value) {
+                    await supabase.from('health_data').insert({
+                      user_id: user.id,
+                      data_type: 'heart_rate_sample',
+                      value: sample.value,
+                      unit: 'bpm',
+                      recorded_at: sampleTime,
+                      source: 'health_connect',
+                    });
+                  }
+                }
+                console.log('SYNC: saved', samples.length, 'individual HR samples');
               }
-              console.log('SYNC: heartRate =', value);
+              console.log('SYNC: heartRate avg =', value, 'from', samples?.length, 'samples');
+              
+              // Separate nighttime read for resting HR (10PM yesterday to 5AM today)
+              const lastNight10pm = new Date(yesterday);
+              lastNight10pm.setHours(22, 0, 0, 0);
+              const thisAm5 = new Date(startOfDay);
+              thisAm5.setHours(5, 0, 0, 0);
+              
+              try {
+                const { samples: nightSamples } = await Health.readSamples({
+                  dataType: 'heartRate',
+                  startDate: lastNight10pm.toISOString(),
+                  endDate: thisAm5.toISOString(),
+                  limit: 500,
+                });
+                if (nightSamples && nightSamples.length > 0) {
+                  // Bottom 20% of nighttime readings = resting HR
+                  const sorted = [...nightSamples].sort((a: any, b: any) => (a.value || 0) - (b.value || 0));
+                  const bottom20 = sorted.slice(0, Math.max(1, Math.floor(sorted.length * 0.2)));
+                  const restingAvg = Math.round(bottom20.reduce((sum: number, s: any) => sum + (s.value || 0), 0) / bottom20.length);
+                  
+                  console.log('SYNC: resting HR =', restingAvg, 'from', nightSamples.length, 'night samples (bottom 20%:', bottom20.length, ')');
+                  
+                  // Save resting HR
+                  const today = new Date().toLocaleDateString('en-CA');
+                  const { data: existingResting } = await supabase
+                    .from('health_data')
+                    .select('id')
+                    .eq('user_id', user.id)
+                    .eq('data_type', 'resting_heart_rate')
+                    .gte('recorded_at', `${today}T00:00:00`)
+                    .lte('recorded_at', `${today}T23:59:59`)
+                    .limit(1)
+                    .maybeSingle();
+                  if (existingResting) {
+                    await supabase.from('health_data').update({ value: restingAvg, recorded_at: new Date().toISOString() }).eq('id', existingResting.id);
+                  } else {
+                    await supabase.from('health_data').insert({
+                      user_id: user.id, data_type: 'resting_heart_rate', value: restingAvg,
+                      unit: 'bpm', recorded_at: new Date().toISOString(), source: 'health_connect',
+                    });
+                  }
+                  
+                  // Also save all night samples individually
+                  for (const sample of nightSamples) {
+                    const sampleTime = sample.startDate || sample.endDate;
+                    if (sampleTime && sample.value) {
+                      await supabase.from('health_data').insert({
+                      user_id: user.id,
+                      data_type: 'heart_rate_sample',
+                      value: sample.value,
+                      unit: 'bpm',
+                      recorded_at: sampleTime,
+                      source: 'health_connect',
+                    });
+                  }
+                  }
+                }
+              } catch (e) {
+                console.log('SYNC: nighttime HR read failed', e);
+              }
               break;
             }
-
-            case 'resting_heart_rate': {
-              console.log('SYNC: reading restingHeartRate');
-              const { samples } = await Health.readSamples({
-                dataType: 'restingHeartRate',
-                startDate: yesterday.toISOString(),
-                endDate: endOfDay.toISOString(),
-                limit: 10,
-              });
-              if (samples && samples.length > 0) {
-                value = Math.round(samples[samples.length - 1].value || 0);
-              }
-              console.log('SYNC: restingHeartRate =', value);
-              break;
-            }
-
             case 'hrv': {
               console.log('SYNC: reading heartRateVariability');
               const { samples } = await Health.readSamples({
