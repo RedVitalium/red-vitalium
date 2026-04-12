@@ -212,7 +212,7 @@ export default function UploadScreenshot() {
           }
         }
 
-        const { error } = await supabase.from("body_composition").insert(bodyComp);
+        const { error } = await supabase.from("body_composition").insert(bodyComp as any);
         if (error) throw error;
 
         toast.success("Composición corporal guardada");
