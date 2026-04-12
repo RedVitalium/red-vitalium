@@ -584,6 +584,7 @@ export type Database = {
           date_of_birth: string | null
           email: string | null
           full_name: string | null
+          health_objectives: string[] | null
           height: number | null
           id: string
           partner_user_id: string | null
@@ -603,6 +604,7 @@ export type Database = {
           date_of_birth?: string | null
           email?: string | null
           full_name?: string | null
+          health_objectives?: string[] | null
           height?: number | null
           id?: string
           partner_user_id?: string | null
@@ -622,6 +624,7 @@ export type Database = {
           date_of_birth?: string | null
           email?: string | null
           full_name?: string | null
+          health_objectives?: string[] | null
           height?: number | null
           id?: string
           partner_user_id?: string | null
