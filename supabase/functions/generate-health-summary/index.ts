@@ -410,6 +410,11 @@ SWLS (Satisfacción con la vida, puntuación ALTA = MEJOR):
     const medicationsContext = buildMedicationsContext();
     const surveyAdherence = buildSurveyAdherence();
     const cycleContext = buildCycleContext();
+    // Patient health objectives
+    const healthObjectives = profile?.health_objectives || [];
+    const objectivesContext = healthObjectives.length > 0 
+      ? `Objetivos del paciente: ${healthObjectives.join(", ")}. Calibra tu tono según estos objetivos. Si su objetivo es salud general y sus métricas son buenas, celebra el logro. No empujes a más a menos que el paciente lo haya pedido explícitamente (ej: "Nivel atleta").`
+      : `El paciente no ha declarado objetivos específicos. Usa un tono neutro, reporta datos sin juicio.`;
 
     // CRITICAL anti-hallucination instruction
     const spanishRule = `Responde siempre en español. El paciente es hispanohablante. IMPORTANTE: Todos los títulos y subtítulos deben estar en español: Psicológico, Longevidad, Hábitos, Composición Corporal, Metabólico. Nunca uses inglés.`;
@@ -771,14 +776,15 @@ RESPONDE SOLO con texto plano (NO JSON).`;
     }
 
     // ======= SECTION-SPECIFIC PROMPTS =======
-    const trendInstruction = `
-ENFOQUE EN TENDENCIAS:
-- Si hay datos de múltiples días/semanas, SIEMPRE reportar la tendencia: "mejoró X%", "se mantuvo estable", "disminuyó X%"
-- Comparar los últimos 7 días vs los 7 anteriores cuando haya datos suficientes
-- Para valores individuales sin historial, interpretar en CONTEXTO del paciente completo (edad, sexo, medicaciones, otros marcadores)
-- Cuando haya tablas de referencia por edad/sexo, indicar el PERCENTIL aproximado: "Tu VO2 Max de 41 te ubica en el percentil 55 para hombres de 45 años"
-- NO reportar solo el último valor. Siempre dar contexto temporal o poblacional.
-- Si el paciente tiene medicaciones activas, mencionar su posible influencia en los marcadores relevantes.`;
+    
+const trendInstruction = "ENFOQUE EN TENDENCIAS:\n" +
+      "- Si hay datos de múltiples días/semanas, SIEMPRE reportar la tendencia.\n" +
+      "- Comparar los últimos 7 días vs los 7 anteriores cuando haya datos suficientes.\n" +
+      "- Para valores individuales sin historial, interpretar en CONTEXTO del paciente completo.\n" +
+      "- Cuando haya tablas de referencia por edad/sexo, indicar el PERCENTIL aproximado.\n" +
+      "- NO reportar solo el último valor. Siempre dar contexto temporal o poblacional.\n" +
+      "- Si el paciente tiene medicaciones activas, mencionar su posible influencia.\n" +
+      "OBJETIVOS DEL PACIENTE: " + objectivesContext;
 
     const sectionPrompts: Record<string, string> = {
       overall: `Eres un médico especialista en medicina preventiva. Genera un resumen integral de salud.

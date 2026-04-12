@@ -202,11 +202,35 @@ const dataTypeAliases: Record<string, string[]> = {
   'vo2_max': ['vo2_max'],
 };
 
-function getHealthDataValue(healthData: Array<{ data_type: string; value: number }> | null, dataType: string): number {
+// Source priority: screenshot_ocr > health_connect > manual_professional > manual
+const SOURCE_PRIORITY: Record<string, number> = {
+  'screenshot_ocr': 4,
+  'health_connect': 3,
+  'manual_professional': 2,
+  'professional': 2,
+  'manual': 1,
+};
+
+function getSourcePriority(source: string | null): number {
+  return SOURCE_PRIORITY[source || ''] || 0;
+}
+
+function getHealthDataValue(healthData: Array<{ data_type: string; value: number; source?: string; recorded_at?: string }> | null, dataType: string): number {
   if (!healthData) return 0;
   const aliases = dataTypeAliases[dataType] || [dataType];
-  const entry = healthData.find(h => aliases.includes(h.data_type));
-  return entry?.value || 0;
+  const matches = healthData.filter(h => aliases.includes(h.data_type));
+  if (matches.length === 0) return 0;
+  // Same day: pick highest priority source. Different days: pick most recent.
+  const today = new Date().toLocaleDateString('en-CA');
+  const todayMatches = matches.filter(h => h.recorded_at?.startsWith(today));
+  const relevant = todayMatches.length > 0 ? todayMatches : matches;
+  // Sort by source priority (desc), then by recorded_at (desc)
+  relevant.sort((a, b) => {
+    const prioDiff = getSourcePriority(b.source || null) - getSourcePriority(a.source || null);
+    if (prioDiff !== 0) return prioDiff;
+    return (b.recorded_at || '').localeCompare(a.recorded_at || '');
+  });
+  return relevant[0]?.value || 0;
 }
 
 // Helper to calculate weekly average (for metrics that update weekly)

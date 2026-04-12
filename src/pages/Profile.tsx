@@ -33,6 +33,7 @@ interface ProfileData {
   wearable_model: string | null;
   research_consent: boolean | null;
   research_consent_at: string | null;
+  health_objectives: string[] | null;
 }
 
 // Fields that patients CAN edit themselves
@@ -56,7 +57,7 @@ export default function Profile() {
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('full_name, email, date_of_birth, sex, height, weight, waist_circumference, wearable_model, research_consent, research_consent_at')
+        .select('full_name, email, date_of_birth, sex, height, weight, waist_circumference, wearable_model, research_consent, research_consent_at, health_objectives')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -82,6 +83,7 @@ export default function Profile() {
       full_name: editedProfile.full_name,
       date_of_birth: editedProfile.date_of_birth,
       sex: editedProfile.sex,
+      health_objectives: editedProfile.health_objectives,
     };
 
     const { error } = await supabase
@@ -219,7 +221,75 @@ export default function Profile() {
                   </p>
                 )}
               </div>
-
+              {/* Health Objectives */}
+              <div className="space-y-2">
+                <Label>Mis Objetivos de Salud <span className="text-xs text-muted-foreground">(máximo 3)</span></Label>
+                {(() => {
+                  const age = profile?.date_of_birth ? Math.floor((Date.now() - new Date(profile.date_of_birth).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : 35;
+                 const options = age < 36 ? [
+                    "Mejorar mi salud general",
+                    "Ganar masa muscular",
+                    "Bajar de peso",
+                    "Nivel atleta",
+                    "Manejar estrés y sueño",
+                    "Longevidad y prevención",
+                  ] : age < 56 ? [
+                    "Mejorar mi salud general",
+                    "Longevidad y prevención",
+                    "Bajar de peso",
+                    "Ganar movilidad y fuerza",
+                    "Manejar estrés y sueño",
+                    "Nivel atleta",
+                  ] : [
+                    "Mantenerme activo y saludable",
+                    "Longevidad y prevención",
+                    "Ganar movilidad",
+                    "Manejar dolor crónico",
+                    "Mejorar sueño",
+                    "Nivel atleta",
+                  ];
+                  const selected: string[] = (isEditing ? editedProfile?.health_objectives : profile?.health_objectives) || [];
+                  const toggleObjective = (obj: string) => {
+                    if (!isEditing) return;
+                    setEditedProfile(prev => {
+                      if (!prev) return null;
+                      const current = prev.health_objectives || [];
+                      if (current.includes(obj)) {
+                        return { ...prev, health_objectives: current.filter(o => o !== obj) };
+                      } else if (current.length < 3) {
+                        return { ...prev, health_objectives: [...current, obj] };
+                      }
+                      return prev;
+                    });
+                  };
+                  return (
+                    <div className="space-y-2">
+                      {options.map(opt => (
+                        <div
+                          key={opt}
+                          onClick={() => toggleObjective(opt)}
+                          className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                            isEditing ? 'cursor-pointer hover:bg-muted/50' : ''
+                          } ${selected.includes(opt) ? 'border-primary bg-primary/5' : 'border-border'}`}
+                        >
+                          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                            selected.includes(opt) ? 'border-primary bg-primary' : 'border-muted-foreground/30'
+                          }`}>
+                            {selected.includes(opt) && <span className="text-white text-xs">✓</span>}
+                          </div>
+                          <span className={`text-sm ${selected.includes(opt) ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
+                            {opt}
+                          </span>
+                        </div>
+                      ))}
+                      {selected.length === 3 && isEditing && (
+                        <p className="text-xs text-amber-600">Máximo 3 objetivos seleccionados</p>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+ 
               {/* Divider */}
               <div className="h-px bg-border my-6" />
 
