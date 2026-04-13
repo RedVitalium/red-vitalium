@@ -27,6 +27,10 @@ export type HealthDataType =
   | 'vo2_max'
   | 'active_minutes'
   | 'calories'
+  | 'calories_total'
+  | 'calories_basal'
+  | 'distance'
+  | 'speed'
   | 'phone_unlocks'
   | 'screen_time'
   | 'weight'
@@ -94,6 +98,10 @@ function getUnit(dataType: HealthDataType): string {
     case 'stress': return 'level';
     case 'vo2_max': return 'ml/kg/min';
     case 'calories': return 'kcal';
+    case 'calories_total': return 'kcal';
+    case 'calories_basal': return 'kcal';
+    case 'distance': return 'm';
+    case 'speed': return 'km/h';
     case 'weight': return 'kg';
     case 'body_fat': return '%';
     default: return '';
@@ -167,6 +175,9 @@ export function useHealthConnect() {
         read: [
           'steps',
           'calories',
+          'totalCalories',
+          'basalCalories',
+          'distance',
           'heartRate',
           'restingHeartRate',
           'heartRateVariability',
@@ -245,7 +256,7 @@ export function useHealthConnect() {
             }
 
             case 'calories': {
-              console.log('SYNC: reading calories');
+              console.log('SYNC: reading calories (active)');
               const { samples } = await Health.readSamples({
                 dataType: 'calories',
                 startDate: startOfDay.toISOString(),
@@ -255,11 +266,113 @@ export function useHealthConnect() {
               if (samples && samples.length > 0) {
                 value = Math.round(samples.reduce((sum: number, s: any) => sum + (s.value || 0), 0));
               }
-              console.log('SYNC: calories =', value);
+              console.log('SYNC: calories (active) =', value);
               break;
             }
 
-           case 'heart_rate': {
+            case 'calories_total': {
+              console.log('SYNC: reading totalCalories');
+              try {
+                const { samples } = await Health.readSamples({
+                  dataType: 'totalCalories',
+                  startDate: startOfDay.toISOString(),
+                  endDate: endOfDay.toISOString(),
+                  limit: 100,
+                });
+                if (samples && samples.length > 0) {
+                  value = Math.round(samples.reduce((sum: number, s: any) => sum + (s.value || 0), 0));
+                }
+              } catch (e) {
+                console.log('SYNC: totalCalories not available');
+              }
+              console.log('SYNC: calories_total =', value);
+              break;
+            }
+
+            case 'calories_basal': {
+              console.log('SYNC: reading basalCalories');
+              try {
+                const { samples } = await Health.readSamples({
+                  dataType: 'basalCalories',
+                  startDate: startOfDay.toISOString(),
+                  endDate: endOfDay.toISOString(),
+                  limit: 100,
+                });
+                if (samples && samples.length > 0) {
+                  value = Math.round(samples.reduce((sum: number, s: any) => sum + (s.value || 0), 0));
+                }
+              } catch (e) {
+                console.log('SYNC: basalCalories not available');
+              }
+              console.log('SYNC: calories_basal =', value);
+              break;
+            }
+
+            case 'distance': {
+              console.log('SYNC: reading distance');
+              try {
+                const { samples } = await Health.readSamples({
+                  dataType: 'distance',
+                  startDate: startOfDay.toISOString(),
+                  endDate: endOfDay.toISOString(),
+                  limit: 100,
+                });
+                if (samples && samples.length > 0) {
+                  // Distance comes in meters, convert to km for display but store in meters
+                  value = Math.round(samples.reduce((sum: number, s: any) => sum + (s.value || 0), 0));
+                }
+              } catch (e) {
+                console.log('SYNC: distance not available');
+              }
+              console.log('SYNC: distance =', value, 'm');
+              break;
+            }
+
+            case 'speed': {
+              console.log('SYNC: reading speed');
+              try {
+                const { samples } = await Health.readSamples({
+                  dataType: 'speed' as any,
+                  startDate: startOfDay.toISOString(),
+                  endDate: endOfDay.toISOString(),
+                  limit: 50,
+                });
+                if (samples && samples.length > 0) {
+                  // Average speed
+                  value = Math.round((samples.reduce((sum: number, s: any) => sum + (s.value || 0), 0) / samples.length) * 10) / 10;
+                }
+              } catch (e) {
+                console.log('SYNC: speed not available');
+              }
+              console.log('SYNC: speed =', value);
+              break;
+            }
+
+            case 'activity_duration': {
+              console.log('SYNC: reading exercise');
+              try {
+                const { samples } = await Health.readSamples({
+                  dataType: 'exerciseTime' as any,
+                  startDate: startOfDay.toISOString(),
+                  endDate: endOfDay.toISOString(),
+                  limit: 20,
+                });
+                console.log('SYNC: exercise samples', JSON.stringify(samples)?.substring(0, 300));
+                if (samples && samples.length > 0) {
+                  // Sum all exercise duration for today
+                  value = Math.round(samples.reduce((sum: number, s: any) => sum + (s.value || 0), 0));
+                  metadata = {
+                    sessionCount: samples.length,
+                  };
+                }
+              } catch (e: any) {
+                console.log('SYNC: exercise FAILED', e.message || e);
+              }
+              console.log('SYNC: activity_duration =', value);
+              break;
+            }
+
+            case 'heart_rate': {
               console.log('SYNC: reading heartRate');
               // General HR for today
               const { samples } = await Health.readSamples({
@@ -272,21 +385,33 @@ export function useHealthConnect() {
                 value = Math.round(samples.reduce((sum: number, s: any) => sum + (s.value || 0), 0) / samples.length);
                 metadata = { totalSamples: samples.length };
                 
-                // Save ALL individual samples with real timestamps
-                for (const sample of samples) {
-                  const sampleTime = sample.startDate || sample.endDate;
-                  if (sampleTime && sample.value) {
-                    await supabase.from('health_data').insert({
+                // Save individual HR samples (skip if already synced today)
+                const today = new Date().toLocaleDateString('en-CA');
+                const { count: existingSamples } = await supabase
+                  .from('health_data')
+                  .select('*', { count: 'exact', head: true })
+                  .eq('user_id', user.id)
+                  .eq('data_type', 'heart_rate_sample')
+                  .gte('recorded_at', `${today}T00:00:00`);
+                
+                if (!existingSamples || existingSamples < 10) {
+                  const sampleInserts = samples
+                    .filter((s: any) => s.value && (s.startDate || s.endDate))
+                    .map((s: any) => ({
                       user_id: user.id,
                       data_type: 'heart_rate_sample',
-                      value: sample.value,
+                      value: s.value,
                       unit: 'bpm',
-                      recorded_at: sampleTime,
+                      recorded_at: s.startDate || s.endDate,
                       source: 'health_connect',
-                    });
+                    }));
+                  if (sampleInserts.length > 0) {
+                    await supabase.from('health_data').insert(sampleInserts);
                   }
+                  console.log('SYNC: saved', sampleInserts.length, 'individual HR samples');
+                } else {
+                  console.log('SYNC: HR samples already synced today, skipping');
                 }
-                console.log('SYNC: saved', samples.length, 'individual HR samples');
               }
               console.log('SYNC: heartRate avg =', value, 'from', samples?.length, 'samples');
               
@@ -330,27 +455,20 @@ export function useHealthConnect() {
                       unit: 'bpm', recorded_at: new Date().toISOString(), source: 'health_connect',
                     });
                   }
-                  
-                  // Also save all night samples individually
-                  for (const sample of nightSamples) {
-                    const sampleTime = sample.startDate || sample.endDate;
-                    if (sampleTime && sample.value) {
-                      await supabase.from('health_data').insert({
-                      user_id: user.id,
-                      data_type: 'heart_rate_sample',
-                      value: sample.value,
-                      unit: 'bpm',
-                      recorded_at: sampleTime,
-                      source: 'health_connect',
-                    });
-                  }
-                  }
                 }
               } catch (e) {
                 console.log('SYNC: nighttime HR read failed', e);
               }
               break;
             }
+
+            case 'resting_heart_rate': {
+              // Resting HR is now derived from nighttime readings in heart_rate case
+              // Skip the plugin's restingHeartRate dataType (Samsung doesn't provide it)
+              value = null;
+              break;
+            }
+
             case 'hrv': {
               console.log('SYNC: reading heartRateVariability');
               const { samples } = await Health.readSamples({
@@ -396,7 +514,6 @@ export function useHealthConnect() {
                 limit: 10,
               });
               if (samples && samples.length > 0) {
-                // Sort by date descending, take most recent
                 const sorted = [...samples].sort((a: any, b: any) => 
                   new Date(b.startDate || b.endDate || 0).getTime() - new Date(a.startDate || a.endDate || 0).getTime());
                 value = Math.round(sorted[0].value * 10) / 10;
@@ -413,7 +530,7 @@ export function useHealthConnect() {
                 endDate: endOfDay.toISOString(),
                 limit: 10,
               });
-             if (samples && samples.length > 0) {
+              if (samples && samples.length > 0) {
                 const sorted = [...samples].sort((a: any, b: any) => 
                   new Date(b.startDate || b.endDate || 0).getTime() - new Date(a.startDate || a.endDate || 0).getTime());
                 value = Math.round(sorted[0].value * 10) / 10;
@@ -433,13 +550,9 @@ export function useHealthConnect() {
                 });
                 console.log('SYNC: sleep ALL', JSON.stringify(samples));
                 if (samples && samples.length > 0) {
-                  // Sort by value descending
                   const sorted = [...samples].sort((a: any, b: any) => (b.value || 0) - (a.value || 0));
-                  
-                  // Longest = time in bed (display value)
                   const timeInBed = sorted[0]?.value || 0;
                   value = Math.round(timeInBed / 60 * 10) / 10;
-                  
                   metadata = {
                     rawSamples: samples.length,
                     timeInBedMinutes: timeInBed,
@@ -455,46 +568,15 @@ export function useHealthConnect() {
               break;
             }
             
-            // Sleep sub-types: we read sleep once and extract stages
-            // For now, skip these as they depend on how the plugin returns sleep data
+            // Sleep sub-types: populated from screenshot OCR, not Health Connect
             case 'sleep_deep':
             case 'sleep_light':
             case 'sleep_rem':
             case 'sleep_awake':
             case 'sleep_score':
-            case 'sleep_spo2':
-              // These will be populated from the sleep_duration read above
-              // once we understand the sleep data format from the new plugin
               value = null;
               break;
-            case 'activity_duration': {
-              console.log('SYNC: reading workouts');
-              try {
-                const { samples } = await Health.readSamples({
-                  dataType: 'workouts' as any,
-                  startDate: historicStart.toISOString(),
-                  endDate: endOfDay.toISOString(),
-                  limit: 20,
-                });
-                console.log('SYNC: workouts ALL', JSON.stringify(samples));
-                if (samples && samples.length > 0) {
-                  // Take most recent workout
-                  const sorted = [...samples].sort((a: any, b: any) => 
-                    new Date(b.startDate || 0).getTime() - new Date(a.startDate || 0).getTime());
-                  value = Math.round(sorted[0].value || 0);
-                  metadata = {
-                    workoutType: sorted[0].workoutType || sorted[0].activityType,
-                    startDate: sorted[0].startDate,
-                    endDate: sorted[0].endDate,
-                    totalWorkouts: samples.length,
-                  };
-                }
-              } catch (e: any) {
-                console.log('SYNC: workouts FAILED', e.message || e);
-              }
-              console.log('SYNC: activity_duration =', value);
-              break;
-            }
+
             default:
               value = null;
           }
@@ -511,8 +593,8 @@ export function useHealthConnect() {
             };
             syncedData.push(healthData);
 
-           // Save to database — upsert: only save if no record today or value changed
-            const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
+            // Save to database — upsert: only save if no record today or value changed
+            const today = new Date().toLocaleDateString('en-CA');
             const { data: existing } = await supabase
               .from('health_data')
               .select('id, value')
@@ -525,7 +607,6 @@ export function useHealthConnect() {
               .maybeSingle();
 
             if (existing) {
-              // Update only if value changed
               if (Math.abs(existing.value - value) > 0.01) {
                 await supabase.from('health_data')
                   .update({ value, recorded_at: now.toISOString() })
@@ -566,6 +647,10 @@ export function useHealthConnect() {
     const allTypes: HealthDataType[] = [
       'steps',
       'calories',
+      'calories_total',
+      'calories_basal',
+      'distance',
+      'activity_duration',
       'heart_rate',
       'resting_heart_rate',
       'hrv',
