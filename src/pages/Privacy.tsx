@@ -23,7 +23,7 @@ export default function Privacy() {
           <p>Red Vitalium recopila los siguientes tipos de información para brindarte un servicio de salud integral:</p>
           <ul className="list-disc pl-5 space-y-1">
             <li><strong>Datos de salud:</strong> composición corporal, biomarcadores sanguíneos, métricas de longevidad (fuerza de agarre, equilibrio, VO2 Máx), edad biológica y metabólica.</li>
-            <li><strong>Datos de wearables:</strong> frecuencia cardíaca, variabilidad cardíaca (HRV), pasos, calorías, SpO2 nocturno, sueño y estrés, sincronizados desde tu dispositivo.</li>
+            <li><strong>Datos de dispositivos:</strong> frecuencia cardíaca, variabilidad cardíaca (HRV), pasos, calorías, SpO2 nocturno, sueño y estrés, sincronizados desde tu dispositivo.</li>
             <li><strong>Encuestas y hábitos:</strong> respuestas a encuestas diarias de hábitos de salud, metas y progreso semanal.</li>
             <li><strong>Datos de perfil:</strong> nombre, correo electrónico, fecha de nacimiento, sexo, altura y peso.</li>
             <li><strong>Tests psicométricos:</strong> resultados de evaluaciones psicológicas validadas.</li>

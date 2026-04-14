@@ -322,7 +322,7 @@ export default function Profile() {
               <div className="space-y-2">
                 <Label className="flex items-center gap-2">
                   <Watch className="h-4 w-4 text-muted-foreground" />
-                  Dispositivo Wearable
+                  Dispositivo
                 </Label>
                 <p className="text-foreground py-2 bg-muted/30 px-3 rounded-md">
                   {profile?.wearable_model || 'Sin dispositivo registrado'}

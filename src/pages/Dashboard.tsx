@@ -165,7 +165,7 @@ const [searchParams] = useSearchParams();
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
-              Aún no tienes datos registrados. Conecta tu dispositivo wearable o espera a que tu médico ingrese tus biomarcadores para comenzar a ver tu progreso.
+              Aún no tienes datos registrados. Conecta tu dispositivo o espera a que tu médico ingrese tus biomarcadores para comenzar a ver tu progreso.
             </AlertDescription>
           </Alert>
         </motion.div>
