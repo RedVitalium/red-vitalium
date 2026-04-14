@@ -88,7 +88,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin + '/home',
+        redirectTo: Capacitor.isNativePlatform()
+          ? 'https://huxadvolwgfdjgsnraxm.supabase.co/auth/v1/callback'
+          : window.location.origin + '/home',
       },
     });
     return { error };
