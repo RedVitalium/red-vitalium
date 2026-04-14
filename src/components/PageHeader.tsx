@@ -35,7 +35,7 @@ export function PageHeader({
   );
 
   return (
-    <header className="sticky top-0 z-[60] bg-background border-b border-border/50" style={{ isolation: 'isolate', paddingTop: 'env(safe-area-inset-top)', marginTop: 'calc(-1 * env(safe-area-inset-top))' }}>
+    <header className="sticky top-0 z-[60] bg-background border-b border-border/50" style={{ isolation: 'isolate', paddingTop: 'max(env(safe-area-inset-top), 24px)', marginTop: 'calc(-1 * max(env(safe-area-inset-top), 24px))' }}
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           {showBack && BackElement}
