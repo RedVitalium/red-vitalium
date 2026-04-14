@@ -84,23 +84,13 @@ function NativeSessionLoader({ children }: { children: React.ReactNode }) {
 
 const AuthCallback = () => {
   React.useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        if (window.navigator.userAgent.includes('wv')) {
-          window.location.replace('intent://home#Intent;scheme=https;package=mx.redvitalium.app;end');
-        } else {
-          window.location.replace('/home');
-        }
-      } else {
-        supabase.auth.exchangeCodeForSession(window.location.href).then(() => {
-          if (window.navigator.userAgent.includes('wv')) {
-          window.location.replace('intent://home#Intent;scheme=https;package=mx.redvitalium.app;end');
-        } else {
-          window.location.replace('/home');
-        }
-        });
-      }
-    });
+    const handleCallback = async () => {
+      const { Browser } = await import('@capacitor/browser');
+      await supabase.auth.exchangeCodeForSession(window.location.href);
+      await Browser.close();
+      window.location.replace('/home');
+    };
+    handleCallback();
   }, []);
   return <LoadingSpinner />;
 };

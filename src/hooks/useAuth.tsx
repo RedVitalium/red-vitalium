@@ -85,15 +85,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: Capacitor.isNativePlatform()
-          ? 'https://redvitalium.com/auth/callback'
-          : window.location.origin + '/home',
-      },
-    });
-    return { error };
+    if (Capacitor.isNativePlatform()) {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: 'https://redvitalium.com/auth/callback',
+          skipBrowserRedirect: true,
+        },
+      });
+      if (error) return { error };
+      if (data?.url) {
+        const { Browser } = await import('@capacitor/browser');
+        await Browser.open({ url: data.url });
+      }
+      return { error: null };
+    } else {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/home',
+        },
+      });
+      return { error };
+    }
   };
 
   const signOut = async () => {
