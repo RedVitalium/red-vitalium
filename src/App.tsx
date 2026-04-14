@@ -123,10 +123,35 @@ function BackButtonHandler() {
     };
   }, []);
 
+return null;
+}
+
+// Deep link handler for Google OAuth callback
+function AppUrlOpenHandler() {
+  React.useEffect(() => {
+    if (!isNativeApp) return;
+
+    const handler = CapApp.addListener('appUrlOpen', async (event) => {
+      const url = event.url;
+      if (url.includes('huxadvolwgfdjgsnraxm.supabase.co/auth/v1/callback') || 
+          url.includes('#access_token') || 
+          url.includes('?code=')) {
+        const { error } = await supabase.auth.exchangeCodeForSession(url);
+        if (error) {
+          console.warn('OAuth callback error:', error.message);
+        }
+      }
+    });
+
+    return () => {
+      handler.then(h => h.remove());
+    };
+  }, []);
+
   return null;
 }
-const App = () => (
-  <QueryClientProvider client={queryClient}>
+
+const App = () => (  <QueryClientProvider client={queryClient}>
     <NativeSessionLoader>
     <AuthProvider>
       <AdminModeProvider>
@@ -135,6 +160,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <BackButtonHandler />
+            <AppUrlOpenHandler />
             <Suspense fallback={<LoadingSpinner />}>
               <Routes>
                 {/* Landing page - only for web, native goes to auth */}
