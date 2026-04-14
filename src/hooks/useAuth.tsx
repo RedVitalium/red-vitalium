@@ -89,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       provider: 'google',
       options: {
         redirectTo: Capacitor.isNativePlatform()
-          ? 'https://huxadvolwgfdjgsnraxm.supabase.co/auth/v1/callback'
+          ? 'https://redvitalium.com/auth/callback'
           : window.location.origin + '/home',
       },
     });

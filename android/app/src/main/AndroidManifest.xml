@@ -24,8 +24,8 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https"
-                      android:host="huxadvolwgfdjgsnraxm.supabase.co"
-                      android:pathPrefix="/auth/v1/callback" />
+                      android:host="redvitalium.com"
+                      android:pathPrefix="/auth/callback" />
             </intent-filter>
         </activity>
 
