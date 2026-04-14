@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "mx.redvitalium.app",
+    "sha256_cert_fingerprints": ["53:06:25:CD:C7:5F:F2:BF:C6:81:AD:FF:AA:D6:57:E7:3E:A1:2F:8E:0D:42:9C:27:CA:2A:BB:E8:85:40:03:CD"]
+  }
+}]
