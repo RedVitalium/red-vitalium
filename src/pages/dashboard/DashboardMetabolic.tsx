@@ -8,6 +8,10 @@ import { MetricTooltip } from "@/components/dashboard/MetricTooltip";
 import { useUserRoles, isFeatureAvailable } from "@/hooks/useUserRoles";
 import { useAdminMode } from "@/hooks/useAdminMode";
 import { PageHeader } from "@/components/PageHeader";
+import { DashboardEmptyState } from "@/components/dashboard/DashboardEmptyState";
+import { useAuth } from "@/hooks/useAuth";
+import { useCycleData } from "@/hooks/useCycleData";
+
 
 // Metabolic markers would come from blood tests
 interface MetabolicMarker {
@@ -38,6 +42,11 @@ export default function DashboardMetabolic() {
 
   // Check if user has access (Oro or higher)
   const hasAccess = isDemo || isFeatureAvailable(subscription, 'oro');
+  const { user } = useAuth();
+  const effectiveUserId = isViewingAsAdmin ? undefined : user?.id;
+  const { getCycleProgress } = useCycleData(isDemo ? null : effectiveUserId || null);
+  const cycleProgress = isDemo ? { hasActiveCycle: true } : getCycleProgress();
+  const showEmpty = !isDemo && !cycleProgress.hasActiveCycle && !isViewingAsAdmin;
   const markers = isDemo ? demoMarkers : [];
 
   if (isLoading && !isDemo) {
@@ -59,6 +68,14 @@ export default function DashboardMetabolic() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-3xl">
+          {showEmpty ? (
+          <DashboardEmptyState
+            icon={Beaker}
+            title="Tus marcadores metabólicos están pendientes"
+            description="Cuando tu programa inicie y tu médico ingrese tus resultados de laboratorio, aquí verás tus biomarcadores."
+          />
+        ) : (
+        <>
         {!hasAccess ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -184,6 +201,8 @@ export default function DashboardMetabolic() {
               </Card>
             </motion.div>
           </>
+        )}
+      </>
         )}
       </main>
     </div>

@@ -91,8 +91,7 @@ export default function DashboardHabits() {
   const screenTimeOptions = [30, 45, 60, 75, 90, 105, 120, 135, 150, 180, 210, 240];
   const phoneUnlocksOptions = [20, 30, 40, 50, 60, 70, 80, 90, 100, 120, 150];
 
-  const hasAnyData = !isDemo && (habitsData.sleep.value > 0 || habitsData.sleepQuality.value > 0 || (habitsData.activity.sessionCount || 0) > 0 || habitsData.screenTime.value > 0 || habitsData.phoneUnlocks.value > 0);
-  const showEmpty = !isDemo && !hasAnyData && !isViewingAsAdmin;
+   const showEmpty = !isDemo && !cycleProgress.hasActiveCycle && !isViewingAsAdmin;
 
   return (
     <div className="min-h-screen bg-background">

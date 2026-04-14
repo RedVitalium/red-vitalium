@@ -10,6 +10,8 @@ import { AIInterpretButton } from "@/components/dashboard/AIInterpretButton";
 import { DashboardEmptyState } from "@/components/dashboard/DashboardEmptyState";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useAdminMode } from "@/hooks/useAdminMode";
+import { useCycleData } from "@/hooks/useCycleData";
+import { useAuth } from "@/hooks/useAuth";
 import { PageHeader } from "@/components/PageHeader";
 
 function getStatus(value: number, target: number, isLowerBetter: boolean = false, treatZeroAsOptimal: boolean = false): "optimal" | "warning" | "danger" {
@@ -35,6 +37,10 @@ export default function DashboardPsychological() {
   const backPath = isViewingAsAdmin ? "/professional/history" : `/my-dashboard${isDemo ? '?demo=true' : ''}`;
   
   const { psychologicalData, personalData } = useDashboardData();
+  const { user } = useAuth();
+  const effectiveUserId = isViewingAsAdmin ? targetUserId : user?.id;
+  const { getCycleProgress } = useCycleData(isDemo ? null : effectiveUserId || null);
+  const cycleProgress = isDemo ? { hasActiveCycle: true } : getCycleProgress();
 
   // Filter out zero/empty values for AI
   const aiHealthData: Record<string, any> = {};
@@ -45,8 +51,7 @@ export default function DashboardPsychological() {
 
   const personalContext = { age: personalData.age, sex: personalData.sex };
 
-  const hasAnyData = isDemo || psychologicalData.anxiety.value > 0 || psychologicalData.stress.value > 0 || psychologicalData.depression.value > 0 || psychologicalData.lifeSatisfaction.value > 0;
-  const showEmpty = !isDemo && !hasAnyData && !isViewingAsAdmin;
+  const showEmpty = !isDemo && !cycleProgress.hasActiveCycle && !isViewingAsAdmin;
 
   return (
     <div className="min-h-screen bg-background">

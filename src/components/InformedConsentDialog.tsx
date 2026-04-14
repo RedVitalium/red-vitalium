@@ -32,8 +32,7 @@ export function InformedConsentDialog({ open, onAccept, onCancel }: InformedCons
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-lg w-full max-h-[90vh] flex flex-col p-0 gap-0">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/50 shrink-0">
+      <DialogContent className="max-w-lg w-full max-h-[80vh] flex flex-col p-0 gap-0">        <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/50 shrink-0">
           <div className="flex items-center gap-3 mb-1">
             <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
               <Shield className="h-5 w-5 text-primary" />
@@ -147,16 +146,14 @@ export function InformedConsentDialog({ open, onAccept, onCancel }: InformedCons
         </ScrollArea>
 
         {/* Footer with checkbox and buttons */}
-        <div className="px-6 py-4 border-t border-border/50 bg-muted/20 shrink-0 space-y-4">
-          <label className="flex items-start gap-3 cursor-pointer group">
+        <div className="px-6 py-3 border-t border-border/50 bg-muted/20 shrink-0 space-y-3">          <label className="flex items-start gap-3 cursor-pointer group">
             <Checkbox
               id="consent-check"
               checked={accepted}
               onCheckedChange={(v) => setAccepted(!!v)}
               className="mt-0.5 shrink-0"
             />
-            <span className="text-sm text-foreground leading-relaxed select-none">
-              He leído y comprendido los términos anteriores. Autorizo a Red Vitalium a recopilar mis datos de salud para el funcionamiento de la plataforma.
+            <span className="text-xs text-foreground leading-snug select-none">              He leído y comprendido los términos anteriores. Autorizo a Red Vitalium a recopilar mis datos de salud para el funcionamiento de la plataforma.
             </span>
           </label>
 
@@ -167,8 +164,7 @@ export function InformedConsentDialog({ open, onAccept, onCancel }: InformedCons
               onCheckedChange={(v) => setResearchAccepted(!!v)}
               className="mt-0.5 shrink-0"
             />
-            <span className="text-sm text-foreground/80 leading-relaxed select-none">
-              Autorizo el uso de mis datos anonimizados para fines de investigación científica, incluyendo estudios actuales y futuros que Red Vitalium pueda realizar. Entiendo que: (a) mis datos serán desidentificados antes de cualquier análisis, (b) puedo retirar mi consentimiento de investigación en cualquier momento sin afectar mi participación en el programa clínico, (c) los resultados podrán ser publicados en revistas científicas sin incluir información que me identifique.
+            <span className="text-xs text-foreground/80 leading-snug select-none">              Autorizo el uso de mis datos anonimizados para fines de investigación científica, incluyendo estudios actuales y futuros que Red Vitalium pueda realizar. Entiendo que: (a) mis datos serán desidentificados antes de cualquier análisis, (b) puedo retirar mi consentimiento de investigación en cualquier momento sin afectar mi participación en el programa clínico, (c) los resultados podrán ser publicados en revistas científicas sin incluir información que me identifique.
             </span>
           </label>
 

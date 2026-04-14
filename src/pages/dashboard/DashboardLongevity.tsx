@@ -11,6 +11,10 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 import { useAdminMode } from "@/hooks/useAdminMode";
 import { LongevityMetricEditor, type MetricType } from "@/components/dashboard/LongevityMetricEditor";
 import { PageHeader } from "@/components/PageHeader";
+import { DashboardEmptyState } from "@/components/dashboard/DashboardEmptyState";
+import { useAuth } from "@/hooks/useAuth";
+import { useCycleData } from "@/hooks/useCycleData";
+
 
 function getStatus(value: number, target: number, isLowerBetter: boolean = false): "optimal" | "warning" | "danger" {
   if (value === 0) return "warning";
@@ -33,6 +37,11 @@ export default function DashboardLongevity() {
   
   const { personalData, longevityData } = useDashboardData();
   const [editingMetric, setEditingMetric] = useState<MetricType | null>(null);
+  const { user } = useAuth();
+  const effectiveUserId = isViewingAsAdmin ? targetUserId : user?.id;
+  const { getCycleProgress } = useCycleData(isDemo ? null : effectiveUserId || null);
+  const cycleProgress = isDemo ? { hasActiveCycle: true } : getCycleProgress();
+  const showEmpty = !isDemo && !cycleProgress.hasActiveCycle && !isViewingAsAdmin;
 
   const personalContext = { age: personalData.age, sex: personalData.sex };
 
@@ -91,6 +100,14 @@ export default function DashboardLongevity() {
       </PageHeader>
 
       <main className="container mx-auto px-4 py-8 max-w-3xl">
+       {showEmpty ? (
+          <DashboardEmptyState
+            icon={Heart}
+            title="Tus métricas de longevidad están en preparación"
+            description="Cuando tu programa inicie, aquí verás tus indicadores de longevidad y rendimiento físico."
+          />
+        ) : (
+        <>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
           <AISummaryCard
             section="longevity"
@@ -139,6 +156,8 @@ export default function DashboardLongevity() {
             </div>
           ))}
         </motion.div>
+        </>
+        )}
       </main>
 
       {editingMetric && targetUserId && (

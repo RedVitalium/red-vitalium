@@ -17,6 +17,9 @@ import { FatAnalysisSlide } from "@/components/dashboard/body-composition/FatAna
 import { MuscleAndLeanSlide } from "@/components/dashboard/body-composition/MuscleAndLeanSlide";
 import { MetabolicProfileSlide } from "@/components/dashboard/body-composition/MetabolicProfileSlide";
 import { BodyCompositionEditor } from "@/components/dashboard/BodyCompositionEditor";
+import { DashboardEmptyState } from "@/components/dashboard/DashboardEmptyState";
+import { useAuth } from "@/hooks/useAuth";
+import { useCycleData } from "@/hooks/useCycleData";
 
 const SLIDE_TITLES = ["General", "Grasa", "Músculo", "Metabólico"];
 
@@ -29,6 +32,11 @@ export default function DashboardBodyComposition() {
   const [editorOpen, setEditorOpen] = useState(false);
   
   const { personalData } = useDashboardData();
+  const { user } = useAuth();
+  const effectiveUserId = isViewingAsAdmin ? targetUserId : user?.id;
+  const { getCycleProgress } = useCycleData(isDemo ? null : effectiveUserId || null);
+  const cycleProgress = isDemo ? { hasActiveCycle: true } : getCycleProgress();
+  const showEmpty = !isDemo && !cycleProgress.hasActiveCycle && !isViewingAsAdmin;
 
   // Fetch latest body composition from DB
   const { data: latestComposition } = useQuery({
@@ -121,6 +129,14 @@ export default function DashboardBodyComposition() {
       </PageHeader>
 
       <main className="container mx-auto px-4 py-6 max-w-3xl">
+        {showEmpty ? (
+          <DashboardEmptyState
+            icon={Scale}
+            title="Tu composición corporal está en camino"
+            description="Cuando tu programa inicie, aquí verás el análisis detallado de tu composición corporal."
+          />
+        ) : (
+        <>
         {/* AI Summary */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
           {(() => {
@@ -223,6 +239,8 @@ export default function DashboardBodyComposition() {
               </Button>
             )}
           </>
+        )}
+      </>
         )}
       </main>
 
