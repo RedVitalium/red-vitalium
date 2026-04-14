@@ -9,6 +9,16 @@ const config: CapacitorConfig = {
       smallIcon: 'ic_stat_icon_config_sample',
       iconColor: '#6366f1',
     },
+    SystemBars: {
+      insetsHandling: 'css',
+      style: 'LIGHT',
+      hidden: false,
+    },
+    StatusBar: {
+      overlaysWebView: true,
+      style: 'LIGHT',
+      backgroundColor: '#00000000',
+    },
   },
 };
 
