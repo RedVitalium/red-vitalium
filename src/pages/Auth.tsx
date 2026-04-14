@@ -396,6 +396,7 @@ export default function Auth() {
 
                   <div className="flex flex-col gap-3">
                     <button
+                      style={{ display: 'none' }}
                       type="button"
                       onClick={handleGoogleSignIn}
                       disabled={loading}
@@ -490,6 +491,7 @@ export default function Auth() {
 
                   <div className="flex flex-col gap-3">
                     <button
+                      style={{ display: 'none' }}                    
                       type="button"
                       onClick={handleGoogleSignIn}
                       disabled={loading}
