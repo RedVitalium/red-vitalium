@@ -86,10 +86,18 @@ const AuthCallback = () => {
   React.useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        window.location.replace("/home");
+        if (window.navigator.userAgent.includes('wv')) {
+          window.location.replace('intent://home#Intent;scheme=https;package=mx.redvitalium.app;end');
+        } else {
+          window.location.replace('/home');
+        }
       } else {
         supabase.auth.exchangeCodeForSession(window.location.href).then(() => {
-          window.location.replace("/home");
+          if (window.navigator.userAgent.includes('wv')) {
+          window.location.replace('intent://home#Intent;scheme=https;package=mx.redvitalium.app;end');
+        } else {
+          window.location.replace('/home');
+        }
         });
       }
     });
