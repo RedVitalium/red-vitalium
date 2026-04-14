@@ -734,7 +734,7 @@ function MeasurementsTab({ patientUserId, isAssigned }: { patientUserId: string;
           <Card className="p-4 space-y-3">
             <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
               <Watch className="h-4 w-4 text-muted-foreground" />
-              Dispositivo Wearable
+              Dispositivo
             </h3>
             {patientProfile?.wearable_model && (
               <p className="text-xs text-muted-foreground">Actual: {patientProfile.wearable_model}</p>

@@ -193,7 +193,7 @@ export default function MyDashboard() {
           className="mt-8 p-5 bg-muted/30 border border-border rounded-xl"
         >
           <p className="text-sm text-muted-foreground text-center">
-            Tu progreso se actualiza automáticamente con los datos de tu dispositivo wearable y las entradas de tu equipo de profesionales.
+            Tu progreso se actualiza automáticamente con los datos de tu dispositivo y las entradas de tu equipo de profesionales.
           </p>
         </motion.div>
       </main>

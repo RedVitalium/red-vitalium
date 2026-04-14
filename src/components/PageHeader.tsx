@@ -30,7 +30,11 @@ export function PageHeader({
     </button>
   );
   return (
+<<<<<<< HEAD
     <header className="sticky top-0 z-[60] bg-background border-b border-border/50 before:absolute before:top-[-100px] before:left-0 before:right-0 before:h-[100px] before:bg-background" style={{ isolation: 'isolate', paddingTop: 'env(safe-area-inset-top)' }}>
+=======
+    <header className="sticky top-0 z-[60] bg-background border-b border-border/50" style={{ isolation: 'isolate', paddingTop: 'max(env(safe-area-inset-top), 24px)', marginTop: 'calc(-1 * max(env(safe-area-inset-top), 24px))' }}>
+>>>>>>> 1e41fbca4ab74607588d43f7e9aface6a69666c0
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           {showBack && BackElement}
