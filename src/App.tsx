@@ -166,6 +166,7 @@ const App = () => (  <QueryClientProvider client={queryClient}>
                 {/* Landing page - only for web, native goes to auth */}
                 <Route path="/" element={isNativeApp ? <Navigate to="/auth" replace /> : <Index />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/auth/callback" element={<Navigate to="/home" replace />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/privacy" element={<Privacy />} />
                 
