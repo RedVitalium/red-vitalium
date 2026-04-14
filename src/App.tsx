@@ -82,6 +82,21 @@ function NativeSessionLoader({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+const AuthCallback = () => {
+  React.useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        window.location.replace("/home");
+      } else {
+        supabase.auth.exchangeCodeForSession(window.location.href).then(() => {
+          window.location.replace("/home");
+        });
+      }
+    });
+  }, []);
+  return <LoadingSpinner />;
+};
+
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center h-screen">
     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -166,7 +181,7 @@ const App = () => (  <QueryClientProvider client={queryClient}>
                 {/* Landing page - only for web, native goes to auth */}
                 <Route path="/" element={isNativeApp ? <Navigate to="/auth" replace /> : <Index />} />
                 <Route path="/auth" element={<Auth />} />
-                <Route path="/auth/callback" element={<Navigate to="/home" replace />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/privacy" element={<Privacy />} />
                 
