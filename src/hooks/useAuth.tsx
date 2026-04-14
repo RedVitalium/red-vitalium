@@ -96,12 +96,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) return { error };
       if (data?.url) {
         const { Browser } = await import('@capacitor/browser');
-        const listener = await Browser.addListener('browserPageLoaded', async () => {
-          const currentUrl = window.location.href;
-          if (currentUrl.includes('/auth/callback') || currentUrl.includes('access_token') || currentUrl.includes('code=')) {
-            await listener.remove();
-            await Browser.close();
-            await supabase.auth.exchangeCodeForSession(currentUrl);
+        const listener = await Browser.addListener('browserFinished', async () => {
+          await listener.remove();
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            window.location.replace('/home');
           }
         });
         await Browser.open({ url: data.url });
