@@ -85,9 +85,7 @@ function NativeSessionLoader({ children }: { children: React.ReactNode }) {
 const AuthCallback = () => {
   React.useEffect(() => {
     const handleCallback = async () => {
-      const { Browser } = await import('@capacitor/browser');
       await supabase.auth.exchangeCodeForSession(window.location.href);
-      await Browser.close();
       window.location.replace('/home');
     };
     handleCallback();
@@ -146,9 +144,12 @@ function AppUrlOpenHandler() {
 
     const handler = CapApp.addListener('appUrlOpen', async (event) => {
       const url = event.url;
-      if (url.includes('huxadvolwgfdjgsnraxm.supabase.co/auth/v1/callback') || 
+      if (url.includes('redvitalium.com/auth/callback') ||
+          url.includes('huxadvolwgfdjgsnraxm.supabase.co/auth/v1/callback') || 
           url.includes('#access_token') || 
           url.includes('?code=')) {
+        const { Browser } = await import('@capacitor/browser');
+        await Browser.close();
         const { error } = await supabase.auth.exchangeCodeForSession(url);
         if (error) {
           console.warn('OAuth callback error:', error.message);
