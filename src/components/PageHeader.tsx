@@ -30,7 +30,7 @@ export function PageHeader({
     </button>
   );
   return (
-    <header className="sticky top-0 z-[60] bg-background border-b border-border/50 before:absolute before:top-[-100px] before:left-0 before:right-0 before:h-[100px] before:bg-background" style={{ isolation: 'isolate', paddingTop: 'env(safe-area-inset-top)' }}>
+    <header className="sticky top-0 z-[60] bg-background border-b border-border/50 before:absolute before:top-[-100px] before:left-0 before:right-0 before:h-[100px] before:bg-background" style={{ isolation: 'isolate', paddingTop: 'var(--safe-area-inset-top, env(safe-area-inset-top, 0px))' }}>
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           {showBack && BackElement}
