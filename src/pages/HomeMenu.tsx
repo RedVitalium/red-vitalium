@@ -352,7 +352,7 @@ export default function HomeMenu() {
               Actualiza tu plan para desbloquear nutrición, medicina y más
             </p>
             <Link
-              to="/"
+              to="/#planes"
               className="inline-block text-sm font-medium text-primary hover:underline"
             >
               Ver planes disponibles →
