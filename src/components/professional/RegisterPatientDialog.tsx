@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, UserPlus, UserCheck, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,14 @@ export default function RegisterPatientDialog() {
   const [newEmail, setNewEmail] = useState("");
   const [newDob, setNewDob] = useState("");
   const [creating, setCreating] = useState(false);
+
+  useEffect(() => {
+    if (searchTerm.trim().length >= 2) {
+      searchExistingPatients();
+    } else {
+      setSearchResults([]);
+    }
+  }, [searchTerm]);
 
   const searchExistingPatients = async () => {
     if (searchTerm.trim().length < 2 || !user) return;
