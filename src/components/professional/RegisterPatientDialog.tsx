@@ -56,7 +56,6 @@ export default function RegisterPatientDialog() {
         .eq("user_id", user.id)
         .maybeSingle();
 
-      console.log('profData:', profData, 'user.id:', user?.id);
 
       // Get already assigned patient ids
       const { data: assigned } = await supabase
@@ -68,18 +67,16 @@ export default function RegisterPatientDialog() {
       const assignedIds = (assigned || []).map((a) => a.patient_id);
 
       // Search profiles
-      const { data: profiles, error: profilesError } = await supabase
+      const { data: profiles } = await supabase
         .from("profiles")
         .select("user_id, full_name, email")
         .or(`full_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`)
         .limit(20);
-      console.log('profilesError:', profilesError);
 
       // Filter out already assigned and the professional themselves
       const filtered = (profiles || []).filter(
         (p) => !assignedIds.includes(p.user_id) && p.user_id !== user.id
       );
-      console.log('profiles:', profiles, 'filtered:', filtered);
       setSearchResults(filtered);
     } catch (err) {
       console.error(err);
