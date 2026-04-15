@@ -123,7 +123,7 @@ const [searchParams] = useSearchParams();
 
   return (
     <div className="min-h-screen bg-background">
-      <PageHeader title="Mi Dashboard" backTo="/home" />
+      <PageHeader title="Mi Tablero" backTo="/home" />
       <div className="container mx-auto px-4 py-8">
       {/* Demo Tour */}
       {isDemo && (
