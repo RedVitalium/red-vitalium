@@ -48,6 +48,8 @@ export default function RegisterPatientDialog() {
         .eq("user_id", user.id)
         .maybeSingle();
 
+      console.log('profData:', profData, 'user.id:', user?.id);
+
       // Get already assigned patient ids
       const { data: assigned } = await supabase
         .from("patient_professionals")
