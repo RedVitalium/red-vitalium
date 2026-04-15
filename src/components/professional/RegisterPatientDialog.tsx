@@ -70,6 +70,7 @@ export default function RegisterPatientDialog() {
       const filtered = (profiles || []).filter(
         (p) => !assignedIds.includes(p.user_id) && p.user_id !== user.id
       );
+      console.log('profiles:', profiles, 'filtered:', filtered);
       setSearchResults(filtered);
     } catch (err) {
       console.error(err);
