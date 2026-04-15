@@ -60,11 +60,12 @@ export default function RegisterPatientDialog() {
       const assignedIds = (assigned || []).map((a) => a.patient_id);
 
       // Search profiles
-      const { data: profiles } = await supabase
+      const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select("user_id, full_name, email")
         .or(`full_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`)
         .limit(20);
+      console.log('profilesError:', profilesError);
 
       // Filter out already assigned and the professional themselves
       const filtered = (profiles || []).filter(
