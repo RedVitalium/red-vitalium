@@ -1,3 +1,4 @@
+/// <reference types="@capawesome/capacitor-android-edge-to-edge-support" />
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
@@ -10,14 +11,11 @@ const config: CapacitorConfig = {
       iconColor: '#6366f1',
     },
     SystemBars: {
-      insetsHandling: 'css',
-      style: 'LIGHT',
-      hidden: false,
+      insetsHandling: 'disable',
     },
-    StatusBar: {
-      overlaysWebView: true,
-      style: 'LIGHT',
-      backgroundColor: '#00000000',
+    EdgeToEdge: {
+      statusBarColor: '#ffffff',
+      backgroundColor: '#ffffff',
     },
   },
 };
