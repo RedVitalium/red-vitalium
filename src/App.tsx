@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { App as CapApp } from '@capacitor/app';
+import { Keyboard } from '@capacitor/keyboard';
 import { Capacitor } from "@capacitor/core";
 import { AuthProvider } from "./hooks/useAuth";
 import { supabase } from "@/integrations/supabase/custom-client";
@@ -138,6 +139,27 @@ return null;
 }
 
 // Deep link handler for Google OAuth callback
+function KeyboardHandler() {
+  React.useEffect(() => {
+    if (!isNativeApp) return;
+
+    const showListener = Keyboard.addListener('keyboardWillShow', (info) => {
+      document.body.style.paddingBottom = info.keyboardHeight + 'px';
+    });
+
+    const hideListener = Keyboard.addListener('keyboardWillHide', () => {
+      document.body.style.paddingBottom = '0px';
+    });
+
+    return () => {
+      showListener.then(s => s.remove());
+      hideListener.then(s => s.remove());
+    };
+  }, []);
+
+  return null;
+}
+
 function AppUrlOpenHandler() {
   React.useEffect(() => {
     if (!isNativeApp) return;
@@ -175,6 +197,7 @@ const App = () => (  <QueryClientProvider client={queryClient}>
           <BrowserRouter>
             <BackButtonHandler />
             <AppUrlOpenHandler />
+            <KeyboardHandler />
             <Suspense fallback={<LoadingSpinner />}>
               <Routes>
                 {/* Landing page - only for web, native goes to auth */}
