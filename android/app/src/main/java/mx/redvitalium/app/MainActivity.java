@@ -1,34 +1,14 @@
 package mx.redvitalium.app;
 
 import android.os.Bundle;
-import android.view.View;
 import android.webkit.WebView;
 import androidx.activity.OnBackPressedCallback;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowCompat;
-import androidx.core.view.WindowInsetsCompat;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
-        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
-        
-        View decorView = getWindow().getDecorView();
-        ViewCompat.setOnApplyWindowInsetsListener(decorView, (v, windowInsets) -> {
-            Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
-            int top = insets.top;
-            bridge.getWebView().post(() -> {
-                bridge.getWebView().evaluateJavascript(
-                    "document.documentElement.style.setProperty('--safe-area-inset-top', '" + top + "px')",
-                    null
-                );
-            });
-            return windowInsets;
-        });
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
