@@ -109,7 +109,7 @@ export default function MyDashboard() {
               <ArrowLeft className="h-5 w-5" />
             </Link>
             <img src={appLogo} alt="Red Vitalium" className="h-8 w-auto" />
-            <span className="text-lg font-display font-bold text-primary">Mi Tablero</span>
+            <span className="text-lg font-display font-bold text-primary">Mi Menú</span>
           </div>
           {isDemo && (
             <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded-full">
