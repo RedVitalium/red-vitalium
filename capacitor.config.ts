@@ -7,6 +7,7 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   android: {
     adjustMarginsForEdgeToEdge: 'force',
+    captureInput: true,
   },
   plugins: {
     LocalNotifications: {
