@@ -202,6 +202,19 @@ export default function UploadScreenshot() {
           skeletal_muscle_kg: "skeletal_muscle",
           smi: "smi",
           waist_hip_ratio: "waist_hip_ratio",
+          muscle_mass_percent: "muscle_mass_percent",
+          bone_mass_percent: "bone_mass_percent",
+          body_water_liters: "body_water_liters",
+          protein_kg: "protein_kg",
+          body_fat_mass_kg: "body_fat_mass_kg",
+          obesity_percent: "obesity_percent",
+          subcutaneous_fat_kg: "subcutaneous_fat_kg",
+          skeletal_muscle_percent: "skeletal_muscle_percent",
+          normal_weight_kg: "normal_weight_kg",
+          weight_control_kg: "weight_control_kg",
+          fat_mass_control_kg: "fat_mass_control_kg",
+          muscle_control_kg: "muscle_control_kg",
+          health_assessment_points: "health_assessment",
         };
 
         for (const [extractedKey, dbKey] of Object.entries(fieldMap)) {
@@ -212,7 +225,30 @@ export default function UploadScreenshot() {
           }
         }
 
-        const { error } = await supabase.from("body_composition").insert(bodyComp as any);
+       // Check if there's already an OCR record today — update it instead of creating new
+        const today = new Date().toLocaleDateString('en-CA');
+        const { data: existingComp } = await supabase
+          .from("body_composition")
+          .select("id")
+          .eq("user_id", patientId)
+          .eq("source", "screenshot_ocr")
+          .gte("recorded_at", `${today}T00:00:00`)
+          .lte("recorded_at", `${today}T23:59:59`)
+          .order("recorded_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (existingComp) {
+          // Update existing record — merge new data with existing
+          const { error } = await supabase
+            .from("body_composition")
+            .update(bodyComp)
+            .eq("id", existingComp.id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase.from("body_composition").insert(bodyComp);
+          if (error) throw error;
+        }
         if (error) throw error;
 
         toast.success("Composición corporal guardada");
