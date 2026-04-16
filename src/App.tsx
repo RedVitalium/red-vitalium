@@ -145,6 +145,10 @@ function KeyboardHandler() {
 
     const showListener = Keyboard.addListener('keyboardWillShow', (info) => {
       document.body.style.paddingBottom = info.keyboardHeight + 'px';
+      setTimeout(() => {
+        const el = document.activeElement as HTMLElement;
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
     });
 
     const hideListener = Keyboard.addListener('keyboardWillHide', () => {
