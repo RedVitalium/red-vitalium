@@ -5,6 +5,9 @@ const config: CapacitorConfig = {
   appId: 'mx.redvitalium.app',
   appName: 'Red Vitalium',
   webDir: 'dist',
+  android: {
+    adjustMarginsForEdgeToEdge: 'force',
+  },
   plugins: {
     LocalNotifications: {
       smallIcon: 'ic_stat_icon_config_sample',
@@ -19,7 +22,7 @@ const config: CapacitorConfig = {
     },
     Keyboard: {
       resize: 'body',
-      resizeOnFullScreen: true,
+      resizeOnFullScreen: false,
     },
   },
 };
