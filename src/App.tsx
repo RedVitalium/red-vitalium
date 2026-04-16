@@ -148,7 +148,7 @@ function KeyboardHandler() {
       setTimeout(() => {
         const el = document.activeElement as HTMLElement;
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 100);
+      }, 300);
     });
 
     const hideListener = Keyboard.addListener('keyboardWillHide', () => {
