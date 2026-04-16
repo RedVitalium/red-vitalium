@@ -97,6 +97,7 @@ export default function RegisterPatientDialog() {
         .maybeSingle();
 
       if (!profData) throw new Error("No professional data");
+      console.log('profData:', profData?.id, 'user.id:', user.id);
 
       // Check if there's an inactive assignment we can reactivate
       const { data: existing } = await supabase
