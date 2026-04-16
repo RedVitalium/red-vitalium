@@ -448,6 +448,7 @@ export function ProfessionalHabitEditor() {
               placeholder="Texto de la pregunta..."
               value={newQuestion.question_text}
               onChange={(e) => setNewQuestion(p => ({ ...p, question_text: e.target.value }))}
+              onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300)}
               className="h-8 text-xs"
             />
             <div className="grid grid-cols-2 gap-2">
@@ -474,6 +475,7 @@ export function ProfessionalHabitEditor() {
               placeholder="Categoría (ej: sugar, meals...)"
               value={newQuestion.habit_category}
               onChange={(e) => setNewQuestion(p => ({ ...p, habit_category: e.target.value }))}
+              onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300)}
               className="h-7 text-xs"
             />
             <Button size="sm" className="w-full h-7 text-xs gap-1" onClick={() => addQuestionMutation.mutate()} disabled={!newQuestion.question_text || addQuestionMutation.isPending}>
