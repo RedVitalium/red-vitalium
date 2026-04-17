@@ -170,7 +170,7 @@ export default function DashboardBodyComposition() {
               <p className="text-muted-foreground mb-4">
                 Conecta tu báscula inteligente o visita nuestras oficinas para obtener mediciones detalladas.
               </p>
-              {isViewingAsAdmin && targetUserId && (
+              {false && isViewingAsAdmin && targetUserId && (
                 <Button onClick={() => setEditorOpen(true)} className="gap-2">
                   <Edit className="h-4 w-4" />
                   Añadir primera medición
