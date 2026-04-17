@@ -18,7 +18,7 @@ interface ExtractedData {
 }
 
 const FIELD_LABELS: Record<string, string> = {
-  // Arboleaf
+  // Arboleaf — body composition
   weight_kg: "Peso (kg)",
   body_fat_percent: "Grasa Corporal (%)",
   body_water_percent: "Agua Corporal (%)",
@@ -36,6 +36,7 @@ const FIELD_LABELS: Record<string, string> = {
   bmr_kcal: "Tasa Metabólica Basal (kcal)",
   fat_free_body_weight_kg: "Peso Libre de Grasa (kg)",
   subcutaneous_fat_percent: "Grasa Subcutánea (%)",
+  subcutaneous_fat_kg: "Grasa Subcutánea (kg)",
   skeletal_muscle_percent: "Músculo Esquelético (%)",
   skeletal_muscle_kg: "Músculo Esquelético (kg)",
   smi: "SMI",
@@ -47,6 +48,49 @@ const FIELD_LABELS: Record<string, string> = {
   fat_mass_control_kg: "Control Masa Grasa (kg)",
   muscle_control_kg: "Control Músculo (kg)",
   health_assessment_points: "Evaluación de Salud (pts)",
+  // Segmental muscle balance
+  left_upper_extremity_muscle_mass_kg: "Músculo Brazo Izq (kg)",
+  left_upper_extremity_muscle_mass_percent: "Músculo Brazo Izq (%)",
+  left_upper_extremity_muscle_compared: "Músculo Brazo Izq vs Normal (%)",
+  right_upper_extremity_muscle_mass_kg: "Músculo Brazo Der (kg)",
+  right_upper_extremity_muscle_mass_percent: "Músculo Brazo Der (%)",
+  right_upper_extremity_muscle_compared: "Músculo Brazo Der vs Normal (%)",
+  trunk_muscle_mass_kg: "Músculo Tronco (kg)",
+  trunk_muscle_mass_percent: "Músculo Tronco (%)",
+  trunk_muscle_compared: "Músculo Tronco vs Normal (%)",
+  left_lower_extremity_muscle_mass_kg: "Músculo Pierna Izq (kg)",
+  left_lower_extremity_muscle_mass_percent: "Músculo Pierna Izq (%)",
+  left_lower_extremity_muscle_compared: "Músculo Pierna Izq vs Normal (%)",
+  right_lower_extremity_muscle_mass_kg: "Músculo Pierna Der (kg)",
+  right_lower_extremity_muscle_mass_percent: "Músculo Pierna Der (%)",
+  right_lower_extremity_muscle_compared: "Músculo Pierna Der vs Normal (%)",
+  // Segmental fat
+  left_upper_extremity_fat_mass_kg: "Grasa Brazo Izq (kg)",
+  left_upper_extremity_fat_percent: "Grasa Brazo Izq (%)",
+  left_upper_extremity_fat_compared: "Grasa Brazo Izq vs Normal (%)",
+  right_upper_extremity_fat_mass_kg: "Grasa Brazo Der (kg)",
+  right_upper_extremity_fat_percent: "Grasa Brazo Der (%)",
+  right_upper_extremity_fat_compared: "Grasa Brazo Der vs Normal (%)",
+  trunk_fat_mass_kg: "Grasa Tronco (kg)",
+  trunk_fat_percent: "Grasa Tronco (%)",
+  trunk_fat_compared: "Grasa Tronco vs Normal (%)",
+  left_lower_extremity_fat_mass_kg: "Grasa Pierna Izq (kg)",
+  left_lower_extremity_fat_percent: "Grasa Pierna Izq (%)",
+  left_lower_extremity_fat_compared: "Grasa Pierna Izq vs Normal (%)",
+  right_lower_extremity_fat_mass_kg: "Grasa Pierna Der (kg)",
+  right_lower_extremity_fat_percent: "Grasa Pierna Der (%)",
+  right_lower_extremity_fat_compared: "Grasa Pierna Der vs Normal (%)",
+  // Segmental status
+  left_upper_extremity_muscle_status: "Estado Músculo Brazo Izq",
+  right_upper_extremity_muscle_status: "Estado Músculo Brazo Der",
+  trunk_muscle_status: "Estado Músculo Tronco",
+  left_lower_extremity_muscle_status: "Estado Músculo Pierna Izq",
+  right_lower_extremity_muscle_status: "Estado Músculo Pierna Der",
+  left_upper_extremity_fat_status: "Estado Grasa Brazo Izq",
+  right_upper_extremity_fat_status: "Estado Grasa Brazo Der",
+  trunk_fat_status: "Estado Grasa Tronco",
+  left_lower_extremity_fat_status: "Estado Grasa Pierna Izq",
+  right_lower_extremity_fat_status: "Estado Grasa Pierna Der",
   // Samsung Health Sleep
   sleep_duration_hours: "Duración de Sueño (hrs)",
   avg_bedtime: "Hora Promedio Acostarse",
@@ -75,6 +119,20 @@ const SCREENSHOT_TYPE_LABELS: Record<string, string> = {
   digital_wellbeing: "Digital Wellbeing — Pantalla",
   mi_fitness_sleep: "Mi Fitness — Sueño",
   unknown: "Tipo no identificado",
+};
+
+// Segmental data mapping: OCR key prefix → { segment, analysis_type }
+const SEGMENTAL_MAP: Record<string, { segment: string; type: string }> = {
+  left_upper_extremity_muscle: { segment: "left_upper", type: "muscle" },
+  right_upper_extremity_muscle: { segment: "right_upper", type: "muscle" },
+  trunk_muscle: { segment: "trunk", type: "muscle" },
+  left_lower_extremity_muscle: { segment: "left_lower", type: "muscle" },
+  right_lower_extremity_muscle: { segment: "right_lower", type: "muscle" },
+  left_upper_extremity_fat: { segment: "left_upper", type: "fat" },
+  right_upper_extremity_fat: { segment: "right_upper", type: "fat" },
+  trunk_fat: { segment: "trunk", type: "fat" },
+  left_lower_extremity_fat: { segment: "left_lower", type: "fat" },
+  right_lower_extremity_fat: { segment: "right_lower", type: "fat" },
 };
 
 export default function UploadScreenshot() {
@@ -112,7 +170,7 @@ export default function UploadScreenshot() {
       const reader = new FileReader();
       reader.onload = () => {
         const result = reader.result as string;
-        resolve(result.split(",")[1]); // Remove data:image/...;base64, prefix
+        resolve(result.split(",")[1]);
       };
       reader.onerror = reject;
       reader.readAsDataURL(file);
@@ -177,7 +235,7 @@ export default function UploadScreenshot() {
       const type = result.screenshot_type;
 
       if (type === "arboleaf") {
-        // Save to body_composition
+        // ── Save body_composition ──
         const bodyComp: Record<string, any> = {
           user_id: patientId,
           recorded_at: now,
@@ -225,7 +283,7 @@ export default function UploadScreenshot() {
           }
         }
 
-       // Check if there's already an OCR record today — update it instead of creating new
+        // Upsert: update same-day OCR record or create new
         const today = new Date().toLocaleDateString('en-CA');
         const { data: existingComp } = await supabase
           .from("body_composition")
@@ -239,7 +297,6 @@ export default function UploadScreenshot() {
           .maybeSingle();
 
         if (existingComp) {
-          // Update existing record — merge new data with existing
           const { error } = await supabase
             .from("body_composition")
             .update(bodyComp)
@@ -249,12 +306,69 @@ export default function UploadScreenshot() {
           const { error } = await supabase.from("body_composition").insert(bodyComp);
           if (error) throw error;
         }
-        if (error) throw error;
 
-        toast.success("Composición corporal guardada");
+        // ── Save segmental data ──
+        const segmentalRows: Record<string, Record<string, any>> = {};
+
+        for (const [ocrKey, value] of Object.entries(editedData)) {
+          for (const [prefix, config] of Object.entries(SEGMENTAL_MAP)) {
+            if (ocrKey.startsWith(prefix)) {
+              const rowKey = `${config.segment}_${config.type}`;
+              if (!segmentalRows[rowKey]) {
+                segmentalRows[rowKey] = {
+                  user_id: patientId,
+                  segment: config.segment,
+                  analysis_type: config.type,
+                  recorded_at: now,
+                  recorded_by: user.id,
+                  source: "screenshot_ocr",
+                };
+              }
+
+              const suffix = ocrKey.replace(prefix + "_", "");
+              if (suffix === "mass_kg" || suffix === "kg") {
+                segmentalRows[rowKey].mass_kg = Number(value);
+              } else if (suffix === "compared" || suffix === "compared_to_normal") {
+                segmentalRows[rowKey].compared_to_normal = Number(value);
+              } else if (suffix === "percent" || suffix === "mass_percent") {
+                segmentalRows[rowKey].body_percentage = Number(value);
+              } else if (suffix === "status") {
+                segmentalRows[rowKey].status = String(value);
+              }
+              break;
+            }
+          }
+        }
+
+        // Upsert segmental rows for today
+        for (const row of Object.values(segmentalRows)) {
+          const { data: existingSeg } = await supabase
+            .from("segmental_analysis")
+            .select("id")
+            .eq("user_id", patientId)
+            .eq("segment", row.segment)
+            .eq("analysis_type", row.analysis_type)
+            .gte("recorded_at", `${today}T00:00:00`)
+            .lte("recorded_at", `${today}T23:59:59`)
+            .limit(1)
+            .maybeSingle();
+
+          if (existingSeg) {
+            const { error } = await supabase
+              .from("segmental_analysis")
+              .update(row)
+              .eq("id", existingSeg.id);
+            if (error) console.error("Segmental update error:", error);
+          } else {
+            const { error } = await supabase.from("segmental_analysis").insert(row);
+            if (error) console.error("Segmental insert error:", error);
+          }
+        }
+
+        const segCount = Object.keys(segmentalRows).length;
+        toast.success(`Composición corporal guardada${segCount > 0 ? ` + ${segCount} segmentos` : ""}`);
 
       } else if (type === "samsung_health_sleep" || type === "mi_fitness_sleep") {
-        // Save sleep data to health_data
         const sleepFields: Record<string, { type: string; unit: string }> = {
           deep_sleep_minutes: { type: "sleep_deep", unit: "min" },
           light_sleep_minutes: { type: "sleep_light", unit: "min" },
@@ -281,7 +395,6 @@ export default function UploadScreenshot() {
         toast.success("Datos de sueño guardados");
 
       } else if (type === "digital_wellbeing") {
-        // Save screen time and unlocks
         if (editedData.screen_time_minutes && Number(editedData.screen_time_minutes) > 0) {
           await supabase.from("health_data").insert({
             user_id: patientId,
