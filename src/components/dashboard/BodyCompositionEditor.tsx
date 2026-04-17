@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -140,13 +140,6 @@ export function BodyCompositionEditor({ open, onOpenChange, targetUserId }: Body
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Scale className="h-5 w-5 text-primary" />
-            Composición Corporal
-          </DialogTitle>
-        </DialogHeader>
-
         <Tabs defaultValue="add" className="w-full">
           <TabsList className="w-full">
             <TabsTrigger value="add" className="flex-1">Añadir medición</TabsTrigger>
