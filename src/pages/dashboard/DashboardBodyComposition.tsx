@@ -128,7 +128,7 @@ export default function DashboardBodyComposition() {
         )}
       </PageHeader>
 
-      <main className="container mx-auto px-4 pt-4 pb-24 max-w-3xl">
+      <main className="container mx-auto px-4 pt-4 pb-32 max-w-3xl">
         {showEmpty ? (
           <DashboardEmptyState
             icon={Scale}
