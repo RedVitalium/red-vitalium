@@ -95,7 +95,7 @@ export default function ProfessionalMode() {
           patient.email?.toLowerCase().includes(search)
         );
       })
-    : [];
+    : patients;
 
   const handleSelectPatient = (patient: Patient) => {
     setSelectedPatient({
