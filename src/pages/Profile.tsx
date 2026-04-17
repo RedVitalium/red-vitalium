@@ -65,8 +65,8 @@ export default function Profile() {
       if (error) {
         console.error('Error fetching profile:', error);
       } else if (data) {
-        setProfile(data);
-        setEditedProfile(data);
+        setProfile(data as unknown as ProfileData);
+        setEditedProfile(data as unknown as ProfileData);
       }
       setIsLoading(false);
     }
@@ -227,13 +227,18 @@ export default function Profile() {
               <div className="space-y-2">
                 <Label htmlFor="phone">Teléfono</Label>
                 {isEditing ? (
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="+52 55 1234 5678"
-                    value={editedProfile?.phone || ''}
-                    onChange={(e) => setEditedProfile(prev => prev ? {...prev, phone: e.target.value} : null)}
-                  />
+                  <>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="+52 55 1234 5678"
+                      value={editedProfile?.phone || ''}
+                      onChange={(e) => setEditedProfile(prev => prev ? {...prev, phone: e.target.value} : null)}
+                    />
+                    {editedProfile?.phone && !/^\+[0-9]{7,15}$/.test(editedProfile.phone.replace(/\s/g, '')) && (
+                      <p className="text-xs text-destructive">Debe comenzar con + y código de país (ej: +52 55 1234 5678)</p>
+                    )}
+                  </>
                 ) : (
                   <p className="text-foreground py-2">{profile?.phone || 'Sin datos'}</p>
                 )}
