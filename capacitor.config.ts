@@ -5,10 +5,6 @@ const config: CapacitorConfig = {
   appId: 'mx.redvitalium.app',
   appName: 'Red Vitalium',
   webDir: 'dist',
-  android: {
-    adjustMarginsForEdgeToEdge: 'force',
-    captureInput: true,
-  },
   plugins: {
     LocalNotifications: {
       smallIcon: 'ic_stat_icon_config_sample',
@@ -20,6 +16,7 @@ const config: CapacitorConfig = {
     EdgeToEdge: {
       statusBarColor: '#ffffff',
       backgroundColor: '#ffffff',
+      navigationBarColor: '#ffffff',
     },
     Keyboard: {
       resize: 'none',
