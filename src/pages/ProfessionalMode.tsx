@@ -215,7 +215,7 @@ export default function ProfessionalMode() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
                 <p className="text-muted-foreground">Buscando pacientes...</p>
               </div>
-            ) : searchTerm.trim().length < 2 ? (
+            ) : searchTerm.trim().length === 1 ? (
               <div className="p-8 text-center">
                 <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">
