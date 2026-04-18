@@ -36,31 +36,34 @@ export default function ProfessionalMode() {
       if (!user) return [];
 
       // Get professional ID
-      const { data: profData } = await supabase
+      const { data: profData, error: profError } = await supabase
         .from('professionals')
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
 
+      console.log('[ProfessionalMode] step1 profData:', profData, 'error:', profError);
       if (!profData) return [];
 
       // Get assigned patients
-      const { data: assignments } = await supabase
+      const { data: assignments, error: assignError } = await supabase
         .from('patient_professionals')
         .select('patient_id')
         .eq('professional_id', profData.id)
         .eq('is_active', true);
 
+      console.log('[ProfessionalMode] step2 assignments:', assignments, 'error:', assignError);
       if (!assignments || assignments.length === 0) return [];
 
       const patientIds = assignments.map(a => a.patient_id);
 
       // Get patient profiles
-      const { data: profiles } = await supabase
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('user_id, full_name, email, date_of_birth')
         .in('user_id', patientIds);
 
+      console.log('[ProfessionalMode] step3 profiles:', profiles, 'error:', profilesError);
       return profiles || [];
     },
     enabled: !!user && isProfessional,
@@ -210,10 +213,10 @@ export default function ProfessionalMode() {
           transition={{ delay: 0.2 }}
         >
           <Card className="overflow-hidden">
-            {isLoading && searchTerm.trim().length >= 2 ? (
+            {isLoading ? (
               <div className="p-8 text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
-                <p className="text-muted-foreground">Buscando pacientes...</p>
+                <p className="text-muted-foreground">Cargando pacientes...</p>
               </div>
             ) : searchTerm.trim().length === 1 ? (
               <div className="p-8 text-center">
