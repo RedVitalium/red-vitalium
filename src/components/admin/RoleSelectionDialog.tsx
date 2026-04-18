@@ -76,7 +76,7 @@ export function RoleSelectionDialog({ open, onOpenChange }: RoleSelectionDialogP
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-3 py-4">
+        <div className="flex flex-col gap-3 py-4 w-full">
           {availableRoles.map((role) => {
             const config = roleConfig[role];
             const Icon = config.icon;
@@ -84,6 +84,7 @@ export function RoleSelectionDialog({ open, onOpenChange }: RoleSelectionDialogP
             return (
               <motion.div
                 key={role}
+                className="w-full"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
