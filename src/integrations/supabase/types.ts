@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -114,15 +114,7 @@ export type Database = {
           status?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "appointments_professional_id_fkey"
-            columns: ["professional_id"]
-            isOneToOne: false
-            referencedRelation: "professionals"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       biomarkers: {
         Row: {
@@ -180,76 +172,115 @@ export type Database = {
           bmi: number | null
           bmr: number | null
           body_age: number | null
+          body_fat_mass_kg: number | null
           body_fat_percent: number | null
           body_type: string | null
+          body_water_liters: number | null
           body_water_percent: number | null
           bone_mass: number | null
+          bone_mass_percent: number | null
           created_at: string
           fat_free_mass: number | null
+          fat_mass_control_kg: number | null
+          health_assessment: number | null
           id: string
           metabolic_age: number | null
+          muscle_control_kg: number | null
           muscle_mass: number | null
+          muscle_mass_percent: number | null
+          normal_weight_kg: number | null
+          obesity_percent: number | null
           protein: number | null
+          protein_kg: number | null
           recorded_at: string
           recorded_by: string | null
           skeletal_muscle: number | null
+          skeletal_muscle_percent: number | null
           smi: number | null
           source: string | null
           subcutaneous_fat: number | null
+          subcutaneous_fat_kg: number | null
           user_id: string
           visceral_fat: number | null
           waist_hip_ratio: number | null
           weight: number | null
+          weight_control_kg: number | null
         }
         Insert: {
           bmi?: number | null
           bmr?: number | null
           body_age?: number | null
+          body_fat_mass_kg?: number | null
           body_fat_percent?: number | null
           body_type?: string | null
+          body_water_liters?: number | null
           body_water_percent?: number | null
           bone_mass?: number | null
+          bone_mass_percent?: number | null
           created_at?: string
           fat_free_mass?: number | null
+          fat_mass_control_kg?: number | null
+          health_assessment?: number | null
           id?: string
           metabolic_age?: number | null
+          muscle_control_kg?: number | null
           muscle_mass?: number | null
+          muscle_mass_percent?: number | null
+          normal_weight_kg?: number | null
+          obesity_percent?: number | null
           protein?: number | null
+          protein_kg?: number | null
           recorded_at?: string
           recorded_by?: string | null
           skeletal_muscle?: number | null
+          skeletal_muscle_percent?: number | null
           smi?: number | null
           source?: string | null
           subcutaneous_fat?: number | null
+          subcutaneous_fat_kg?: number | null
           user_id: string
           visceral_fat?: number | null
           waist_hip_ratio?: number | null
           weight?: number | null
+          weight_control_kg?: number | null
         }
         Update: {
           bmi?: number | null
           bmr?: number | null
           body_age?: number | null
+          body_fat_mass_kg?: number | null
           body_fat_percent?: number | null
           body_type?: string | null
+          body_water_liters?: number | null
           body_water_percent?: number | null
           bone_mass?: number | null
+          bone_mass_percent?: number | null
           created_at?: string
           fat_free_mass?: number | null
+          fat_mass_control_kg?: number | null
+          health_assessment?: number | null
           id?: string
           metabolic_age?: number | null
+          muscle_control_kg?: number | null
           muscle_mass?: number | null
+          muscle_mass_percent?: number | null
+          normal_weight_kg?: number | null
+          obesity_percent?: number | null
           protein?: number | null
+          protein_kg?: number | null
           recorded_at?: string
           recorded_by?: string | null
           skeletal_muscle?: number | null
+          skeletal_muscle_percent?: number | null
           smi?: number | null
           source?: string | null
           subcutaneous_fat?: number | null
+          subcutaneous_fat_kg?: number | null
           user_id?: string
           visceral_fat?: number | null
           waist_hip_ratio?: number | null
           weight?: number | null
+          weight_control_kg?: number | null
         }
         Relationships: []
       }
@@ -326,15 +357,7 @@ export type Database = {
           response_date?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "daily_survey_responses_question_id_fkey"
-            columns: ["question_id"]
-            isOneToOne: false
-            referencedRelation: "daily_survey_questions"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       habit_goals: {
         Row: {
@@ -475,15 +498,7 @@ export type Database = {
           professional_id?: string
           specialty?: Database["public"]["Enums"]["specialty"]
         }
-        Relationships: [
-          {
-            foreignKeyName: "patient_professionals_professional_id_fkey"
-            columns: ["professional_id"]
-            isOneToOne: false
-            referencedRelation: "professionals"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       professional_notes: {
         Row: {
@@ -519,15 +534,7 @@ export type Database = {
           specialty?: Database["public"]["Enums"]["specialty"]
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "professional_notes_professional_id_fkey"
-            columns: ["professional_id"]
-            isOneToOne: false
-            referencedRelation: "professionals"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       professionals: {
         Row: {
@@ -584,10 +591,12 @@ export type Database = {
           date_of_birth: string | null
           email: string | null
           full_name: string | null
-          health_objectives: string[] | null
+          health_objective: string | null
+          health_objectives: Json | null
           height: number | null
           id: string
           partner_user_id: string | null
+          phone: string | null
           research_consent: boolean | null
           research_consent_at: string | null
           sex: string | null
@@ -604,10 +613,12 @@ export type Database = {
           date_of_birth?: string | null
           email?: string | null
           full_name?: string | null
-          health_objectives?: string[] | null
+          health_objective?: string | null
+          health_objectives?: Json | null
           height?: number | null
           id?: string
           partner_user_id?: string | null
+          phone?: string | null
           research_consent?: boolean | null
           research_consent_at?: string | null
           sex?: string | null
@@ -624,10 +635,12 @@ export type Database = {
           date_of_birth?: string | null
           email?: string | null
           full_name?: string | null
-          health_objectives?: string[] | null
+          health_objective?: string | null
+          health_objectives?: Json | null
           height?: number | null
           id?: string
           partner_user_id?: string | null
+          phone?: string | null
           research_consent?: boolean | null
           research_consent_at?: string | null
           sex?: string | null
@@ -637,6 +650,51 @@ export type Database = {
           waist_circumference?: number | null
           wearable_model?: string | null
           weight?: number | null
+        }
+        Relationships: []
+      }
+      segmental_analysis: {
+        Row: {
+          analysis_type: string
+          body_percentage: number | null
+          compared_to_normal: number | null
+          created_at: string | null
+          id: string
+          mass_kg: number | null
+          recorded_at: string | null
+          recorded_by: string | null
+          segment: string
+          source: string | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          analysis_type: string
+          body_percentage?: number | null
+          compared_to_normal?: number | null
+          created_at?: string | null
+          id?: string
+          mass_kg?: number | null
+          recorded_at?: string | null
+          recorded_by?: string | null
+          segment: string
+          source?: string | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          analysis_type?: string
+          body_percentage?: number | null
+          compared_to_normal?: number | null
+          created_at?: string | null
+          id?: string
+          mass_kg?: number | null
+          recorded_at?: string | null
+          recorded_by?: string | null
+          segment?: string
+          source?: string | null
+          status?: string | null
+          user_id?: string
         }
         Relationships: []
       }

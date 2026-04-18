@@ -34,10 +34,11 @@ interface ProfileData {
   research_consent: boolean | null;
   research_consent_at: string | null;
   health_objectives: string[] | null;
+  phone: string | null;
 }
 
 // Fields that patients CAN edit themselves
-const editableFields = ['full_name', 'date_of_birth', 'sex'];
+const editableFields = ['full_name', 'date_of_birth', 'sex', 'phone'];
 
 // Fields that only professionals/admins can edit
 const professionalOnlyFields = ['height', 'weight', 'waist_circumference'];
@@ -57,15 +58,15 @@ export default function Profile() {
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('full_name, email, date_of_birth, sex, height, weight, waist_circumference, wearable_model, research_consent, research_consent_at, health_objectives')
+        .select('full_name, email, date_of_birth, sex, height, weight, waist_circumference, wearable_model, research_consent, research_consent_at, health_objectives, phone')
         .eq('user_id', user.id)
         .maybeSingle();
 
       if (error) {
         console.error('Error fetching profile:', error);
       } else if (data) {
-        setProfile(data);
-        setEditedProfile(data);
+        setProfile(data as unknown as ProfileData);
+        setEditedProfile(data as unknown as ProfileData);
       }
       setIsLoading(false);
     }
@@ -81,6 +82,7 @@ export default function Profile() {
     // Only update editable fields
     const updateData = {
       full_name: editedProfile.full_name,
+      phone: editedProfile.phone,
       date_of_birth: editedProfile.date_of_birth,
       sex: editedProfile.sex,
       health_objectives: editedProfile.health_objectives,
@@ -221,6 +223,27 @@ export default function Profile() {
                   </p>
                 )}
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone">Teléfono</Label>
+                {isEditing ? (
+                  <>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="+52 55 1234 5678"
+                      value={editedProfile?.phone || ''}
+                      onChange={(e) => setEditedProfile(prev => prev ? {...prev, phone: e.target.value} : null)}
+                    />
+                    {editedProfile?.phone && !/^\+[0-9]{7,15}$/.test(editedProfile.phone.replace(/\s/g, '')) && (
+                      <p className="text-xs text-destructive">Debe comenzar con + y código de país (ej: +52 55 1234 5678)</p>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-foreground py-2">{profile?.phone || 'Sin datos'}</p>
+                )}
+              </div>
+
               {/* Health Objectives */}
               <div className="space-y-2">
                 <Label>Mis Objetivos de Salud <span className="text-xs text-muted-foreground">(máximo 3)</span></Label>

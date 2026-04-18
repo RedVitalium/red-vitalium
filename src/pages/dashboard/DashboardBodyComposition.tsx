@@ -190,7 +190,7 @@ export default function DashboardBodyComposition() {
         )}
       </PageHeader>
 
-      <main className="container mx-auto px-4 py-6 max-w-3xl">
+      <main className="container mx-auto px-4 pt-20 pb-32 max-w-3xl">
         {showEmpty ? (
           <DashboardEmptyState
             icon={Scale}
@@ -198,6 +198,52 @@ export default function DashboardBodyComposition() {
             description="Cuando tu programa inicie, aquí verás el análisis detallado de tu composición corporal."
           />
         ) : (
+<<<<<<< HEAD
+=======
+        <>
+        {/* AI Summary */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+          {(() => {
+            const aiData: Record<string, any> = {};
+            if (bodyData.weight > 0) aiData.weight = bodyData.weight;
+            if (bodyData.bodyFatPercent > 0) aiData.bodyFatPercent = bodyData.bodyFatPercent;
+            if (bodyData.muscleMass > 0) aiData.muscleMass = bodyData.muscleMass;
+            if (bodyData.visceralFat > 0) aiData.visceralFat = bodyData.visceralFat;
+            if (bodyData.bodyWaterPercent > 0) aiData.bodyWaterPercent = bodyData.bodyWaterPercent;
+            if (bodyData.bmi > 0) aiData.bmi = bodyData.bmi;
+            if (bodyData.metabolicAge > 0) aiData.metabolicAge = bodyData.metabolicAge;
+            if (bodyData.bmr > 0) aiData.bmr = bodyData.bmr;
+            if (bodyData.boneMass > 0) aiData.boneMass = bodyData.boneMass;
+            return (
+              <AISummaryCard
+                section="body-composition"
+                healthData={Object.keys(aiData).length > 0 ? aiData : undefined}
+                targetUserId={isViewingAsAdmin ? targetUserId || undefined : undefined}
+                compact
+                isDemo={isDemo}
+              />
+            );
+          })()}
+        </motion.div>
+
+        {!hasData ? (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <Card className="p-8 text-center">
+              <Scale className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-xl font-display font-bold mb-2">Sin datos de composición corporal</h3>
+              <p className="text-muted-foreground mb-4">
+                Conecta tu báscula inteligente o visita nuestras oficinas para obtener mediciones detalladas.
+              </p>
+              {false && isViewingAsAdmin && targetUserId && (
+                <Button onClick={() => setEditorOpen(true)} className="gap-2">
+                  <Edit className="h-4 w-4" />
+                  Añadir primera medición
+                </Button>
+              )}
+            </Card>
+          </motion.div>
+        ) : (
+>>>>>>> 49d98ae6db3e3dfd33849862df75d0261884e211
           <>
             {/* AI Summary */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">

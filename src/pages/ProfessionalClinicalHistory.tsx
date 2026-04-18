@@ -699,6 +699,8 @@ function MeasurementsTab({ patientUserId, isAssigned }: { patientUserId: string;
             {MEASURE_FIELDS.map(field => {
               const latest = field.key === 'waist_circumference'
                 ? patientProfile?.waist_circumference
+                : field.key === 'height'
+                ? patientProfile?.height
                 : getLatestValue(field.key);
               return (
                 <div key={field.key} className="space-y-1">
