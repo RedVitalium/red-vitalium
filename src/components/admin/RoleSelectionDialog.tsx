@@ -90,15 +90,15 @@ export function RoleSelectionDialog({ open, onOpenChange }: RoleSelectionDialogP
               >
                 <Button
                   variant="outline"
-                  className={`w-full h-auto p-5 flex items-center gap-4 border-2 ${config.bgClass}`}
+                  className={`w-full h-auto py-4 px-4 flex items-center gap-3 border-2 ${config.bgClass}`}
                   onClick={() => handleSelectRole(role)}
                 >
-                  <div className={`p-2.5 rounded-full ${config.bgClass}`}>
+                  <div className={`shrink-0 p-2.5 rounded-full ${config.bgClass}`}>
                     <Icon className={`h-6 w-6 ${config.colorClass}`} />
                   </div>
-                  <div className="text-left flex-1">
-                    <p className="font-display font-semibold">{config.label}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
+                  <div className="text-left flex-1 min-w-0">
+                    <p className="font-display font-semibold text-sm leading-snug">{config.label}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 whitespace-normal break-words leading-snug">
                       {config.description}
                     </p>
                   </div>
