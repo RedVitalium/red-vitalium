@@ -324,7 +324,7 @@ export default function Profile() {
               <div className="space-y-2">
                 <Label>Altura</Label>
                 <p className="text-foreground py-2 bg-muted/30 px-3 rounded-md">
-                  {profile?.height ? `${profile.height} cm` : 'Sin datos'}
+                  {profile?.height ? `${Math.round(Number(profile.height) * 100)} cm` : 'Sin datos'}
                 </p>
               </div>
 

@@ -66,7 +66,7 @@ export function RoleSelectionDialog({ open, onOpenChange }: RoleSelectionDialogP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center text-xl font-display">
             ¿Cómo deseas ingresar?
