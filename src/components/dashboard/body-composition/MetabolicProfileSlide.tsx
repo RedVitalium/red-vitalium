@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { BodySilhouette } from "./BodySilhouette";
 import { FullBodyCompositionData } from "./types";
-import { Flame, Clock, Droplets, Activity } from "lucide-react";
+import { Flame, Clock, Droplets, Activity, User } from "lucide-react";
 
 interface Props {
   data: FullBodyCompositionData;
@@ -10,14 +10,18 @@ interface Props {
 
 export function MetabolicProfileSlide({ data, chronologicalAge }: Props) {
   const referenceAge = chronologicalAge && chronologicalAge > 0 ? chronologicalAge : null;
-  const ageDiff = referenceAge ? data.metabolicAge - referenceAge : 0;
-  const ageStatus = ageDiff <= 0 ? "text-green-500" : ageDiff <= 3 ? "text-yellow-500" : "text-red-500";
-
-  const ageDesc = referenceAge
-    ? (ageDiff <= 0 ? `${Math.abs(ageDiff)} años menor` : `${ageDiff} años mayor`)
+  const metaAgeDiff = referenceAge ? data.metabolicAge - referenceAge : 0;
+  const metaAgeStatus = metaAgeDiff <= 0 ? "text-green-500" : metaAgeDiff <= 3 ? "text-yellow-500" : "text-red-500";
+  const metaAgeDesc = referenceAge
+    ? (metaAgeDiff <= 0 ? `${Math.abs(metaAgeDiff)} años menor` : `${metaAgeDiff} años mayor`)
     : (data.metabolicAge > 0 ? "Sin edad cronológica" : "-");
 
-  // Water fill opacity based on hydration
+  const bodyAgeDiff = referenceAge && data.bodyAge > 0 ? data.bodyAge - referenceAge : 0;
+  const bodyAgeStatus = bodyAgeDiff <= 0 ? "text-green-500" : bodyAgeDiff <= 3 ? "text-yellow-500" : "text-red-500";
+  const bodyAgeDesc = referenceAge && data.bodyAge > 0
+    ? (bodyAgeDiff <= 0 ? `${Math.abs(bodyAgeDiff)} años menor` : `${bodyAgeDiff} años mayor`)
+    : "";
+
   const waterOpacity = Math.min(data.bodyWaterPercent / 100, 0.5);
 
   const metrics = [
@@ -28,14 +32,25 @@ export function MetabolicProfileSlide({ data, chronologicalAge }: Props) {
       unit: "kcal/día",
       desc: "Calorías en reposo",
       color: "text-orange-500",
+      show: data.bmr > 0,
     },
     {
       icon: Clock,
       label: "Edad Metabólica",
       value: `${data.metabolicAge}`,
       unit: "años",
-      desc: ageDesc,
-      color: ageStatus,
+      desc: metaAgeDesc,
+      color: metaAgeStatus,
+      show: data.metabolicAge > 0,
+    },
+    {
+      icon: User,
+      label: "Edad Corporal",
+      value: `${data.bodyAge}`,
+      unit: "años",
+      desc: bodyAgeDesc,
+      color: bodyAgeStatus,
+      show: data.bodyAge > 0,
     },
     {
       icon: Droplets,
@@ -44,6 +59,7 @@ export function MetabolicProfileSlide({ data, chronologicalAge }: Props) {
       unit: "%",
       desc: data.bodyWaterPercent >= 50 ? "Hidratación adecuada" : "Hidratación baja",
       color: "text-blue-500",
+      show: data.bodyWaterPercent > 0,
     },
     {
       icon: Activity,
@@ -52,8 +68,9 @@ export function MetabolicProfileSlide({ data, chronologicalAge }: Props) {
       unit: "kg/m²",
       desc: data.bmi < 18.5 ? "Bajo peso" : data.bmi < 25 ? "Normal" : data.bmi < 30 ? "Sobrepeso" : "Obesidad",
       color: data.bmi < 25 ? "text-green-500" : data.bmi < 30 ? "text-yellow-500" : "text-red-500",
+      show: data.bmi > 0,
     },
-  ];
+  ].filter(m => m.show);
 
   return (
     <div className="flex flex-col items-center gap-4">
