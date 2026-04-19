@@ -341,7 +341,7 @@ export default function AppointmentsNew() {
                   onSelect={setSelectedDate}
                   disabled={(date) => date < new Date() || date.getDay() === 0}
                   locale={es}
-                  className="rounded-md border mx-auto"
+                  className="rounded-md border mx-auto w-fit"
                 />
               </div>
 
