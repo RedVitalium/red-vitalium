@@ -52,7 +52,6 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Get professional's auth email as fallback
     const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(professional.user_id)
     const recipientEmail = profile.email || authUser?.user?.email
 
@@ -64,60 +63,58 @@ Deno.serve(async (req) => {
     }
 
     const modalityLabel = modality === 'virtual' ? 'Videollamada' : 'Presencial'
+    const resendApiKey = Deno.env.get('RESEND_API_KEY')
 
-    // For now, log the notification (email sending requires domain setup)
-    console.log(`📧 Notification for ${profile.full_name || 'Professional'} (${recipientEmail}):`)
-    console.log(`   Patient: ${patient_name}`)
-    console.log(`   Date: ${appointment_date} at ${appointment_time}`)
-    console.log(`   Modality: ${modalityLabel}`)
-
-    // Try to send via Lovable transactional email if available
-    const callbackUrl = Deno.env.get('LOVABLE_API_KEY') 
-      ? `https://api.lovable.dev/v1/email/send`
-      : null
-
-    if (callbackUrl) {
-      try {
-        const emailResponse = await fetch(callbackUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`,
-          },
-          body: JSON.stringify({
-            to: recipientEmail,
-            subject: `Nueva cita agendada - ${patient_name}`,
-            html: `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #1a1a1a;">Nueva Cita Agendada</h2>
-                <p>Hola ${profile.full_name || 'Doctor/a'},</p>
-                <p>Un paciente ha agendado una nueva cita contigo:</p>
-                <div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
-                  <p style="margin: 4px 0;"><strong>Paciente:</strong> ${patient_name}</p>
-                  <p style="margin: 4px 0;"><strong>Fecha:</strong> ${appointment_date}</p>
-                  <p style="margin: 4px 0;"><strong>Hora:</strong> ${appointment_time}</p>
-                  <p style="margin: 4px 0;"><strong>Modalidad:</strong> ${modalityLabel}</p>
-                </div>
-                <p style="color: #666; font-size: 12px;">Red Vitalium - Longevidad y Bienestar Basado en Datos</p>
-              </div>
-            `,
-          }),
-        })
-        
-        if (emailResponse.ok) {
-          console.log('✅ Email sent successfully')
-        } else {
-          console.log('⚠️ Email API returned:', await emailResponse.text())
-        }
-      } catch (emailErr) {
-        console.log('⚠️ Could not send email:', emailErr)
-      }
+    if (!resendApiKey) {
+      console.error('RESEND_API_KEY not configured')
+      return new Response(
+        JSON.stringify({ error: 'Email service not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
+
+    const emailResponse = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${resendApiKey}`,
+      },
+      body: JSON.stringify({
+        from: 'Red Vitalium <noreply@redvitalium.com>',
+        to: [recipientEmail],
+        subject: `Nueva cita agendada - ${patient_name}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #1a1a1a;">Nueva Cita Agendada</h2>
+            <p>Hola ${profile.full_name || 'Doctor/a'},</p>
+            <p>Un paciente ha agendado una nueva cita contigo:</p>
+            <div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
+              <p style="margin: 4px 0;"><strong>Paciente:</strong> ${patient_name}</p>
+              <p style="margin: 4px 0;"><strong>Fecha:</strong> ${appointment_date}</p>
+              <p style="margin: 4px 0;"><strong>Hora:</strong> ${appointment_time}</p>
+              <p style="margin: 4px 0;"><strong>Modalidad:</strong> ${modalityLabel}</p>
+            </div>
+            <p style="color: #666; font-size: 12px;">Red Vitalium - Longevidad y Bienestar Basado en Datos</p>
+          </div>
+        `,
+      }),
+    })
+
+    if (!emailResponse.ok) {
+      const errorText = await emailResponse.text()
+      console.error('Resend error:', errorText)
+      return new Response(
+        JSON.stringify({ error: 'Failed to send email', details: errorText }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    console.log(`✅ Email sent to ${recipientEmail} via Resend`)
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Notification processed',
+        message: 'Notification sent',
         recipient: recipientEmail 
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
