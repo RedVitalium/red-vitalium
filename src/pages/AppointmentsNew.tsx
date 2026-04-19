@@ -1,20 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link, useSearchParams } from "react-router-dom";
-import { Calendar as CalendarIcon, Clock, MapPin, Video, User, Loader2, AlertTriangle, XCircle } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, MapPin, Video, User, Loader2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -442,39 +434,6 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
 };
 
 function MyAppointments({ userId }: { userId: string }) {
-  const queryClient = useQueryClient();
-  const [cancellingId, setCancellingId] = useState<string | null>(null);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-
-  const cancelMutation = useMutation({
-    mutationFn: async (appointmentId: string) => {
-      const { error } = await supabase
-        .from('appointments')
-        .update({ status: 'cancelled' })
-        .eq('id', appointmentId)
-        .eq('user_id', userId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success('Cita cancelada correctamente');
-      queryClient.invalidateQueries({ queryKey: ['my-appointments', userId] });
-      setConfirmOpen(false);
-      setCancellingId(null);
-    },
-    onError: (error: any) => {
-      toast.error('Error al cancelar la cita', { description: error.message });
-    },
-  });
-
-  const handleCancelClick = (id: string) => {
-    setCancellingId(id);
-    setConfirmOpen(true);
-  };
-
-  const handleConfirmCancel = () => {
-    if (cancellingId) cancelMutation.mutate(cancellingId);
-  };
-
   const { data: appointments = [], isLoading } = useQuery({
     queryKey: ['my-appointments', userId],
     queryFn: async () => {
@@ -540,41 +499,25 @@ function MyAppointments({ userId }: { userId: string }) {
             Aún no tienes citas registradas
           </p>
         ) : (
-          <>
           <div className="space-y-3">
             {appointments.slice(0, 5).map(appt => {
               const cfg = statusConfig[appt.status] || statusConfig.scheduled;
-              const isFuture = new Date(appt.appointment_date + 'T00:00:00') >= new Date(new Date().toDateString());
-              const canCancel = appt.status === 'scheduled' && isFuture;
               return (
-                <div key={appt.id} className="p-3 bg-muted/30 rounded-lg space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <p className="text-sm font-medium text-foreground">
-                        {format(new Date(appt.appointment_date + 'T00:00:00'), "d MMM yyyy", { locale: es })}
-                        <span className="text-muted-foreground ml-2">{appt.appointment_time?.slice(0, 5)}</span>
-                      </p>
-                      {appt.professional_name && (
-                        <p className="text-xs text-muted-foreground">{appt.professional_name}</p>
-                      )}
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        {appt.modality === 'videollamada' ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
-                        {appt.modality === 'videollamada' ? 'Videollamada' : 'Presencial'}
-                      </p>
-                    </div>
-                    <Badge variant={cfg.variant}>{cfg.label}</Badge>
+                <div key={appt.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-medium text-foreground">
+                      {format(new Date(appt.appointment_date + 'T00:00:00'), "d MMM yyyy", { locale: es })}
+                      <span className="text-muted-foreground ml-2">{appt.appointment_time?.slice(0, 5)}</span>
+                    </p>
+                    {appt.professional_name && (
+                      <p className="text-xs text-muted-foreground">{appt.professional_name}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      {appt.modality === 'videollamada' ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
+                      {appt.modality === 'videollamada' ? 'Videollamada' : 'Presencial'}
+                    </p>
                   </div>
-                  {canCancel && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
-                      onClick={() => handleCancelClick(appt.id)}
-                    >
-                      <XCircle className="h-3.5 w-3.5 mr-1.5" />
-                      Cancelar cita
-                    </Button>
-                  )}
+                  <Badge variant={cfg.variant}>{cfg.label}</Badge>
                 </div>
               );
             })}
@@ -584,38 +527,6 @@ function MyAppointments({ userId }: { userId: string }) {
               </p>
             )}
           </div>
-
-          <Dialog open={confirmOpen} onOpenChange={(val) => { setConfirmOpen(val); if (!val) setCancellingId(null); }}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Cancelar cita</DialogTitle>
-                <DialogDescription>
-                  ¿Estás seguro que deseas cancelar esta cita? Esta acción no se puede deshacer.
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter className="flex-row gap-2 justify-end">
-                <Button
-                  variant="outline"
-                  onClick={() => { setConfirmOpen(false); setCancellingId(null); }}
-                  disabled={cancelMutation.isPending}
-                >
-                  Mantener cita
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={handleConfirmCancel}
-                  disabled={cancelMutation.isPending}
-                >
-                  {cancelMutation.isPending ? (
-                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Cancelando...</>
-                  ) : (
-                    'Sí, cancelar'
-                  )}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          </>
         )}
       </Card>
     </motion.div>
