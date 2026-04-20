@@ -99,6 +99,25 @@ export default function RegisterPatientDialog() {
       if (!profData) throw new Error("No professional data");
       console.log('profData:', profData?.id, 'user.id:', user.id);
 
+      // Check if patient already has an active professional with same specialty
+      if (profData.specialty) {
+        const { data: sameSpecialty } = await supabase
+          .from("patient_professionals")
+          .select("id, professionals(specialty, profiles(full_name))")
+          .eq("patient_id", patient.user_id)
+          .eq("is_active", true)
+          .neq("professional_id", profData.id);
+
+        const duplicate = (sameSpecialty || []).find(
+          (pp: any) => pp.professionals?.specialty === profData.specialty
+        );
+
+        if (duplicate) {
+          const existingName = duplicate.professionals?.profiles?.full_name || "otro profesional";
+          toast.warning(`Este paciente ya tiene un ${profData.specialty} activo (${existingName}). Puedes continuar si lo deseas.`);
+        }
+      }
+
       // Check if there's an inactive assignment we can reactivate
       const { data: existing } = await supabase
         .from("patient_professionals")
