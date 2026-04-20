@@ -103,19 +103,22 @@ export default function RegisterPatientDialog() {
       if (profData.specialty) {
         const { data: sameSpecialty } = await supabase
           .from("patient_professionals")
-          .select("id, professionals(specialty, profiles(full_name))")
+          .select("id, professional_id")
           .eq("patient_id", patient.user_id)
           .eq("is_active", true)
           .neq("professional_id", profData.id);
 
-        console.log('sameSpecialty:', JSON.stringify(sameSpecialty));
-        const duplicate = (sameSpecialty || []).find(
-          (pp: any) => pp.professionals?.specialty === profData.specialty
-        );
+        if (sameSpecialty && sameSpecialty.length > 0) {
+          const profIds = sameSpecialty.map((pp: any) => pp.professional_id);
+          const { data: sameProfessionals } = await supabase
+            .from("professionals")
+            .select("specialty")
+            .in("id", profIds)
+            .eq("specialty", profData.specialty);
 
-        if (duplicate) {
-          const existingName = duplicate.professionals?.profiles?.full_name || "otro profesional";
-          toast.warning(`Este paciente ya tiene un ${profData.specialty} activo (${existingName}). Puedes continuar si lo deseas.`);
+          if (sameProfessionals && sameProfessionals.length > 0) {
+            toast.warning(`Este paciente ya tiene un profesional de ${profData.specialty} activo. Puedes continuar si lo deseas.`);
+          }
         }
       }
 
