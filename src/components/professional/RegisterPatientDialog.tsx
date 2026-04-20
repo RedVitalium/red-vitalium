@@ -108,6 +108,7 @@ export default function RegisterPatientDialog() {
           .eq("is_active", true)
           .neq("professional_id", profData.id);
 
+        console.log('sameSpecialty:', JSON.stringify(sameSpecialty));
         const duplicate = (sameSpecialty || []).find(
           (pp: any) => pp.professionals?.specialty === profData.specialty
         );
