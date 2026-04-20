@@ -100,6 +100,7 @@ export default function RegisterPatientDialog() {
       console.log('profData:', profData?.id, 'user.id:', user.id);
 
       // Check if patient already has an active professional with same specialty
+      console.log('profData.specialty:', profData.specialty);
       if (profData.specialty) {
         const { data: sameSpecialty } = await supabase
           .from("patient_professionals")
@@ -360,3 +361,4 @@ export default function RegisterPatientDialog() {
     </Dialog>
   );
 }
+// lunes, 20 de abril de 2026, 15:12:18 CEST
